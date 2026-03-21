@@ -11,18 +11,20 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { RateLimitGuard, RateLimit } from '../../common/guards/rate-limit.guard';
 import { PayoutsService } from './payouts.service';
 import { RequestPayoutDto } from './dto/request-payout.dto';
 
 @ApiTags('Payouts')
 @Controller('payouts')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RateLimitGuard)
 @ApiBearerAuth()
 export class PayoutsController {
   constructor(private readonly payoutsService: PayoutsService) {}
 
   @Post('request')
   @HttpCode(HttpStatus.CREATED)
+  @RateLimit({ limit: 5, windowSeconds: 3600 }) // 5 per hour
   @ApiOperation({ summary: 'Request a payout to your bank/UPI' })
   async requestPayout(
     @CurrentUser('id') userId: string,

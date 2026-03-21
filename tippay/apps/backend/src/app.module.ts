@@ -12,6 +12,8 @@ import { WalletsModule } from './modules/wallets/wallets.module';
 import { PayoutsModule } from './modules/payouts/payouts.module';
 import { QrCodesModule } from './modules/qrcodes/qrcodes.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { OutboxModule } from './modules/outbox/outbox.module';
 
 @Module({
   imports: [
@@ -33,6 +35,8 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     PayoutsModule,
     QrCodesModule,
     NotificationsModule,
+    AdminModule,
+    OutboxModule,
   ],
   controllers: [AppController],
 })

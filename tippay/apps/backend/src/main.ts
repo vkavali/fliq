@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { BigIntSerializationInterceptor } from './common/interceptors/bigint-serialization.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -35,7 +36,10 @@ async function bootstrap() {
 
   // Global filters and interceptors
   app.useGlobalFilters(new AllExceptionsFilter());
-  app.useGlobalInterceptors(new LoggingInterceptor());
+  app.useGlobalInterceptors(
+    new LoggingInterceptor(),
+    new BigIntSerializationInterceptor(),
+  );
 
   // Swagger (development only)
   if (env === 'development') {

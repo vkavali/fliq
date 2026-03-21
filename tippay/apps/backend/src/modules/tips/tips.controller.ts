@@ -6,12 +6,15 @@ import {
   Body,
   Query,
   UseGuards,
+  UseInterceptors,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiHeader } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { RateLimitGuard, RateLimit } from '../../common/guards/rate-limit.guard';
+import { IdempotencyInterceptor } from '../../common/interceptors/idempotency.interceptor';
 import { TipsService } from './tips.service';
 import { CreateTipDto } from './dto/create-tip.dto';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
@@ -22,18 +25,25 @@ export class TipsController {
   constructor(private readonly tipsService: TipsService) {}
 
   @Post()
+  @UseGuards(RateLimitGuard)
+  @RateLimit({ limit: 20, windowSeconds: 60 }) // 20 per minute per IP
+  @UseInterceptors(IdempotencyInterceptor)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a tip and get Razorpay order' })
+  @ApiHeader({ name: 'idempotency-key', required: false })
   async createTip(@Body() dto: CreateTipDto) {
     // Tips can be created without auth (QR code flow)
     return this.tipsService.createTip(dto);
   }
 
   @Post('authenticated')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RateLimitGuard)
+  @RateLimit({ limit: 20, windowSeconds: 60 })
+  @UseInterceptors(IdempotencyInterceptor)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a tip (authenticated, links to customer)' })
+  @ApiHeader({ name: 'idempotency-key', required: false })
   async createTipAuthenticated(
     @CurrentUser('id') userId: string,
     @Body() dto: CreateTipDto,
@@ -42,6 +52,8 @@ export class TipsController {
   }
 
   @Post(':tipId/verify')
+  @UseGuards(RateLimitGuard)
+  @RateLimit({ limit: 10, windowSeconds: 60 })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Verify payment after Razorpay checkout' })
   async verifyPayment(
