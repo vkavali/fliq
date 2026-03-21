@@ -4,6 +4,7 @@ class ApiConstants {
   // Auth
   static const String sendOtp = '/auth/otp/send';
   static const String verifyOtp = '/auth/otp/verify';
+  static const String refreshToken = '/auth/refresh';
 
   // Users
   static const String userProfile = '/users/me';

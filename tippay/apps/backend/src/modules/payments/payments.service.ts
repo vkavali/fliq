@@ -106,6 +106,17 @@ export class PaymentsService {
         }
       }
 
+      // Update provider stats (tip count + rating)
+      await tx.provider.update({
+        where: { id: tip.providerId },
+        data: {
+          totalTipsReceived: { increment: 1 },
+          ...(tip.rating ? {
+            ratingAverage: await this.calculateNewRating(tx, tip.providerId, tip.rating),
+          } : {}),
+        },
+      });
+
       // Insert outbox event for Kafka
       await tx.outboxEvent.create({
         data: {
@@ -160,6 +171,22 @@ export class PaymentsService {
         failureReason: payout.failure_reason || 'Unknown',
       },
     });
+  }
+
+  private async calculateNewRating(
+    tx: any,
+    providerId: string,
+    newRating: number,
+  ): Promise<number> {
+    const provider = await tx.provider.findUnique({ where: { id: providerId } });
+    if (!provider) return newRating;
+
+    const currentAvg = provider.ratingAverage ? Number(provider.ratingAverage) : 0;
+    const currentCount = provider.totalTipsReceived; // before increment
+    const ratedCount = currentAvg > 0 ? currentCount : 0;
+
+    // Weighted average including the new rating
+    return Number(((currentAvg * ratedCount + newRating) / (ratedCount + 1)).toFixed(2));
   }
 
   private mapPaymentMethod(method: string): PaymentMethod {

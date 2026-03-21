@@ -11,7 +11,7 @@ final dioProvider = Provider<Dio>((ref) {
     headers: {'Content-Type': 'application/json'},
   ));
 
-  dio.interceptors.add(AuthInterceptor(ref));
+  dio.interceptors.add(AuthInterceptor(ref, dio));
   dio.interceptors.add(LogInterceptor(
     requestBody: true,
     responseBody: true,
@@ -23,8 +23,10 @@ final dioProvider = Provider<Dio>((ref) {
 
 class AuthInterceptor extends Interceptor {
   final Ref _ref;
+  final Dio _dio;
+  bool _isRefreshing = false;
 
-  AuthInterceptor(this._ref);
+  AuthInterceptor(this._ref, this._dio);
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
@@ -38,8 +40,32 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.response?.statusCode == 401) {
-      // Token expired — could implement refresh here
+    if (err.response?.statusCode == 401 && !_isRefreshing) {
+      _isRefreshing = true;
+      try {
+        final storage = _ref.read(secureStorageProvider);
+        final refreshToken = await storage.getRefreshToken();
+
+        if (refreshToken != null) {
+          // Try to refresh the access token
+          final response = await Dio(BaseOptions(
+            baseUrl: ApiConstants.baseUrl,
+          )).post('/auth/refresh', data: {'refreshToken': refreshToken});
+
+          final newAccessToken = response.data['accessToken'] as String;
+          await storage.saveAccessToken(newAccessToken);
+
+          // Retry the original request with new token
+          err.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
+          final retryResponse = await _dio.fetch(err.requestOptions);
+          _isRefreshing = false;
+          return handler.resolve(retryResponse);
+        }
+      } catch (_) {
+        // Refresh failed — clear auth and force re-login
+      }
+
+      _isRefreshing = false;
       final storage = _ref.read(secureStorageProvider);
       await storage.clearAll();
     }

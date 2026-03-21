@@ -156,6 +156,29 @@ export class AuthService {
     );
   }
 
+  async refreshAccessToken(refreshToken: string): Promise<{ accessToken: string }> {
+    try {
+      const payload = this.jwt.verify(refreshToken, {
+        secret: this.config.get<string>('JWT_SECRET'),
+      });
+
+      if (payload.tokenType !== 'refresh') {
+        throw new BadRequestException('Invalid token type');
+      }
+
+      const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
+      if (!user || user.status !== 'ACTIVE') {
+        throw new BadRequestException('User not found or inactive');
+      }
+
+      const accessToken = this.generateAccessToken(user.id, user.type as UserType);
+      return { accessToken };
+    } catch (error) {
+      if (error instanceof BadRequestException) throw error;
+      throw new BadRequestException('Invalid or expired refresh token');
+    }
+  }
+
   private async checkOtpRateLimit(phone: string): Promise<void> {
     const hourKey = `otp_rate:hour:${phone}`;
     const dayKey = `otp_rate:day:${phone}`;
