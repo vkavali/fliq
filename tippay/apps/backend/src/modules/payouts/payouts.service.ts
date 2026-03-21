@@ -3,8 +3,8 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { PrismaService } from '@tippay/database';
-import { WalletType, LedgerEntryType } from '@tippay/shared';
+import { PrismaService } from '@fliq/database';
+import { WalletType, LedgerEntryType } from '@fliq/shared';
 import { RazorpayService } from '../payments/razorpay.service';
 import { WalletsService } from '../wallets/wallets.service';
 import { RequestPayoutDto } from './dto/request-payout.dto';

@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsEnum, IsOptional, Matches } from 'class-validator';
-import { ProviderCategory } from '@tippay/shared';
+import { ProviderCategory } from '@fliq/shared';
 
 export class CreateProviderProfileDto {
   @ApiProperty({ enum: ProviderCategory, example: ProviderCategory.RESTAURANT })

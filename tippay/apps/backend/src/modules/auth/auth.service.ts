@@ -7,8 +7,8 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '@tippay/database';
-import { UserType } from '@tippay/shared';
+import { PrismaService } from '@fliq/database';
+import { UserType } from '@fliq/shared';
 import { RedisService } from '../redis/redis.service';
 import * as crypto from 'crypto';
 

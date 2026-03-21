@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Kafka, Consumer } from 'kafkajs';
-import { KAFKA_TOPICS } from '@tippay/shared';
+import { KAFKA_TOPICS } from '@fliq/shared';
 
 /**
  * Kafka consumer that subscribes to platform events.
@@ -28,11 +28,11 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
     try {
       const brokers = this.config.get<string>('KAFKA_BROKERS', 'localhost:9092');
       const kafka = new Kafka({
-        clientId: 'tippay-consumer',
+        clientId: 'fliq-consumer',
         brokers: brokers.split(','),
       });
 
-      this.consumer = kafka.consumer({ groupId: 'tippay-backend-group' });
+      this.consumer = kafka.consumer({ groupId: 'fliq-backend-group' });
       await this.consumer.connect();
 
       // Subscribe to all platform topics

@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
-import { QrCodeType } from '@tippay/shared';
+import { QrCodeType } from '@fliq/shared';
 
 export class CreateQrCodeDto {
   @ApiPropertyOptional({ enum: QrCodeType, default: QrCodeType.STATIC })

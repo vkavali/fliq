@@ -5,7 +5,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '@tippay/database';
+import { PrismaService } from '@fliq/database';
 import {
   calculateCommission,
   calculateGstOnCommission,
@@ -13,7 +13,7 @@ import {
   DEFAULT_COMMISSION_RATE,
   GST_RATE_ON_COMMISSION,
   CURRENCY,
-} from '@tippay/shared';
+} from '@fliq/shared';
 import { RazorpayService } from '../payments/razorpay.service';
 import { CreateTipDto } from './dto/create-tip.dto';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';

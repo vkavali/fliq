@@ -4,8 +4,8 @@ import {
   NotFoundException,
   Logger,
 } from '@nestjs/common';
-import { PrismaService } from '@tippay/database';
-import { QrCodeType } from '@tippay/shared';
+import { PrismaService } from '@fliq/database';
+import { QrCodeType } from '@fliq/shared';
 import { RazorpayService } from '../payments/razorpay.service';
 import { CreateQrCodeDto } from './dto/create-qrcode.dto';
 
@@ -36,7 +36,7 @@ export class QrCodesService {
         name: `${provider.user.name || 'Provider'} - ${dto.locationLabel || 'Default'}`,
         usage: 'multiple_use',
         fixedAmount: false,
-        description: `TipPay QR for provider ${userId}`,
+        description: `Fliq QR for provider ${userId}`,
         notes: {
           providerId: userId,
           locationLabel: dto.locationLabel || '',

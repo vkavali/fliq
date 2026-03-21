@@ -1,4 +1,4 @@
-# TipPay — Indian UPI Tipping & Services Platform
+# Fliq — Indian UPI Tipping & Services Platform
 
 ## Project Overview
 A UPI-native tipping platform for India. Service providers (delivery, salon, restaurant staff) receive tips via QR code scanning. Customers scan, choose amount, pay via Razorpay. Providers see earnings and request payouts.
@@ -6,8 +6,8 @@ A UPI-native tipping platform for India. Service providers (delivery, salon, res
 ## Monorepo Structure
 - `apps/backend/` — NestJS (TypeScript) API server
 - `apps/mobile/` — Flutter (Dart) mobile app
-- `packages/database/` — Prisma schema + generated client (`@tippay/database`)
-- `packages/shared/` — Shared types, constants, utils (`@tippay/shared`)
+- `packages/database/` — Prisma schema + generated client (`@fliq/database`)
+- `packages/shared/` — Shared types, constants, utils (`@fliq/shared`)
 
 ## Tech Stack
 - **Backend**: NestJS 10, Prisma 6, PostgreSQL 16, Redis 7, Kafka
@@ -36,11 +36,11 @@ A UPI-native tipping platform for India. Service providers (delivery, salon, res
 pnpm install
 
 # Build packages (required before backend)
-pnpm --filter @tippay/shared build
-pnpm --filter @tippay/database build
+pnpm --filter @fliq/shared build
+pnpm --filter @fliq/database build
 
 # Start backend dev server
-pnpm --filter @tippay/backend dev
+pnpm --filter @fliq/backend dev
 
 # Type-check backend
 cd apps/backend && npx tsc --noEmit
@@ -52,10 +52,10 @@ cd apps/backend && npx jest
 docker compose up -d
 
 # Run Prisma migrations
-pnpm --filter @tippay/database migrate:dev
+pnpm --filter @fliq/database migrate:dev
 
 # Generate Prisma client
-pnpm --filter @tippay/database build
+pnpm --filter @fliq/database build
 
 # Deploy (Railway)
 # Uses apps/backend/Dockerfile and railway.json

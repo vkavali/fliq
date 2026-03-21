@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '@tippay/database';
+import { PrismaService } from '@fliq/database';
 
 @Injectable()
 export class AdminService {

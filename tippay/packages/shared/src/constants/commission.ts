@@ -1,5 +1,5 @@
 /**
- * Commission rates for the TipPay platform.
+ * Commission rates for the Fliq platform.
  *
  * Tips <= ZERO_COMMISSION_THRESHOLD_PAISE: 0% commission (builds trust).
  * Tips > threshold: DEFAULT_COMMISSION_RATE commission.

@@ -9,7 +9,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { UserType } from '@tippay/shared';
+import { UserType } from '@fliq/shared';
 import { AdminService } from './admin.service';
 
 @ApiTags('Admin')

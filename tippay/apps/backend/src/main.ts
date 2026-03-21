@@ -2,14 +2,16 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
+import { join } from 'path';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { BigIntSerializationInterceptor } from './common/interceptors/bigint-serialization.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     // Preserve raw body for webhook signature verification
     rawBody: true,
   });
@@ -18,11 +20,18 @@ async function bootstrap() {
   const port = configService.get<number>('APP_PORT', 3000);
   const env = configService.get<string>('APP_ENV', 'development');
 
-  // Security
-  app.use(helmet());
+  // Security — relax CSP in dev for static serving
+  app.use(helmet({
+    contentSecurityPolicy: env === 'development' ? false : undefined,
+    crossOriginEmbedderPolicy: env === 'development' ? false : undefined,
+  }));
   app.enableCors({
     origin: env === 'development' ? '*' : configService.get<string>('APP_URL'),
   });
+
+  // Serve web app static files from /app
+  const webAppPath = join(__dirname, '..', '..', 'web', 'public');
+  app.useStaticAssets(webAppPath, { prefix: '/app/' });
 
   // Global pipes
   app.useGlobalPipes(
@@ -44,7 +53,7 @@ async function bootstrap() {
   // Swagger (development only)
   if (env === 'development') {
     const swaggerConfig = new DocumentBuilder()
-      .setTitle('TipPay API')
+      .setTitle('Fliq API')
       .setDescription('Indian UPI Tipping & Services Platform API')
       .setVersion('0.1.0')
       .addBearerAuth()
@@ -54,7 +63,7 @@ async function bootstrap() {
   }
 
   await app.listen(port);
-  console.log(`TipPay backend running on http://localhost:${port}`);
+  console.log(`Fliq backend running on http://localhost:${port}`);
   if (env === 'development') {
     console.log(`Swagger docs at http://localhost:${port}/api/docs`);
   }

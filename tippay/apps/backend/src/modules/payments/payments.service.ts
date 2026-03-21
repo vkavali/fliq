@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService, PaymentMethod } from '@tippay/database';
-import { RAZORPAY_EVENTS, WalletType } from '@tippay/shared';
+import { PrismaService, PaymentMethod } from '@fliq/database';
+import { RAZORPAY_EVENTS, WalletType } from '@fliq/shared';
 import { WalletsService } from '../wallets/wallets.service';
 
 @Injectable()

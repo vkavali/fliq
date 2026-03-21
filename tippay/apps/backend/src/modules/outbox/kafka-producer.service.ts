@@ -22,7 +22,7 @@ export class KafkaProducerService implements OnModuleInit, OnModuleDestroy {
     try {
       const brokers = this.config.get<string>('KAFKA_BROKERS', 'localhost:9092');
       const kafka = new Kafka({
-        clientId: 'tippay-backend',
+        clientId: 'fliq-backend',
         brokers: brokers.split(','),
       });
       this.producer = kafka.producer();

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TipsService } from './tips.service';
-import { PrismaService } from '@tippay/database';
+import { PrismaService } from '@fliq/database';
 import { RazorpayService } from '../payments/razorpay.service';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 

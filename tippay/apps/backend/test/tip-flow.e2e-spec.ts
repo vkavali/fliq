@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { PrismaService } from '@tippay/database';
+import { PrismaService } from '@fliq/database';
 import { BigIntSerializationInterceptor } from '../src/common/interceptors/bigint-serialization.interceptor';
 
 /**
@@ -58,7 +58,7 @@ describe('Tip Flow (e2e)', () => {
       .expect(200)
       .expect((res) => {
         expect(res.body.status).toBe('ok');
-        expect(res.body.service).toBe('tippay-backend');
+        expect(res.body.service).toBe('fliq-backend');
       });
   });
 

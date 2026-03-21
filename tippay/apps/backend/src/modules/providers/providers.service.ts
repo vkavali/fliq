@@ -1,6 +1,6 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '@tippay/database';
-import { WalletType, UserType } from '@tippay/shared';
+import { PrismaService } from '@fliq/database';
+import { WalletType, UserType } from '@fliq/shared';
 import { CreateProviderProfileDto } from './dto/create-provider-profile.dto';
 import { UpdateProviderProfileDto } from './dto/update-provider-profile.dto';
 

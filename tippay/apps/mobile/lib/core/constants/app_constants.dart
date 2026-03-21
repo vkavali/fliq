@@ -1,5 +1,5 @@
 class AppConstants {
-  static const String appName = 'TipPay';
+  static const String appName = 'Fliq';
 
   // Tip amounts (in paise)
   static const int minTipPaise = 1000;     // Rs 10

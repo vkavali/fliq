@@ -54,7 +54,7 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
   }
 
   String _extractQrCodeId(String rawValue) {
-    // If it's a URL like https://tippay.in/qr/UUID, extract the UUID
+    // If it's a URL like https://fliq.in/qr/UUID, extract the UUID
     final uri = Uri.tryParse(rawValue);
     if (uri != null && uri.pathSegments.length >= 2 && uri.pathSegments[0] == 'qr') {
       return uri.pathSegments[1];
@@ -94,7 +94,7 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
             left: 0,
             right: 0,
             child: Text(
-              'Point camera at a TipPay QR code',
+              'Point camera at a Fliq QR code',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Colors.white,

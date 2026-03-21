@@ -3,24 +3,24 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: tippay-postgres
+    container_name: fliq-postgres
     environment:
-      POSTGRES_USER: tippay
-      POSTGRES_PASSWORD: tippay_dev
-      POSTGRES_DB: tippay
+      POSTGRES_USER: fliq
+      POSTGRES_PASSWORD: fliq_dev
+      POSTGRES_DB: fliq
     ports:
       - '5433:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U tippay']
+      test: ['CMD-SHELL', 'pg_isready -U fliq']
       interval: 5s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
-    container_name: tippay-redis
+    container_name: fliq-redis
     ports:
       - '6379:6379'
     volumes:
@@ -33,7 +33,7 @@ services:
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.0
-    container_name: tippay-zookeeper
+    container_name: fliq-zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -42,7 +42,7 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.6.0
-    container_name: tippay-kafka
+    container_name: fliq-kafka
     depends_on:
       - zookeeper
     ports:

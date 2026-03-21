@@ -127,7 +127,7 @@ async function main() {
     update: {},
     create: {
       phone: '+910000000000',
-      name: 'TipPay Platform',
+      name: 'Fliq Platform',
       type: UserType.ADMIN,
       status: UserStatus.ACTIVE,
       kycStatus: KycStatus.FULL,

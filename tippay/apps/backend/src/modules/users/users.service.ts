@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '@tippay/database';
+import { PrismaService } from '@fliq/database';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()

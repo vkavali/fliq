@@ -52,7 +52,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               children: [
                 const Spacer(flex: 2),
                 Text(
-                  'TipPay',
+                  'Fliq',
                   style: Theme.of(context).textTheme.displaySmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.primary,

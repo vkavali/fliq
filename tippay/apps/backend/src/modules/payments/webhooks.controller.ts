@@ -9,7 +9,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiExcludeEndpoint } from '@nestjs/swagger';
-import { PrismaService } from '@tippay/database';
+import { PrismaService } from '@fliq/database';
 import { RazorpayService } from './razorpay.service';
 import { PaymentsService } from './payments.service';
 

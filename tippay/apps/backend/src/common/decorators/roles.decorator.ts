@@ -1,5 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
-import { UserType } from '@tippay/shared';
+import { UserType } from '@fliq/shared';
 
 export const ROLES_KEY = 'roles';
 

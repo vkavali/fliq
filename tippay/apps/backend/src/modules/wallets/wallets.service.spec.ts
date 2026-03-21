@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { WalletsService } from './wallets.service';
-import { PrismaService } from '@tippay/database';
+import { PrismaService } from '@fliq/database';
 import { BadRequestException } from '@nestjs/common';
 
 describe('WalletsService', () => {

@@ -1,16 +1,16 @@
 {
-  "name": "tippay",
+  "name": "fliq",
   "version": "0.1.0",
   "private": true,
-  "description": "TipPay — Indian UPI Tipping & Services Platform",
+  "description": "Fliq — Indian UPI Tipping & Services Platform",
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
     "test": "turbo test",
-    "db:generate": "pnpm --filter @tippay/database generate",
-    "db:migrate": "pnpm --filter @tippay/database migrate:dev",
-    "db:seed": "pnpm --filter @tippay/database seed",
+    "db:generate": "pnpm --filter @fliq/database generate",
+    "db:migrate": "pnpm --filter @fliq/database migrate:dev",
+    "db:seed": "pnpm --filter @fliq/database seed",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down"
   },

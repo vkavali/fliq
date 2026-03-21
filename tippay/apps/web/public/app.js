@@ -1,5 +1,8 @@
-// ===== TipPay Web App =====
-const API = 'http://localhost:3000';
+// ===== Fliq Web App =====
+// Auto-detect: if served from backend (/app/), use same origin. Otherwise localhost.
+const API = location.port === '5173'
+  ? 'http://localhost:3000'
+  : location.origin;
 
 let token = null;
 let user = null;

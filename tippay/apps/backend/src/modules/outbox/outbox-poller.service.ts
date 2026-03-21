@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { PrismaService } from '@tippay/database';
+import { PrismaService } from '@fliq/database';
 import { KafkaProducerService } from './kafka-producer.service';
 
 /**

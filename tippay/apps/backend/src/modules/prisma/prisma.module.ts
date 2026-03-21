@@ -1,5 +1,5 @@
 import { Global, Module } from '@nestjs/common';
-import { PrismaService } from '@tippay/database';
+import { PrismaService } from '@fliq/database';
 
 @Global()
 @Module({

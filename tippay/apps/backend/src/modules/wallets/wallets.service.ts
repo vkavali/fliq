@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
-import { PrismaService, Prisma } from '@tippay/database';
-import { WalletType, LedgerEntryType } from '@tippay/shared';
+import { PrismaService, Prisma } from '@fliq/database';
+import { WalletType, LedgerEntryType } from '@fliq/shared';
 
 const MAX_OPTIMISTIC_LOCK_RETRIES = 3;
 

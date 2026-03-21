@@ -1,10 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsEnum, IsOptional, IsInt, Min, Max, IsUUID, MaxLength } from 'class-validator';
-import { TipSource } from '@tippay/shared';
+import { TipSource } from '@fliq/shared';
 import {
   MIN_TIP_AMOUNT_PAISE,
   MAX_TIP_AMOUNT_PAISE,
-} from '@tippay/shared';
+} from '@fliq/shared';
 
 export class CreateTipDto {
   @ApiProperty({ description: 'Provider user ID' })

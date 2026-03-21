@@ -5,18 +5,18 @@ import 'core/theme/app_theme.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const ProviderScope(child: TipPayApp()));
+  runApp(const ProviderScope(child: FliqApp()));
 }
 
-class TipPayApp extends ConsumerWidget {
-  const TipPayApp({super.key});
+class FliqApp extends ConsumerWidget {
+  const FliqApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
 
     return MaterialApp.router(
-      title: 'TipPay',
+      title: 'Fliq',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,

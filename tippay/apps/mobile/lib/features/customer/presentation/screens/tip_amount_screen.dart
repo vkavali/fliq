@@ -84,7 +84,7 @@ class _TipAmountScreenState extends ConsumerState<TipAmountScreen> {
         'amount': result.amount,
         'currency': result.currency,
         'order_id': result.orderId,
-        'name': 'TipPay',
+        'name': 'Fliq',
         'description': 'Tip for ${widget.providerName}',
         'prefill': {
           'contact': '',

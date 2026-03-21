@@ -76,7 +76,7 @@ class QrDisplayScreen extends ConsumerWidget {
               final qrId = qr['id'] as String? ?? '';
               final label = qr['locationLabel'] as String? ?? 'Default';
               // Generate local QR with deep link URL
-              final qrUrl = 'https://tippay.in/qr/$qrId';
+              final qrUrl = 'https://fliq.in/qr/$qrId';
 
               return Card(
                 margin: const EdgeInsets.only(bottom: AppSpacing.md),

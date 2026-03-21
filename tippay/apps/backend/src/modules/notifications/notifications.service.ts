@@ -30,16 +30,16 @@ export class NotificationsService {
   async notifyTipReceived(phone: string, amount: number, customerName?: string): Promise<void> {
     const rupees = (amount / 100).toFixed(2);
     const from = customerName ? ` from ${customerName}` : '';
-    await this.sendSms(phone, `You received a tip of Rs ${rupees}${from} on TipPay!`);
+    await this.sendSms(phone, `You received a tip of Rs ${rupees}${from} on Fliq!`);
   }
 
   async notifyPayoutProcessed(phone: string, amount: number): Promise<void> {
     const rupees = (amount / 100).toFixed(2);
-    await this.sendSms(phone, `Your TipPay payout of Rs ${rupees} has been processed.`);
+    await this.sendSms(phone, `Your Fliq payout of Rs ${rupees} has been processed.`);
   }
 
   async notifyPayoutFailed(phone: string, amount: number): Promise<void> {
     const rupees = (amount / 100).toFixed(2);
-    await this.sendSms(phone, `Your TipPay payout of Rs ${rupees} failed. Please try again.`);
+    await this.sendSms(phone, `Your Fliq payout of Rs ${rupees} failed. Please try again.`);
   }
 }
