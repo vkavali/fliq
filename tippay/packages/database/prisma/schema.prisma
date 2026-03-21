@@ -1,0 +1,335 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ──────────────────────────────────────────────────────────────────
+
+enum UserType {
+  CUSTOMER
+  PROVIDER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum KycStatus {
+  PENDING
+  BASIC
+  FULL
+}
+
+enum ProviderCategory {
+  DELIVERY
+  SALON
+  HOUSEHOLD
+  RESTAURANT
+  HOTEL
+  OTHER
+}
+
+enum PayoutPreference {
+  INSTANT
+  DAILY_BATCH
+  WEEKLY
+}
+
+enum WalletType {
+  PROVIDER_EARNINGS
+  PLATFORM_COMMISSION
+  TAX_RESERVE
+}
+
+enum LedgerEntryType {
+  DEBIT
+  CREDIT
+}
+
+enum PaymentMethod {
+  UPI
+  CARD
+  NET_BANKING
+  WALLET
+}
+
+enum TipSource {
+  QR_CODE
+  PAYMENT_LINK
+  IN_APP
+}
+
+enum TipStatus {
+  INITIATED
+  PAID
+  SETTLED
+  FAILED
+  REFUNDED
+}
+
+enum TransactionType {
+  TIP
+  PAYOUT
+  REFUND
+  COMMISSION
+  TAX_DEDUCTION
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REVERSED
+}
+
+enum PayoutMode {
+  UPI
+  IMPS
+  NEFT
+}
+
+enum PayoutStatus {
+  PENDING_BATCH
+  INITIATED
+  PROCESSED
+  SETTLED
+  FAILED
+}
+
+enum QrCodeType {
+  STATIC
+  DYNAMIC
+}
+
+// ─── Models ─────────────────────────────────────────────────────────────────
+
+model User {
+  id                 String     @id @default(uuid()) @db.Uuid
+  type               UserType
+  phone              String     @unique @db.VarChar(15)
+  email              String?    @db.VarChar(255)
+  name               String?    @db.VarChar(255)
+  languagePreference String     @default("en") @db.VarChar(5)
+  kycStatus          KycStatus  @default(PENDING)
+  status             UserStatus @default(ACTIVE)
+  createdAt          DateTime   @default(now()) @db.Timestamptz()
+  updatedAt          DateTime   @updatedAt @db.Timestamptz()
+
+  providerProfile Provider?
+  wallets         Wallet[]
+  tipsGiven       Tip[]           @relation("CustomerTips")
+  tipsReceived    Tip[]           @relation("ProviderTips")
+  payouts         Payout[]
+  otpCodes        OtpCode[]
+  consentRecords  ConsentRecord[]
+
+  @@map("users")
+}
+
+model Provider {
+  id                         String           @id @db.Uuid
+  user                       User             @relation(fields: [id], references: [id])
+  upiVpa                     String?          @db.VarChar(255)
+  bankAccountNumberEncrypted Bytes?
+  bankIfsc                   String?          @db.VarChar(11)
+  panEncrypted               Bytes?
+  panVerified                Boolean          @default(false)
+  bankVerified               Boolean          @default(false)
+  category                   ProviderCategory @default(OTHER)
+  ratingAverage              Decimal?         @db.Decimal(3, 2)
+  totalTipsReceived          Int              @default(0)
+  payoutPreference           PayoutPreference @default(DAILY_BATCH)
+  razorpayLinkedAccountId    String?          @db.VarChar(50)
+  razorpayFundAccountId      String?          @db.VarChar(50)
+  qrCodeUrl                  String?
+  createdAt                  DateTime         @default(now()) @db.Timestamptz()
+
+  qrCodes QrCode[]
+
+  @@map("providers")
+}
+
+model OtpCode {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @db.Uuid
+  user      User?    @relation(fields: [userId], references: [id])
+  phone     String   @db.VarChar(15)
+  code      String   @db.VarChar(6)
+  expiresAt DateTime @db.Timestamptz()
+  verified  Boolean  @default(false)
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz()
+
+  @@index([phone, code])
+  @@map("otp_codes")
+}
+
+model Wallet {
+  id           String     @id @default(uuid()) @db.Uuid
+  userId       String     @db.Uuid
+  user         User       @relation(fields: [userId], references: [id])
+  type         WalletType
+  balancePaise BigInt     @default(0)
+  version      Int        @default(1)
+  createdAt    DateTime   @default(now()) @db.Timestamptz()
+  updatedAt    DateTime   @updatedAt @db.Timestamptz()
+
+  ledgerEntries LedgerEntry[]
+
+  @@unique([userId, type])
+  @@map("wallets")
+}
+
+model LedgerEntry {
+  id                String          @id @default(uuid()) @db.Uuid
+  walletId          String          @db.Uuid
+  wallet            Wallet          @relation(fields: [walletId], references: [id])
+  transactionId     String          @db.Uuid
+  transaction       Transaction     @relation(fields: [transactionId], references: [id])
+  entryType         LedgerEntryType
+  amountPaise       BigInt
+  balanceAfterPaise BigInt
+  description       String?
+  createdAt         DateTime        @default(now()) @db.Timestamptz()
+
+  @@index([walletId, createdAt])
+  @@map("ledger_entries")
+}
+
+model Tip {
+  id                   String         @id @default(uuid()) @db.Uuid
+  customerId           String?        @db.Uuid
+  customer             User?          @relation("CustomerTips", fields: [customerId], references: [id])
+  providerId           String         @db.Uuid
+  provider             User           @relation("ProviderTips", fields: [providerId], references: [id])
+  amountPaise          BigInt
+  commissionPaise      BigInt         @default(0)
+  commissionRate       Decimal?       @db.Decimal(5, 4)
+  netAmountPaise       BigInt
+  gstOnCommissionPaise BigInt         @default(0)
+  tdsPaise             BigInt         @default(0)
+  tcsPaise             BigInt         @default(0)
+  paymentMethod        PaymentMethod?
+  source               TipSource
+  status               TipStatus      @default(INITIATED)
+  gateway              String?        @db.VarChar(20)
+  gatewayOrderId       String?        @db.VarChar(100)
+  gatewayPaymentId     String?        @db.VarChar(100)
+  message              String?
+  rating               Int?           @db.SmallInt
+  createdAt            DateTime       @default(now()) @db.Timestamptz()
+  updatedAt            DateTime       @updatedAt @db.Timestamptz()
+
+  transactions Transaction[]
+
+  @@index([providerId, createdAt])
+  @@index([customerId, createdAt])
+  @@index([gatewayPaymentId])
+  @@map("tips")
+}
+
+model Transaction {
+  id                   String            @id @default(uuid()) @db.Uuid
+  type                 TransactionType
+  referenceId          String?           @db.Uuid
+  tip                  Tip?              @relation(fields: [referenceId], references: [id])
+  fromWalletId         String?           @db.Uuid
+  toWalletId           String?           @db.Uuid
+  amountPaise          BigInt
+  status               TransactionStatus @default(PENDING)
+  idempotencyKey       String?           @unique @db.VarChar(255)
+  gateway              String?           @db.VarChar(20)
+  gatewayTransactionId String?           @db.VarChar(100)
+  metadata             Json?
+  createdAt            DateTime          @default(now()) @db.Timestamptz()
+  updatedAt            DateTime          @updatedAt @db.Timestamptz()
+
+  ledgerEntries LedgerEntry[]
+
+  @@index([referenceId])
+  @@map("transactions")
+}
+
+model Payout {
+  id              String       @id @default(uuid()) @db.Uuid
+  providerId      String       @db.Uuid
+  provider        User         @relation(fields: [providerId], references: [id])
+  amountPaise     BigInt
+  mode            PayoutMode   @default(IMPS)
+  status          PayoutStatus @default(PENDING_BATCH)
+  gateway         String?      @db.VarChar(20)
+  gatewayPayoutId String?      @db.VarChar(100)
+  utr             String?      @db.VarChar(50)
+  failureReason   String?
+  retryCount      Int          @default(0)
+  batchId         String?      @db.Uuid
+  createdAt       DateTime     @default(now()) @db.Timestamptz()
+  settledAt       DateTime?    @db.Timestamptz()
+
+  @@index([providerId, createdAt])
+  @@map("payouts")
+}
+
+model QrCode {
+  id            String     @id @default(uuid()) @db.Uuid
+  providerId    String     @db.Uuid
+  provider      Provider   @relation(fields: [providerId], references: [id])
+  type          QrCodeType
+  razorpayQrId  String?    @db.VarChar(50)
+  qrImageUrl    String?
+  upiUrl        String?
+  locationLabel String?    @db.VarChar(255)
+  scanCount     Int        @default(0)
+  isActive      Boolean    @default(true)
+  createdAt     DateTime   @default(now()) @db.Timestamptz()
+
+  @@index([providerId])
+  @@map("qr_codes")
+}
+
+model WebhookEvent {
+  id          String    @id @default(uuid()) @db.Uuid
+  eventId     String    @unique @db.VarChar(100)
+  gateway     String    @db.VarChar(20)
+  eventType   String    @db.VarChar(100)
+  payload     Json
+  processed   Boolean   @default(false)
+  processedAt DateTime? @db.Timestamptz()
+  createdAt   DateTime  @default(now()) @db.Timestamptz()
+
+  @@map("webhook_events")
+}
+
+model OutboxEvent {
+  id            String   @id @default(uuid()) @db.Uuid
+  aggregateType String   @db.VarChar(50)
+  aggregateId   String   @db.Uuid
+  eventType     String   @db.VarChar(100)
+  payload       Json
+  published     Boolean  @default(false)
+  createdAt     DateTime @default(now()) @db.Timestamptz()
+
+  @@index([published, createdAt])
+  @@map("outbox_events")
+}
+
+model ConsentRecord {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @db.Uuid
+  user          User      @relation(fields: [userId], references: [id])
+  purpose       String    @db.VarChar(50)
+  granted       Boolean   @default(true)
+  grantedAt     DateTime  @default(now()) @db.Timestamptz()
+  withdrawnAt   DateTime? @db.Timestamptz()
+  policyVersion String    @db.VarChar(20)
+  channel       String    @db.VarChar(20)
+
+  @@map("consent_records")
+}

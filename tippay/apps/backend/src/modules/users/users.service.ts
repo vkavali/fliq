@@ -1,0 +1,22 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '@tippay/database';
+import { UpdateUserDto } from './dto/update-user.dto';
+
+@Injectable()
+export class UsersService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async findById(id: string) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
+    return user;
+  }
+
+  async updateProfile(userId: string, dto: UpdateUserDto) {
+    await this.findById(userId);
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: dto,
+    });
+  }
+}

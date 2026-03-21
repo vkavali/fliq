@@ -1,0 +1,39 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { AppController } from './app.controller';
+import { PrismaModule } from './modules/prisma/prisma.module';
+import { RedisModule } from './modules/redis/redis.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
+import { ProvidersModule } from './modules/providers/providers.module';
+import { TipsModule } from './modules/tips/tips.module';
+import { PaymentsModule } from './modules/payments/payments.module';
+import { WalletsModule } from './modules/wallets/wallets.module';
+import { PayoutsModule } from './modules/payouts/payouts.module';
+import { QrCodesModule } from './modules/qrcodes/qrcodes.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: [
+        '../../.env',       // monorepo root
+        '../../.env.local', // local overrides
+      ],
+    }),
+    PrismaModule,
+    RedisModule,
+    AuthModule,
+    UsersModule,
+    ProvidersModule,
+    WalletsModule,
+    PaymentsModule,
+    TipsModule,
+    PayoutsModule,
+    QrCodesModule,
+    NotificationsModule,
+  ],
+  controllers: [AppController],
+})
+export class AppModule {}
