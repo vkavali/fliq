@@ -1,0 +1,9 @@
+{
+  "name": "@tippay/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "npx serve public -l 5173 -C",
+    "start": "npx serve public -l 5173 -C"
+  }
+}

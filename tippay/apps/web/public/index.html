@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TipPay — Scan. Tip. Done.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ==================== CUSTOMER TIP PAGE (No Login — Zero Friction) ==================== -->
+  <div id="tip-page" class="page hidden">
+    <div class="tip-container">
+      <!-- Provider Info — Trust Signals -->
+      <div class="tip-header">
+        <div class="tip-provider-avatar" id="tip-provider-avatar">?</div>
+        <h2 id="tip-provider-name">Loading...</h2>
+        <span class="category-badge" id="tip-provider-category">-</span>
+        <div class="tip-provider-rating" id="tip-provider-rating"></div>
+        <div class="trust-signal">100% goes directly to <span id="trust-name">them</span></div>
+      </div>
+
+      <!-- Amount Selection — Emotional Framing + Anchoring -->
+      <div id="tip-amount-section">
+        <p class="section-label">Show your appreciation</p>
+        <div class="amount-presets">
+          <button class="preset" onclick="pickAmount(2000)" data-amt="2000">
+            <span class="preset-amount">&#8377;20</span>
+            <span class="preset-label">Quick thanks</span>
+          </button>
+          <button class="preset" onclick="pickAmount(5000)" data-amt="5000">
+            <span class="preset-amount">&#8377;50</span>
+            <span class="preset-label">Buy them chai</span>
+          </button>
+          <button class="preset active" onclick="pickAmount(10000)" data-amt="10000">
+            <span class="preset-amount">&#8377;100</span>
+            <span class="preset-label">Great service</span>
+            <span class="popular-tag">Most popular</span>
+          </button>
+          <button class="preset" onclick="pickAmount(20000)" data-amt="20000">
+            <span class="preset-amount">&#8377;200</span>
+            <span class="preset-label">Above & beyond</span>
+          </button>
+          <button class="preset" onclick="pickAmount(50000)" data-amt="50000">
+            <span class="preset-amount">&#8377;500</span>
+            <span class="preset-label">Exceptional</span>
+          </button>
+        </div>
+
+        <div class="custom-amount-row">
+          <span class="rupee-sign">&#8377;</span>
+          <input type="number" id="custom-amount" placeholder="Custom amount" min="10" max="10000" oninput="customAmountChanged()">
+        </div>
+
+        <div class="breakdown" id="breakdown">
+          <div class="breakdown-line">
+            <span>Tip amount</span>
+            <span id="bd-amount">&#8377;100</span>
+          </div>
+          <div class="breakdown-line commission hidden" id="bd-commission-row">
+            <span>Platform fee (5%)</span>
+            <span id="bd-commission">&#8377;0</span>
+          </div>
+          <div class="breakdown-line net">
+            <span><strong id="net-name">Provider</strong> receives</span>
+            <span id="bd-net">&#8377;100</span>
+          </div>
+        </div>
+
+        <!-- Star Rating -->
+        <p class="section-label">Rate your experience</p>
+        <div class="stars-row">
+          <button class="star" onclick="rate(1)" data-v="1">&#9733;</button>
+          <button class="star" onclick="rate(2)" data-v="2">&#9733;</button>
+          <button class="star" onclick="rate(3)" data-v="3">&#9733;</button>
+          <button class="star active" onclick="rate(4)" data-v="4">&#9733;</button>
+          <button class="star active" onclick="rate(5)" data-v="5">&#9733;</button>
+        </div>
+
+        <!-- Quick Messages -->
+        <div class="quick-messages">
+          <button class="qmsg" onclick="setMsg('Great service!')">Great service!</button>
+          <button class="qmsg" onclick="setMsg('Thank you so much!')">Thank you!</button>
+          <button class="qmsg" onclick="setMsg('You made my day!')">Made my day!</button>
+        </div>
+        <textarea id="tip-message" placeholder="Or write your own message..." rows="2"></textarea>
+
+        <!-- Pay Button -->
+        <button class="pay-btn" id="pay-btn" onclick="payTip()">
+          Tip &#8377;<span id="pay-label">100</span> via UPI
+        </button>
+        <p class="pay-hint">Secure payment via Razorpay. No account needed.</p>
+      </div>
+
+      <!-- Success -->
+      <div id="tip-success" class="hidden">
+        <div class="success-check">&#10003;</div>
+        <h2>You made <span id="success-name">their</span> day!</h2>
+        <p class="success-sub">Your tip of <strong id="success-amount">&#8377;100</strong> is on its way</p>
+        <div class="receipt">
+          <div class="receipt-line"><span>Amount</span><span id="r-amount">-</span></div>
+          <div class="receipt-line"><span>Tip ID</span><span id="r-tipid" class="mono">-</span></div>
+          <div class="receipt-line"><span>Status</span><span class="badge-initiated">INITIATED</span></div>
+        </div>
+        <p class="receipt-note">In production, this opens your UPI app (GPay, PhonePe, Paytm) to complete payment.</p>
+        <button class="pay-btn outline" onclick="resetTip()">Tip Again</button>
+      </div>
+
+      <!-- Error -->
+      <div id="tip-error" class="error-box hidden"></div>
+
+      <div class="tip-footer">
+        <span>Powered by</span>
+        <strong>TipPay</strong>
+        <span>&#183; Scan. Tip. Done.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PROVIDER LOGIN ==================== -->
+  <div id="login-page" class="page hidden">
+    <div class="auth-box">
+      <div class="brand">
+        <div class="brand-icon">&#8377;</div>
+        <h1>TipPay</h1>
+        <p class="brand-sub">Provider Dashboard</p>
+      </div>
+
+      <div id="phone-step">
+        <h3>Login with Phone</h3>
+        <div class="phone-input-row">
+          <span class="prefix">+91</span>
+          <input type="tel" id="phone" placeholder="9876543210" maxlength="10">
+        </div>
+        <button class="auth-btn" onclick="sendOtp()">Send OTP</button>
+      </div>
+
+      <div id="otp-step" class="hidden">
+        <h3>Enter OTP</h3>
+        <p class="otp-sub" id="otp-sub"></p>
+        <div class="otp-row">
+          <input type="text" maxlength="1" class="otp-box" data-i="0">
+          <input type="text" maxlength="1" class="otp-box" data-i="1">
+          <input type="text" maxlength="1" class="otp-box" data-i="2">
+          <input type="text" maxlength="1" class="otp-box" data-i="3">
+          <input type="text" maxlength="1" class="otp-box" data-i="4">
+          <input type="text" maxlength="1" class="otp-box" data-i="5">
+        </div>
+        <div id="otp-dev-hint" class="dev-hint hidden"></div>
+        <button class="auth-btn" onclick="verifyOtp()">Verify</button>
+        <button class="link-btn" onclick="showPhoneStep()">Change number</button>
+      </div>
+
+      <div id="auth-error" class="error-box hidden"></div>
+    </div>
+  </div>
+
+  <!-- ==================== PROVIDER DASHBOARD ==================== -->
+  <div id="dashboard-page" class="page hidden">
+    <nav class="topbar">
+      <div class="topbar-inner">
+        <div class="topbar-brand"><span class="brand-icon-sm">&#8377;</span> TipPay</div>
+        <div class="topbar-right">
+          <span id="dash-phone" class="topbar-phone"></span>
+          <button class="topbar-logout" onclick="logout()">Logout</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- No profile yet -->
+    <div id="onboarding" class="hidden">
+      <div class="container">
+        <div class="onboard-card">
+          <h2>Create Your Provider Profile</h2>
+          <p>Set up your profile to start receiving tips via QR code</p>
+          <select id="cat-select" class="select-full">
+            <option value="">Select your category</option>
+            <option value="RESTAURANT">Restaurant / Cafe</option>
+            <option value="SALON">Salon / Spa</option>
+            <option value="DELIVERY">Delivery</option>
+            <option value="HOTEL">Hotel</option>
+            <option value="TRANSPORT">Transport / Auto / Cab</option>
+            <option value="HEALTHCARE">Healthcare</option>
+            <option value="OTHER">Other</option>
+          </select>
+          <button class="auth-btn" onclick="createProfile()">Create Profile</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="hidden">
+      <div class="container">
+        <!-- Earnings Banner -->
+        <div class="earnings-banner">
+          <div>
+            <div class="eb-label">Total Tips</div>
+            <div class="eb-value" id="d-tips">0</div>
+          </div>
+          <div>
+            <div class="eb-label">Rating</div>
+            <div class="eb-value" id="d-rating">-</div>
+          </div>
+          <div>
+            <div class="eb-label">Category</div>
+            <div class="eb-value eb-cat" id="d-category">-</div>
+          </div>
+        </div>
+
+        <!-- QR Code Section -->
+        <div class="section">
+          <div class="section-header">
+            <h3>Your QR Codes</h3>
+            <button class="small-btn" onclick="newQr()">+ New QR</button>
+          </div>
+          <div id="qr-grid" class="qr-grid">
+            <p class="muted">Loading...</p>
+          </div>
+          <div class="share-hint">
+            <p>Share your tip link: <code id="tip-link"></code></p>
+          </div>
+        </div>
+
+        <!-- Recent Tips -->
+        <div class="section">
+          <h3>Recent Tips Received</h3>
+          <div id="d-tips-list" class="tips-list">
+            <p class="muted">Loading...</p>
+          </div>
+        </div>
+
+        <!-- Payouts -->
+        <div class="section">
+          <h3>Payouts</h3>
+          <div class="payout-row">
+            <div class="payout-input-row">
+              <span class="rupee-sign">&#8377;</span>
+              <input type="number" id="payout-amt" placeholder="Amount" min="100">
+            </div>
+            <button class="small-btn" onclick="requestPayout()">Request Payout</button>
+          </div>
+          <div id="d-payouts" class="payouts-list">
+            <p class="muted">No payouts yet</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== LANDING (route picker) ==================== -->
+  <div id="landing-page" class="page">
+    <div class="landing">
+      <div class="brand big">
+        <div class="brand-icon big">&#8377;</div>
+        <h1>TipPay</h1>
+        <p class="brand-sub">Scan. Tip. Done.</p>
+      </div>
+      <p class="landing-desc">India's simplest UPI tipping platform.<br>No app needed. Just scan and tip.</p>
+      <div class="landing-actions">
+        <button class="landing-btn provider" onclick="goTo('login')">
+          <span class="landing-btn-icon">&#128188;</span>
+          <span>I'm a Provider</span>
+          <span class="landing-btn-sub">Login to manage tips & QR codes</span>
+        </button>
+        <button class="landing-btn customer" onclick="demoCust()">
+          <span class="landing-btn-icon">&#128176;</span>
+          <span>I want to Tip</span>
+          <span class="landing-btn-sub">Enter a provider ID to tip directly</span>
+        </button>
+      </div>
+      <div id="demo-tip-input" class="demo-input hidden">
+        <input type="text" id="demo-provider-id" placeholder="Paste provider ID here">
+        <button class="small-btn" onclick="goTipPage()">Go</button>
+      </div>
+      <p class="landing-footer">Built for India. UPI-native. Zero friction.</p>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"><span id="toast-msg"></span></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

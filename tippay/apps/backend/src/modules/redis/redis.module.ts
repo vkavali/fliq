@@ -1,16 +1,15 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import Redis from 'ioredis';
 import { RedisService } from './redis.service';
-
-export const REDIS_CLIENT = 'REDIS_CLIENT';
+import { REDIS_CLIENT } from './redis.constants';
 
 @Global()
 @Module({
   providers: [
     {
       provide: REDIS_CLIENT,
-      useFactory: async (configService: ConfigService) => {
-        const Redis = (await import('ioredis')).default;
+      useFactory: (configService: ConfigService) => {
         return new Redis({
           host: configService.get<string>('REDIS_HOST', 'localhost'),
           port: configService.get<number>('REDIS_PORT', 6379),
@@ -22,6 +21,6 @@ export const REDIS_CLIENT = 'REDIS_CLIENT';
     },
     RedisService,
   ],
-  exports: [RedisService],
+  exports: [RedisService, REDIS_CLIENT],
 })
 export class RedisModule {}

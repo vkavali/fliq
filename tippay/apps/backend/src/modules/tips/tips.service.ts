@@ -4,6 +4,7 @@ import {
   NotFoundException,
   Logger,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '@tippay/database';
 import {
   calculateCommission,
@@ -16,15 +17,20 @@ import {
 import { RazorpayService } from '../payments/razorpay.service';
 import { CreateTipDto } from './dto/create-tip.dto';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class TipsService {
   private readonly logger = new Logger(TipsService.name);
+  private readonly isDev: boolean;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly razorpay: RazorpayService,
-  ) {}
+    private readonly config: ConfigService,
+  ) {
+    this.isDev = this.config.get<string>('APP_ENV', 'development') === 'development';
+  }
 
   /**
    * Create a tip: calculate commission, create DB record, create Razorpay order.
@@ -68,29 +74,41 @@ export class TipsService {
       },
     });
 
-    // Create Razorpay order
-    const order = await this.razorpay.createOrder({
-      amount: dto.amountPaise,
-      currency: CURRENCY,
-      receipt: tip.id,
-      notes: {
-        tipId: tip.id,
-        providerId: dto.providerId,
-      },
-    });
+    // Create Razorpay order (or mock in dev mode)
+    let orderId: string;
+    try {
+      const order = await this.razorpay.createOrder({
+        amount: dto.amountPaise,
+        currency: CURRENCY,
+        receipt: tip.id,
+        notes: {
+          tipId: tip.id,
+          providerId: dto.providerId,
+        },
+      });
+      orderId = order.id;
+    } catch (err) {
+      if (this.isDev) {
+        // Mock order in dev mode when Razorpay keys aren't configured
+        orderId = `order_dev_${randomUUID().replace(/-/g, '').substring(0, 14)}`;
+        this.logger.warn(`Dev mode: mocked Razorpay order ${orderId}`);
+      } else {
+        throw err;
+      }
+    }
 
     // Store order ID on tip
     await this.prisma.tip.update({
       where: { id: tip.id },
-      data: { gatewayOrderId: order.id },
+      data: { gatewayOrderId: orderId },
     });
 
     return {
       tipId: tip.id,
-      orderId: order.id,
+      orderId,
       amount: dto.amountPaise,
       currency: CURRENCY,
-      razorpayKeyId: this.razorpay.getRazorpayKeyId(),
+      razorpayKeyId: this.isDev ? 'rzp_test_dev' : this.razorpay.getRazorpayKeyId(),
       provider: {
         name: provider.user.name,
         category: provider.category,
