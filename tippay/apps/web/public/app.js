@@ -290,7 +290,7 @@ async function loadDashboard() {
     document.getElementById('d-category').textContent = p.category || '-';
 
     // Tip link
-    document.getElementById('tip-link').textContent = `${location.origin}#tip/${p.id}`;
+    document.getElementById('tip-link').textContent = `${location.origin}/app/#tip/${p.id}`;
 
     loadQrCodes();
     loadProviderTips();
@@ -317,14 +317,17 @@ async function loadQrCodes() {
   try {
     const d = await api('GET', '/qrcodes/my');
     const codes = Array.isArray(d) ? d : (d.qrCodes || []);
-    if (codes.length === 0) { grid.innerHTML = '<p class="muted">No QR codes yet</p>'; return; }
-    grid.innerHTML = codes.map(q => `
+    if (codes.length === 0) { grid.innerHTML = '<p class="muted">No QR codes yet. Click "+ New QR" to create one.</p>'; return; }
+    const tipBase = `${location.origin}/app/#tip/${providerProfile.id}`;
+    grid.innerHTML = codes.map(q => {
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(tipBase)}`;
+      return `
       <div class="qr-card">
-        <div class="qr-visual">&#9638;</div>
+        <img src="${qrUrl}" alt="QR Code" style="width:120px;height:120px;border-radius:8px;">
         <div class="qr-label">${q.locationLabel || 'QR Code'}</div>
         <div class="qr-scans">${q.scanCount || 0} scans</div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   } catch (e) { grid.innerHTML = '<p class="muted">Could not load</p>'; }
 }
 
