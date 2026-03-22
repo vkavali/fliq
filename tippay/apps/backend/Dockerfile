@@ -34,7 +34,7 @@ COPY packages/shared/package.json packages/shared/
 COPY packages/database/package.json packages/database/
 COPY apps/backend/package.json apps/backend/
 
-# Install production deps only (pnpm resolves symlinks properly here)
+# Install production deps only
 RUN pnpm install --prod --frozen-lockfile
 
 # Copy built artifacts
@@ -43,8 +43,8 @@ COPY --from=builder /app/packages/database/dist packages/database/dist
 COPY --from=builder /app/packages/database/prisma packages/database/prisma
 COPY --from=builder /app/apps/backend/dist apps/backend/dist
 
-# Copy web app static files
-COPY apps/web/public apps/web/public
+# Generate Prisma client (requires schema + @prisma/client installed)
+RUN npx prisma generate --schema=packages/database/prisma/schema.prisma
 
 EXPOSE 3000
 

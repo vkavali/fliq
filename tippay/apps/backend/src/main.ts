@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import { join } from 'path';
+import { existsSync } from 'fs';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -28,9 +29,11 @@ async function bootstrap() {
     origin: '*',
   });
 
-  // Serve web app static files from /app
+  // Serve web app static files from /app (if present)
   const webAppPath = join(__dirname, '..', '..', 'web', 'public');
-  app.useStaticAssets(webAppPath, { prefix: '/app/' });
+  if (existsSync(webAppPath)) {
+    app.useStaticAssets(webAppPath, { prefix: '/app/' });
+  }
 
   // Global pipes
   app.useGlobalPipes(
