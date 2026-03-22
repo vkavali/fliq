@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { existsSync } from 'fs';
 import { execSync } from 'child_process';
 import { AppModule } from './app.module';
@@ -16,7 +16,14 @@ import { BigIntSerializationInterceptor } from './common/interceptors/bigint-ser
 try {
   console.log('=== Running prisma db push ===');
   const schemaPath = join(__dirname, '..', '..', '..', 'packages', 'database', 'prisma', 'schema.prisma');
-  execSync(`npx prisma db push --schema=${schemaPath} --skip-generate --accept-data-loss`, {
+  console.log('Schema path:', schemaPath, '| exists:', existsSync(schemaPath));
+
+  // Use the exact installed prisma binary (not npx which may download v7)
+  const prismaPkgPath = require.resolve('prisma/package.json');
+  const prismaBin = join(dirname(prismaPkgPath), 'build', 'index.js');
+  console.log('Prisma binary:', prismaBin);
+
+  execSync(`node "${prismaBin}" db push --schema="${schemaPath}" --skip-generate --accept-data-loss`, {
     stdio: 'inherit',
     timeout: 30000,
   });
