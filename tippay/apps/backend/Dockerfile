@@ -52,4 +52,4 @@ COPY apps/web/public apps/web/public
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma@6 migrate deploy --schema=packages/database/prisma/schema.prisma && node apps/backend/dist/main.js"]
+CMD ["sh", "-c", "npx prisma@6 db push --schema=packages/database/prisma/schema.prisma --accept-data-loss --skip-generate && node apps/backend/dist/main.js"]

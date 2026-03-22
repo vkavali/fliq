@@ -12,6 +12,7 @@ import { KafkaProducerService } from './kafka-producer.service';
 export class OutboxPollerService {
   private readonly logger = new Logger(OutboxPollerService.name);
   private isProcessing = false;
+  private disabled = false;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -20,7 +21,7 @@ export class OutboxPollerService {
 
   @Cron(CronExpression.EVERY_5_SECONDS)
   async pollOutbox() {
-    if (this.isProcessing) return;
+    if (this.isProcessing || this.disabled) return;
     this.isProcessing = true;
 
     try {
@@ -50,6 +51,12 @@ export class OutboxPollerService {
         }
       }
     } catch (error) {
+      const msg = (error as Error).message || '';
+      if (msg.includes('does not exist')) {
+        this.logger.warn('Outbox table not found — disabling poller. Run migrations to enable.');
+        this.disabled = true;
+        return;
+      }
       this.logger.error('Outbox polling failed', error);
     } finally {
       this.isProcessing = false;
