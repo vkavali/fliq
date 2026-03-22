@@ -23,6 +23,7 @@ RUN pnpm --filter @fliq/backend build
 
 # Stage 2: Production image with fresh install
 FROM node:20-slim AS runner
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 RUN corepack enable
 WORKDIR /app
 
@@ -43,8 +44,8 @@ COPY --from=builder /app/packages/database/dist packages/database/dist
 COPY --from=builder /app/packages/database/prisma packages/database/prisma
 COPY --from=builder /app/apps/backend/dist apps/backend/dist
 
-# Generate Prisma client (requires schema + @prisma/client installed)
-RUN npx prisma generate --schema=packages/database/prisma/schema.prisma
+# Generate Prisma client using pinned v6 (project version, not latest v7)
+RUN npx prisma@6 generate --schema=packages/database/prisma/schema.prisma
 
 EXPOSE 3000
 
