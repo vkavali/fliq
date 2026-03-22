@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = 'http://10.0.2.2:3000'; // Android emulator -> host
+  static const String baseUrl = 'https://fliq-production-9ac7.up.railway.app';
 
   // Auth
   static const String sendOtp = '/auth/otp/send';

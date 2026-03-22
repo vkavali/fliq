@@ -201,16 +201,23 @@ async function sendOtp() {
   btn.disabled = true; btn.textContent = 'Sending...';
 
   try {
-    await api('POST', '/auth/otp/send', { phone: authPhone }, false);
+    const res = await api('POST', '/auth/otp/send', { phone: authPhone }, false);
     document.getElementById('phone-step').classList.add('hidden');
     document.getElementById('otp-step').classList.remove('hidden');
     document.getElementById('otp-sub').textContent = `OTP sent to ${authPhone}`;
-    document.querySelector('.otp-box[data-i="0"]').focus();
 
-    // Dev hint
+    // Dev mode: auto-fill OTP from response
     const hint = document.getElementById('otp-dev-hint');
-    hint.textContent = 'Dev mode — check the database or ask Claude for the OTP';
-    hint.classList.remove('hidden');
+    if (res.otp) {
+      const boxes = document.querySelectorAll('.otp-box');
+      res.otp.split('').forEach((c, i) => { if (boxes[i]) boxes[i].value = c; });
+      hint.textContent = `Dev mode — OTP auto-filled: ${res.otp}`;
+      hint.classList.remove('hidden');
+    } else {
+      document.querySelector('.otp-box[data-i="0"]').focus();
+      hint.textContent = 'Check your phone for the OTP';
+      hint.classList.remove('hidden');
+    }
 
     hideAuthErr();
   } catch (e) {

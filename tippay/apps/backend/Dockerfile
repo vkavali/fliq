@@ -47,6 +47,9 @@ COPY --from=builder /app/apps/backend/dist apps/backend/dist
 # Generate Prisma client using pinned v6 (project version, not latest v7)
 RUN npx prisma@6 generate --schema=packages/database/prisma/schema.prisma
 
+# Copy web app static files
+COPY apps/web/public apps/web/public
+
 EXPOSE 3000
 
 CMD ["node", "apps/backend/dist/main.js"]
