@@ -4,33 +4,12 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
-import { join, dirname } from 'path';
+import { join } from 'path';
 import { existsSync } from 'fs';
-import { execSync } from 'child_process';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { BigIntSerializationInterceptor } from './common/interceptors/bigint-serialization.interceptor';
-
-// Run prisma db push before app starts to ensure tables exist
-try {
-  console.log('=== Running prisma db push ===');
-  const schemaPath = join(__dirname, '..', '..', '..', 'packages', 'database', 'prisma', 'schema.prisma');
-  console.log('Schema path:', schemaPath, '| exists:', existsSync(schemaPath));
-
-  // Use the exact installed prisma binary (not npx which may download v7)
-  const prismaPkgPath = require.resolve('prisma/package.json');
-  const prismaBin = join(dirname(prismaPkgPath), 'build', 'index.js');
-  console.log('Prisma binary:', prismaBin);
-
-  execSync(`node "${prismaBin}" db push --schema="${schemaPath}" --skip-generate --accept-data-loss`, {
-    stdio: 'inherit',
-    timeout: 30000,
-  });
-  console.log('=== DB push complete ===');
-} catch (e) {
-  console.error('=== DB push failed ===', (e as Error).message);
-}
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
