@@ -13,7 +13,7 @@ let tipState = { providerId: null, provider: null, amount: 10000, rating: 5 };
 function goTo(page) {
   document.querySelectorAll('.page').forEach(p => { p.style.display = 'none'; p.classList.add('hidden'); });
   const el = document.getElementById(`${page}-page`);
-  if (el) { el.style.display = ''; el.classList.remove('hidden'); }
+  if (el) { el.style.display = 'block'; el.classList.remove('hidden'); }
 }
 
 function demoCust() {
