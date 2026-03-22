@@ -35,7 +35,7 @@ COPY packages/shared/package.json packages/shared/
 COPY packages/database/package.json packages/database/
 COPY apps/backend/package.json apps/backend/
 
-# Install production deps only
+# Install production deps (now includes prisma CLI)
 RUN pnpm install --prod --frozen-lockfile
 
 # Copy built artifacts
@@ -44,12 +44,13 @@ COPY --from=builder /app/packages/database/dist packages/database/dist
 COPY --from=builder /app/packages/database/prisma packages/database/prisma
 COPY --from=builder /app/apps/backend/dist apps/backend/dist
 
-# Generate Prisma client using pinned v6 (project version, not latest v7)
-RUN npx prisma@6 generate --schema=packages/database/prisma/schema.prisma
+# Generate Prisma client
+RUN pnpm --filter @fliq/database exec prisma generate
 
 # Copy web app static files
 COPY apps/web/public apps/web/public
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma@6 db push --schema=packages/database/prisma/schema.prisma --accept-data-loss --skip-generate && node apps/backend/dist/main.js"]
+# On startup: push schema to create/sync tables, then start app
+CMD ["sh", "-c", "echo '=== Running prisma db push ===' && pnpm --filter @fliq/database exec prisma db push --skip-generate --accept-data-loss 2>&1 && echo '=== DB push complete ===' && node apps/backend/dist/main.js"]

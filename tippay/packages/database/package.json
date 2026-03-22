@@ -14,11 +14,11 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@prisma/client": "^6.0.0"
+    "@prisma/client": "^6.0.0",
+    "prisma": "^6.0.0"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
-    "prisma": "^6.0.0",
     "ts-node": "^10.9.0",
     "typescript": "^5.7.0"
   }
