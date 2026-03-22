@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { TipsService } from './tips.service';
 import { PrismaService } from '@fliq/database';
 import { RazorpayService } from '../payments/razorpay.service';
@@ -38,6 +39,17 @@ describe('TipsService', () => {
         TipsService,
         { provide: PrismaService, useValue: prisma },
         { provide: RazorpayService, useValue: razorpay },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn((key: string, defaultValue?: string) => {
+              const config: Record<string, string> = {
+                APP_ENV: 'test',
+              };
+              return config[key] || defaultValue;
+            }),
+          },
+        },
       ],
     }).compile();
 

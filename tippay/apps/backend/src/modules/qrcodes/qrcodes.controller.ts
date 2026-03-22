@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RateLimitGuard, RateLimit } from '../../common/guards/rate-limit.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { QrCodesService } from './qrcodes.service';
 import { CreateQrCodeDto } from './dto/create-qrcode.dto';
@@ -20,7 +21,8 @@ export class QrCodesController {
   constructor(private readonly qrCodesService: QrCodesService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RateLimitGuard)
+  @RateLimit({ limit: 10, windowSeconds: 3600 }) // 10 per hour
   @ApiBearerAuth()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Generate a new QR code for provider' })
@@ -40,6 +42,8 @@ export class QrCodesController {
   }
 
   @Get(':id/resolve')
+  @UseGuards(RateLimitGuard)
+  @RateLimit({ limit: 60, windowSeconds: 60 }) // 60 per minute
   @ApiOperation({ summary: 'Resolve a QR code to provider info (public, used by scanner)' })
   async resolveQrCode(@Param('id') qrCodeId: string) {
     return this.qrCodesService.resolveQrCode(qrCodeId);
