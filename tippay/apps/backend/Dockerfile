@@ -52,5 +52,4 @@ COPY apps/web/public apps/web/public
 
 EXPOSE 3000
 
-# On startup: push schema to create/sync tables, then start app
-CMD ["sh", "-c", "echo '=== Running prisma db push ===' && pnpm --filter @fliq/database exec prisma db push --skip-generate --accept-data-loss 2>&1 && echo '=== DB push complete ===' && node apps/backend/dist/main.js"]
+CMD ["node", "apps/backend/dist/main.js"]
