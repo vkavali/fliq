@@ -9,12 +9,20 @@
   <!-- Rounded square -->
   <rect x="0" y="0" width="72" height="72" rx="18" fill="url(#g1)"/>
 
-  <!-- ₹ with flick tail -->
-  <line x1="20" y1="24" x2="52" y2="24" stroke="white" stroke-width="4" stroke-linecap="round"/>
-  <line x1="20" y1="33" x2="52" y2="33" stroke="white" stroke-width="4" stroke-linecap="round"/>
-  <path d="M28 19 L28 42 Q28 57 44 59 Q53 60 58 52" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <path d="M54 56 L58 52 L54 48" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- F + ₹ merged symbol -->
+  <!-- Shared vertical stem (left side — this is both the F's spine and ₹'s left stroke) -->
+  <path d="M22 14 L22 56" stroke="white" stroke-width="4" stroke-linecap="round" fill="none"/>
 
-  <!-- Green spark -->
-  <circle cx="60" cy="16" r="4" fill="#00B894"/>
+  <!-- Top horizontal bar (F's top bar + ₹'s top bar) -->
+  <line x1="22" y1="14" x2="50" y2="14" stroke="white" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Middle horizontal bar (F's middle bar + ₹'s second bar) -->
+  <line x1="22" y1="28" x2="44" y2="28" stroke="white" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- ₹ diagonal sweep — from right of top bar, curving down-left -->
+  <!-- This is what makes it clearly ₹ and not just F -->
+  <path d="M44 18 C40 34, 32 44, 22 52" stroke="#00B894" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Green flick spark at the end -->
+  <circle cx="52" cy="12" r="3.5" fill="#00B894"/>
 </svg>
