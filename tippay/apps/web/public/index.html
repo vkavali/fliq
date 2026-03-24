@@ -250,33 +250,144 @@
     </div>
   </div>
 
-  <!-- ==================== LANDING (route picker) ==================== -->
+  <!-- ==================== LANDING (marketing page) ==================== -->
   <div id="landing-page" class="page">
-    <div class="landing">
-      <div class="brand big">
-        <div class="brand-icon big">&#8377;</div>
-        <h1>Fliq</h1>
-        <p class="brand-sub">Scan. Fliq. Done.</p>
+
+    <!-- 1. Sticky Nav -->
+    <nav class="lp-nav">
+      <div class="lp-nav-inner">
+        <div class="lp-nav-brand"><span class="lp-nav-icon">&#8377;</span> Fliq</div>
+        <button class="lp-nav-btn" onclick="goTo('login')">Provider Login</button>
       </div>
-      <p class="landing-desc">India's simplest UPI tipping platform.<br>No app needed. Just scan and tip.</p>
-      <div class="landing-actions">
-        <button class="landing-btn provider" onclick="goTo('login')">
-          <span class="landing-btn-icon">&#128188;</span>
-          <span>I'm a Provider</span>
-          <span class="landing-btn-sub">Login to manage tips & QR codes</span>
-        </button>
-        <button class="landing-btn customer" onclick="demoCust()">
-          <span class="landing-btn-icon">&#128176;</span>
-          <span>I want to Tip</span>
-          <span class="landing-btn-sub">Enter a provider ID to tip directly</span>
-        </button>
+    </nav>
+
+    <!-- 2. Hero -->
+    <section class="lp-hero">
+      <div class="lp-hero-content">
+        <h1 class="lp-hero-title">Tipping Made Instant</h1>
+        <p class="lp-hero-sub">India's UPI-native tipping platform. Customers scan, tip, done — no app needed.</p>
+        <div class="lp-hero-actions">
+          <button class="lp-btn-primary" onclick="goTo('login')">Get Started</button>
+          <button class="lp-btn-outline" onclick="scrollToSection('lp-how')">See How It Works</button>
+        </div>
+        <div class="lp-hero-tip-link">
+          Have a provider ID? <a href="javascript:void(0)" onclick="demoCust()">Tip directly</a>
+          <div id="demo-tip-input" class="lp-demo-input hidden">
+            <input type="text" id="demo-provider-id" placeholder="Paste provider ID here">
+            <button class="small-btn" onclick="goTipPage()">Go</button>
+          </div>
+        </div>
       </div>
-      <div id="demo-tip-input" class="demo-input hidden">
-        <input type="text" id="demo-provider-id" placeholder="Paste provider ID here">
-        <button class="small-btn" onclick="goTipPage()">Go</button>
+      <div class="lp-hero-visual">
+        <div class="lp-phone">
+          <div class="lp-phone-notch"></div>
+          <div class="lp-phone-screen">
+            <div class="lp-phone-avatar">A</div>
+            <div class="lp-phone-name">Amit's Cafe</div>
+            <div class="lp-phone-presets">
+              <span>&#8377;20</span>
+              <span class="lp-phone-active">&#8377;50</span>
+              <span>&#8377;100</span>
+            </div>
+            <div class="lp-phone-btn">Pay via UPI</div>
+          </div>
+        </div>
       </div>
-      <p class="landing-footer">Built for India. UPI-native. Zero friction.</p>
-    </div>
+    </section>
+
+    <!-- 3. How It Works -->
+    <section class="lp-section lp-section-gray" id="lp-how">
+      <div class="lp-container">
+        <h2 class="lp-section-title">How It Works</h2>
+        <div class="lp-steps">
+          <div class="lp-step">
+            <div class="lp-step-num">1</div>
+            <div class="lp-step-icon">&#128247;</div>
+            <h3>Scan QR Code</h3>
+            <p>Customer scans the provider's unique QR code</p>
+          </div>
+          <div class="lp-step">
+            <div class="lp-step-num">2</div>
+            <div class="lp-step-icon">&#128176;</div>
+            <h3>Choose Amount</h3>
+            <p>Pick a preset or enter a custom tip amount</p>
+          </div>
+          <div class="lp-step">
+            <div class="lp-step-num">3</div>
+            <div class="lp-step-icon">&#9889;</div>
+            <h3>Pay via UPI</h3>
+            <p>Instant payment through GPay, PhonePe, or any UPI app</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Features Grid -->
+    <section class="lp-section">
+      <div class="lp-container">
+        <h2 class="lp-section-title">Why Fliq?</h2>
+        <div class="lp-features">
+          <div class="lp-feature">
+            <div class="lp-feature-icon">&#9889;</div>
+            <h3>Zero Friction</h3>
+            <p>No app download, no registration for customers</p>
+          </div>
+          <div class="lp-feature">
+            <div class="lp-feature-icon">&#128241;</div>
+            <h3>UPI Native</h3>
+            <p>Works with GPay, PhonePe, Paytm, any UPI app</p>
+          </div>
+          <div class="lp-feature">
+            <div class="lp-feature-icon">&#128640;</div>
+            <h3>Instant Settlement</h3>
+            <p>Tips reach the provider's account instantly</p>
+          </div>
+          <div class="lp-feature">
+            <div class="lp-feature-icon">&#128196;</div>
+            <h3>QR Code Ready</h3>
+            <p>Generate and print QR codes in seconds</p>
+          </div>
+          <div class="lp-feature">
+            <div class="lp-feature-icon">&#128200;</div>
+            <h3>Transparent Pricing</h3>
+            <p>Zero commission on tips up to &#8377;100</p>
+          </div>
+          <div class="lp-feature">
+            <div class="lp-feature-icon">&#128274;</div>
+            <h3>Bank-Grade Security</h3>
+            <p>Powered by Razorpay's secure infrastructure</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Provider CTA -->
+    <section class="lp-cta">
+      <div class="lp-container">
+        <h2 class="lp-cta-title">Start receiving tips in 2 minutes</h2>
+        <ul class="lp-cta-list">
+          <li>Free QR code — print and place anywhere</li>
+          <li>Earnings dashboard — track every tip in real time</li>
+          <li>Instant payouts — withdraw to your bank anytime</li>
+        </ul>
+        <button class="lp-btn-primary lp-btn-lg" onclick="goTo('login')">Create Provider Account</button>
+      </div>
+    </section>
+
+    <!-- 6. Footer -->
+    <footer class="lp-footer">
+      <div class="lp-container lp-footer-inner">
+        <div class="lp-footer-brand">
+          <span class="lp-nav-icon">&#8377;</span> <strong>Fliq</strong> &mdash; Scan. Fliq. Done.
+        </div>
+        <p class="lp-footer-tagline">Built for India. UPI-native. Zero friction.</p>
+        <div class="lp-footer-links">
+          <a href="javascript:void(0)" onclick="goTo('login')">Provider Login</a>
+          <a href="/api/docs">API Docs</a>
+        </div>
+      </div>
+    </footer>
+
   </div>
 
   <!-- Toast -->

@@ -13,12 +13,22 @@ let tipState = { providerId: null, provider: null, amount: 10000, rating: 5 };
 function goTo(page) {
   document.querySelectorAll('.page').forEach(p => { p.style.display = 'none'; p.classList.add('hidden'); });
   const el = document.getElementById(`${page}-page`);
-  if (el) { el.style.display = 'block'; el.classList.remove('hidden'); }
+  if (el) {
+    const isFlex = page === 'landing' || page === 'login' || page === 'tip';
+    el.style.display = isFlex ? 'flex' : 'block';
+    el.classList.remove('hidden');
+  }
 }
 
 function demoCust() {
-  document.getElementById('demo-tip-input').classList.remove('hidden');
-  document.getElementById('demo-provider-id').focus();
+  const el = document.getElementById('demo-tip-input');
+  el.classList.toggle('hidden');
+  if (!el.classList.contains('hidden')) document.getElementById('demo-provider-id').focus();
+}
+
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth' });
 }
 
 function goTipPage() {
