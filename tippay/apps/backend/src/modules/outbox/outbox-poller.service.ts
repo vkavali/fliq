@@ -19,7 +19,7 @@ export class OutboxPollerService {
     private readonly kafka: KafkaProducerService,
   ) {}
 
-  @Cron(CronExpression.EVERY_5_SECONDS)
+  @Cron(CronExpression.EVERY_30_SECONDS)
   async pollOutbox() {
     if (this.isProcessing || this.disabled) return;
     this.isProcessing = true;
