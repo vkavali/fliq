@@ -175,6 +175,8 @@ html { scroll-behavior: smooth; }
   transition: background 0.2s; white-space: nowrap;
 }
 .lp-btn-tip:hover { background: var(--pri-dark); }
+.lp-btn-tip:disabled { opacity: 0.6; cursor: not-allowed; }
+.lp-tip-error { color: var(--red); font-size: 13px; margin-top: 8px; text-align: center; }
 
 /* -- CTA extras -- */
 .lp-cta-sub { color: rgba(255,255,255,0.8); font-size: 16px; margin-bottom: 28px; }

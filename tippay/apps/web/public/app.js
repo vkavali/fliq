@@ -31,10 +31,34 @@ function scrollToSection(id) {
   if (el) el.scrollIntoView({ behavior: 'smooth' });
 }
 
-function goTipPage() {
-  const id = document.getElementById('demo-provider-id').value.trim();
-  if (!id) return toast('Enter a provider ID');
-  openTipPage(id);
+async function goTipPage() {
+  const code = document.getElementById('demo-provider-id').value.trim();
+  const errEl = document.getElementById('demo-tip-error');
+  const btn = document.getElementById('tip-now-btn');
+  errEl.classList.add('hidden');
+
+  if (!code) { errEl.textContent = 'Enter a provider code or ID'; errEl.classList.remove('hidden'); return; }
+
+  btn.disabled = true; btn.textContent = 'Checking...';
+  try {
+    const provider = await resolveProvider(code);
+    openTipPage(code, provider);
+  } catch (e) {
+    errEl.textContent = 'Invalid code — provider not found';
+    errEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Tip Now';
+  }
+}
+
+async function resolveProvider(code) {
+  try {
+    const p = await api('GET', `/payment-links/${code}/resolve`, null, false);
+    return { id: p.providerId, name: p.providerName || 'Service Provider', category: p.category, ratingAverage: p.ratingAverage, suggestedAmountPaise: p.suggestedAmountPaise };
+  } catch {
+    const p = await api('GET', `/providers/${code}/public`, null, false);
+    return { id: code, name: p.name || 'Service Provider', category: p.category, ratingAverage: p.ratingAverage };
+  }
 }
 
 // Check URL hash for direct tip links: #tip/PROVIDER_ID
@@ -69,51 +93,43 @@ async function api(method, path, body, auth = true) {
 }
 
 // ===== TIP PAGE (no login needed) =====
-async function openTipPage(code) {
+async function openTipPage(code, provider) {
+  // If no provider data passed, resolve it first (e.g. from hash route)
+  if (!provider) {
+    try {
+      provider = await resolveProvider(code);
+    } catch {
+      toast('Invalid code — provider not found');
+      goTo('landing');
+      return;
+    }
+  }
+
+  tipState.providerId = provider.id;
+  tipState.provider = provider;
   goTo('tip');
 
   // Reset
   document.getElementById('tip-amount-section').classList.remove('hidden');
-  document.getElementById('tip-success').classList.remove('hidden');
   document.getElementById('tip-success').classList.add('hidden');
   document.getElementById('tip-error').classList.add('hidden');
 
-  try {
-    // Try payment-links resolve first (handles short codes + UUIDs)
-    // Falls back to providers/public for direct UUID lookups
-    let p, name;
-    try {
-      p = await api('GET', `/payment-links/${code}/resolve`, null, false);
-      tipState.providerId = p.providerId;
-      name = p.providerName || 'Service Provider';
-    } catch {
-      p = await api('GET', `/providers/${code}/public`, null, false);
-      tipState.providerId = code;
-      name = p.name || 'Service Provider';
-    }
-    tipState.provider = p;
+  const name = provider.name;
+  document.getElementById('tip-provider-avatar').textContent = name[0].toUpperCase();
+  document.getElementById('tip-provider-name').textContent = name;
+  document.getElementById('tip-provider-category').textContent = provider.category || 'SERVICE';
 
-    document.getElementById('tip-provider-avatar').textContent = name[0].toUpperCase();
-    document.getElementById('tip-provider-name').textContent = name;
-    document.getElementById('tip-provider-category').textContent = p.category || 'SERVICE';
+  // Trust signal
+  document.getElementById('trust-name').textContent = name.split(' ')[0];
+  document.getElementById('net-name').textContent = name.split(' ')[0];
 
-    // Trust signal
-    document.getElementById('trust-name').textContent = name.split(' ')[0];
-    document.getElementById('net-name').textContent = name.split(' ')[0];
+  const rating = provider.ratingAverage ? Number(provider.ratingAverage) : 0;
+  const stars = Math.round(rating);
+  document.getElementById('tip-provider-rating').innerHTML = rating > 0
+    ? `<span class="star-display">${'★'.repeat(stars)}${'☆'.repeat(5 - stars)}</span> ${rating.toFixed(1)}`
+    : '<span class="muted">New provider</span>';
 
-    const rating = p.ratingAverage ? Number(p.ratingAverage) : 0;
-    const stars = Math.round(rating);
-    document.getElementById('tip-provider-rating').innerHTML = rating > 0
-      ? `<span class="star-display">${'★'.repeat(stars)}${'☆'.repeat(5 - stars)}</span> ${rating.toFixed(1)}`
-      : '<span class="muted">New provider</span>';
-
-    // Use suggested amount from payment link, or default
-    pickAmount(p.suggestedAmountPaise || 10000);
-  } catch (e) {
-    document.getElementById('tip-provider-name').textContent = 'Provider not found';
-    document.getElementById('tip-amount-section').classList.add('hidden');
-    showTipError(e.message);
-  }
+  pickAmount(provider.suggestedAmountPaise || 10000);
 }
 
 function pickAmount(paise) {
