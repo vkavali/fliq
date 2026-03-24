@@ -253,10 +253,16 @@
   <!-- ==================== LANDING (marketing page) ==================== -->
   <div id="landing-page" class="page">
 
+    <!-- Beta banner -->
+    <div class="lp-beta-bar">Early Access Beta — We're building in public. <a href="#lp-cta-section" onclick="scrollToSection('lp-cta-section')">Join now</a></div>
+
     <!-- 1. Sticky Nav -->
     <nav class="lp-nav">
       <div class="lp-nav-inner">
-        <div class="lp-nav-brand"><span class="lp-nav-icon">&#8377;</span> Fliq</div>
+        <div class="lp-nav-brand">
+          <img src="logo.svg" alt="Fliq" class="lp-logo-img">
+          <span class="lp-beta-badge">BETA</span>
+        </div>
         <button class="lp-nav-btn" onclick="goTo('login')">Provider Login</button>
       </div>
     </nav>
@@ -362,7 +368,7 @@
     </section>
 
     <!-- 5. Provider CTA -->
-    <section class="lp-cta">
+    <section class="lp-cta" id="lp-cta-section">
       <div class="lp-container">
         <h2 class="lp-cta-title">Start receiving tips in 2 minutes</h2>
         <ul class="lp-cta-list">
@@ -378,7 +384,7 @@
     <footer class="lp-footer">
       <div class="lp-container lp-footer-inner">
         <div class="lp-footer-brand">
-          <span class="lp-nav-icon">&#8377;</span> <strong>Fliq</strong> &mdash; Scan. Fliq. Done.
+          <img src="logo-white.svg" alt="Fliq" class="lp-footer-logo"> &mdash; Scan. Fliq. Done.
         </div>
         <p class="lp-footer-tagline">Built for India. UPI-native. Zero friction.</p>
         <div class="lp-footer-links">

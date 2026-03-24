@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1128 191" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1128" y2="191" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6C5CE7"/>
+      <stop offset="50%" stop-color="#A29BFE"/>
+      <stop offset="100%" stop-color="#6C5CE7"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1128" height="191" fill="url(#bg)"/>
+
+  <!-- Subtle pattern dots -->
+  <circle cx="80" cy="30" r="40" fill="rgba(255,255,255,0.05)"/>
+  <circle cx="200" cy="150" r="60" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="900" cy="40" r="50" fill="rgba(255,255,255,0.05)"/>
+  <circle cx="1050" cy="140" r="35" fill="rgba(255,255,255,0.04)"/>
+
+  <!-- Logo icon -->
+  <rect x="380" y="40" width="52" height="52" rx="13" fill="rgba(255,255,255,0.2)"/>
+  <line x1="393" y1="53" x2="419" y2="53" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <line x1="393" y1="60" x2="419" y2="60" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <path d="M399 48 L399 66 Q399 76 410 77 Q416 77.5 420 73" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M417 76 L420 73 L417 70" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <circle cx="423" cy="44" r="2.5" fill="#00B894"/>
+
+  <!-- Brand name -->
+  <text x="445" y="78" font-family="Inter, -apple-system, Helvetica, sans-serif" font-size="36" font-weight="800" fill="white">Fliq</text>
+
+  <!-- Tagline -->
+  <text x="380" y="115" font-family="Inter, -apple-system, Helvetica, sans-serif" font-size="16" font-weight="500" fill="rgba(255,255,255,0.8)">Scan. Fliq. Done.</text>
+
+  <!-- Subtitle -->
+  <text x="380" y="140" font-family="Inter, -apple-system, Helvetica, sans-serif" font-size="13" font-weight="400" fill="rgba(255,255,255,0.6)">India's UPI-native tipping platform</text>
+
+  <!-- Beta badge -->
+  <rect x="495" y="55" width="48" height="20" rx="10" fill="#00B894"/>
+  <text x="507" y="69" font-family="Inter, -apple-system, Helvetica, sans-serif" font-size="10" font-weight="700" fill="white">BETA</text>
+</svg>

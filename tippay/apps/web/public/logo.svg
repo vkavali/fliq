@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" fill="none">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6C5CE7"/>
+      <stop offset="100%" stop-color="#A29BFE"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6C5CE7"/>
+      <stop offset="100%" stop-color="#5A4BD1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Icon: Rounded square with ₹ morphed into a forward-flick/swipe -->
+  <rect x="4" y="8" width="64" height="64" rx="16" fill="url(#g1)"/>
+
+  <!-- ₹ symbol — stylized with a flick tail -->
+  <!-- Top horizontal bars of ₹ -->
+  <line x1="22" y1="26" x2="50" y2="26" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="22" y1="34" x2="50" y2="34" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- Vertical stem curving into a flick -->
+  <path d="M30 22 L30 42 Q30 56 44 58 Q52 59 56 52" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Flick arrow tip -->
+  <path d="M52 56 L56 52 L52 48" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Small spark dot -->
+  <circle cx="58" cy="20" r="3" fill="#00B894"/>
+
+  <!-- Wordmark: Fliq -->
+  <text x="82" y="56" font-family="Inter, -apple-system, sans-serif" font-size="42" font-weight="800" fill="#2D3436">
+    Fl<tspan fill="url(#g2)">i</tspan>q
+  </text>
+
+  <!-- Dot on the i replaced with a green spark -->
+  <!-- The 'i' dot is at approximately x=130, y=25 -->
+</svg>

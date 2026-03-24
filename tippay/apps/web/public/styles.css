@@ -40,9 +40,18 @@ body {
 html { scroll-behavior: smooth; }
 #landing-page { display: flex; flex-direction: column; }
 
+/* -- Beta bar -- */
+.lp-beta-bar {
+  background: var(--green); color: white;
+  text-align: center; padding: 8px 16px;
+  font-size: 13px; font-weight: 600;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 101;
+}
+.lp-beta-bar a { color: white; text-decoration: underline; margin-left: 4px; }
+
 /* -- Nav -- */
 .lp-nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  position: fixed; top: 34px; left: 0; right: 0; z-index: 100;
   background: rgba(255,255,255,0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
@@ -53,8 +62,14 @@ html { scroll-behavior: smooth; }
   display: flex; align-items: center; justify-content: space-between;
 }
 .lp-nav-brand {
-  font-weight: 800; font-size: 20px; color: var(--pri);
   display: flex; align-items: center; gap: 8px;
+}
+.lp-logo-img { height: 32px; width: auto; }
+.lp-beta-badge {
+  background: var(--green); color: white;
+  font-size: 9px; font-weight: 800;
+  padding: 2px 8px; border-radius: 10px;
+  letter-spacing: 0.5px;
 }
 .lp-nav-icon {
   width: 32px; height: 32px;
@@ -74,7 +89,7 @@ html { scroll-behavior: smooth; }
 
 /* -- Hero -- */
 .lp-hero {
-  min-height: 100vh; padding: 100px 24px 60px;
+  min-height: 100vh; padding: 120px 24px 60px;
   background: linear-gradient(160deg, #6C5CE7 0%, #A29BFE 40%, #DFE6E9 100%);
   display: flex; align-items: center; justify-content: center;
   gap: 60px; flex-wrap: wrap;
@@ -257,6 +272,7 @@ html { scroll-behavior: smooth; }
   font-size: 18px; color: white; margin-bottom: 6px;
   display: flex; align-items: center; justify-content: center; gap: 8px;
 }
+.lp-footer-logo { height: 28px; width: auto; }
 .lp-footer-brand .lp-nav-icon { width: 28px; height: 28px; font-size: 14px; }
 .lp-footer-tagline { font-size: 13px; margin-bottom: 16px; color: rgba(255,255,255,0.5); }
 .lp-footer-links { display: flex; gap: 20px; justify-content: center; }

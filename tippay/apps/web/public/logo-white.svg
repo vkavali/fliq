@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" fill="none">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#A29BFE"/>
+      <stop offset="100%" stop-color="#DFE6E9"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Icon: Rounded square with ₹ morphed into a forward-flick -->
+  <rect x="4" y="8" width="64" height="64" rx="16" fill="rgba(255,255,255,0.2)"/>
+
+  <!-- ₹ symbol — stylized with a flick tail -->
+  <line x1="22" y1="26" x2="50" y2="26" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="22" y1="34" x2="50" y2="34" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M30 22 L30 42 Q30 56 44 58 Q52 59 56 52" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M52 56 L56 52 L52 48" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <circle cx="58" cy="20" r="3" fill="#00B894"/>
+
+  <!-- Wordmark: Fliq (white version for dark/gradient backgrounds) -->
+  <text x="82" y="56" font-family="Inter, -apple-system, sans-serif" font-size="42" font-weight="800" fill="white">
+    Fliq
+  </text>
+</svg>
