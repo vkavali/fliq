@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 80" fill="none">
+  <!-- ₹ symbol in gold -->
+  <text x="0" y="68" font-family="Inter, -apple-system, sans-serif" font-size="78" font-weight="800" fill="#E8A800">&#8377;</text>
+  <!-- "liq" in white for dark backgrounds -->
+  <text x="52" y="68" font-family="Inter, -apple-system, sans-serif" font-size="72" font-weight="800" fill="#FFFFFF" letter-spacing="-2">liq</text>
+</svg>
