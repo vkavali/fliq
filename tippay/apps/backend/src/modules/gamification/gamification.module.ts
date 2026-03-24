@@ -15,9 +15,9 @@ export class GamificationModule implements OnModuleInit {
   async onModuleInit() {
     try {
       await this.gamification.seedBadges();
-    } catch (error) {
+    } catch (error: any) {
       this.logger.warn(
-        `Badge seeding skipped — tables may not exist yet. Run prisma migrate. Error: ${error.message}`,
+        `Badge seeding skipped — tables may not exist yet. Run prisma migrate. Error: ${error?.message ?? error}`,
       );
     }
   }
