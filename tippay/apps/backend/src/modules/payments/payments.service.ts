@@ -1,7 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService, PaymentMethod } from '@fliq/database';
 import { RAZORPAY_EVENTS, WalletType } from '@fliq/shared';
 import { WalletsService } from '../wallets/wallets.service';
+import { GamificationService } from '../gamification/gamification.service';
 
 @Injectable()
 export class PaymentsService {
@@ -10,6 +11,8 @@ export class PaymentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly wallets: WalletsService,
+    @Inject(forwardRef(() => GamificationService))
+    private readonly gamification: GamificationService,
   ) {}
 
   /**
@@ -134,6 +137,41 @@ export class PaymentsService {
     });
 
     this.logger.log(`Tip ${tip.id} settled successfully`);
+
+    // ── Gamification: award badges & update streak ──────────────────
+    try {
+      const tipAmount = Number(tip.amountPaise);
+
+      // Process tipper (customer) gamification
+      if (tip.customerId) {
+        await this.gamification.updateStreak(tip.customerId);
+        const tipperBadges = await this.gamification.checkAndAwardBadges(
+          tip.customerId,
+          'TIPPER',
+          tipAmount,
+        );
+        if (tipperBadges.length > 0) {
+          this.logger.log(
+            `Tipper ${tip.customerId} earned badges: ${tipperBadges.map((b) => b.code).join(', ')}`,
+          );
+        }
+      }
+
+      // Process provider gamification
+      const providerBadges = await this.gamification.checkAndAwardBadges(
+        tip.providerId,
+        'PROVIDER',
+        tipAmount,
+      );
+      if (providerBadges.length > 0) {
+        this.logger.log(
+          `Provider ${tip.providerId} earned badges: ${providerBadges.map((b) => b.code).join(', ')}`,
+        );
+      }
+    } catch (err) {
+      // Gamification errors should not break tip settlement
+      this.logger.error(`Gamification processing failed for tip ${tip.id}: ${err}`);
+    }
   }
 
   private async handlePaymentFailed(payload: any): Promise<void> {

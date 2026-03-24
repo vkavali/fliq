@@ -12,6 +12,7 @@ class ApiConstants {
   // Providers
   static const String providerProfile = '/providers/profile';
   static String providerPublic(String id) => '/providers/$id/public';
+  static const String searchProviders = '/providers/search';
 
   // Tips
   static const String createTip = '/tips';
@@ -28,4 +29,24 @@ class ApiConstants {
   static const String createQrCode = '/qrcodes';
   static const String myQrCodes = '/qrcodes/my';
   static String resolveQrCode(String id) => '/qrcodes/$id/resolve';
+
+  // Payment Links
+  static const String createPaymentLink = '/payment-links';
+  static const String myPaymentLinks = '/payment-links/my';
+  static String deletePaymentLink(String id) => '/payment-links/$id';
+
+  // Tip Pools
+  static const String tipPools = '/tip-pools';
+  static const String myTipPools = '/tip-pools/my';
+  static String tipPoolDetail(String id) => '/tip-pools/$id';
+  static String tipPoolMembers(String id) => '/tip-pools/$id/members';
+  static String tipPoolRemoveMember(String id, String memberId) =>
+      '/tip-pools/$id/members/$memberId';
+  static String tipPoolEarnings(String id) => '/tip-pools/$id/earnings';
+
+  // Gamification
+  static const String badges = '/gamification/badges';
+  static const String streak = '/gamification/streak';
+  static const String leaderboardTippers = '/gamification/leaderboard';
+  static const String leaderboardProviders = '/gamification/leaderboard/providers';
 }

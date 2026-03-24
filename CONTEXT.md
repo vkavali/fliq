@@ -1,7 +1,7 @@
 # Fliq — Project Context & Status
 
 > This file is committed to git so any machine/session can pick up where we left off.
-> Last updated: 2026-03-23
+> Last updated: 2026-03-23 (Session 2 — major feature build)
 
 ---
 
@@ -184,11 +184,84 @@ cd apps/web && npx serve public -l 5173
 
 ---
 
-## Next Steps (Priority Order)
-1. **Add full customer flow to mobile app** — scan QR, see provider, pick amount, pay, success
-2. **Polish UI** — animations, skeleton loaders, bottom nav, proper empty states
-3. **Provider onboarding flow** — KYC, bank details, PAN verification
-4. **Expose existing backend features** — wallet balance, commission breakdown, analytics, multi-language
-5. **WhatsApp tip links** — share tipping link via WhatsApp
-6. **Push notifications** — real-time tip alerts
-7. **Admin mobile/web dashboard**
+## Changelog
+
+### Session 2 — 2026-03-23 (Major Feature Build)
+
+**Mobile App Overhaul (v0.1 → v0.8):**
+- Rewrote ALL customer screens (home, scan, tip, success, history) with modern UI
+- Rewrote ALL provider screens (dashboard, earnings, payouts, QR display)
+- Added splash screen with auth persistence
+- Added bottom navigation (customer: Home/Scan/History/Profile; provider: Dashboard/QR/Earnings/Payouts/Settings)
+- Added settings screen (language, payout pref, UPI VPA, logout)
+- Added customer profile screen
+- Created proper models for all backend entities (User, Provider, Tip, Payout, QrCode, PaymentLink, TipPool, Badge, Streak)
+- Created auth service with token persistence + auto-refresh
+
+**New Feature: WhatsApp Tip Links** (backend + mobile + web)
+- Backend: PaymentLinks module (POST/GET/DELETE /payment-links, GET resolve by shortCode)
+- Prisma: PaymentLink model with shortCode
+- Web: tip.html — beautiful mobile-first landing page for WhatsApp shared links
+- Mobile: "Share via WhatsApp" button on provider dashboard
+- Backend: GET /tip/:shortCode route serves the landing page
+
+**New Feature: UPI Intent Flow** (mobile)
+- Direct UPI app launching (GPay, PhonePe, Paytm) from tip screen
+- Constructs upi://pay intent URL with provider VPA
+- Falls back to Razorpay checkout if no UPI app available
+
+**New Feature: Provider Discovery** (backend + mobile)
+- Backend: GET /providers/search with name/phone query + category filter
+- Mobile: ProviderSearchScreen with debounced search, category chips, results list
+- Home screen categories are now tappable → navigate to search with filter
+
+**New Feature: Multi-Language (i18n)** (mobile)
+- 6 languages: English, Hindi, Tamil, Telugu, Kannada, Marathi
+- 66 string keys with real translations (not Google Translate)
+- Map-based AppStrings system with locale provider (Riverpod)
+- Settings screen language selector updates UI + syncs to backend
+
+**New Feature: Tip Pools** (backend + mobile)
+- Backend: TipPools module with CRUD, member management, earnings distribution
+- Prisma: TipPool + TipPoolMember models
+- Split methods: EQUAL, PERCENTAGE, ROLE_BASED
+- Auto-detection: tips to pool members auto-link to pool
+- Mobile: TipPoolsScreen, PoolDetailScreen, CreatePoolScreen
+- Distribution logic credits each member's wallet
+
+**New Feature: Gamification** (backend + mobile)
+- Backend: Gamification module with badges, streaks, leaderboards
+- Prisma: Badge, UserBadge, TipStreak models
+- 13 badges seeded on startup (tipper, provider, streak categories)
+- Streak tracking (daily consecutive tipping)
+- Leaderboards (week/month, tippers/providers)
+- Hooked into payment settlement (auto-awards after each tip)
+- Mobile: BadgesScreen, LeaderboardScreen, StreakScreen
+- Streak banner + badges section on home/dashboard screens
+
+**Errors Encountered & Fixed:**
+- CardTheme → CardThemeData (Flutter 3.41 API change)
+- iOS deployment target 9.0 → 14.0 (Xcode 26 requirement)
+- Missing iOS platform folder → flutter create --platforms ios
+- Missing asset directories → mkdir
+- withOpacity deprecated → withValues(alpha:)
+- Git HTTPS auth → SSH
+
+### Session 1 — 2026-03-23 (Initial Setup)
+- Installed Flutter, CocoaPods, Xcode setup
+- Generated iOS platform, fixed build errors
+- Successfully ran app on iPhone wirelessly
+- Created CONTEXT.md for cross-machine continuity
+
+---
+
+## Remaining Work (Priority Order)
+1. **Provider onboarding flow** — KYC, bank details, PAN verification screens
+2. **Push notifications** — FCM integration, real-time tip alerts
+3. **Admin dashboard** — mobile or web admin panel
+4. **Prisma migration** — run `prisma migrate dev` for new tables (PaymentLink, TipPool, TipPoolMember, Badge, UserBadge, TipStreak)
+5. **Deploy backend** — push new modules to Railway
+6. **Install Node.js locally** — needed for backend dev/testing on this machine
+7. **Integration testing** — end-to-end tip flow on phone
+8. **App polish** — Lottie animations, skeleton loaders, haptic feedback
+9. **App store prep** — icon, splash, screenshots, store listing

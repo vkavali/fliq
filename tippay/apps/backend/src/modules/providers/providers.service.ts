@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '@fliq/database';
 import { WalletType, UserType } from '@fliq/shared';
 import { CreateProviderProfileDto } from './dto/create-provider-profile.dto';
@@ -64,6 +64,7 @@ export class ProvidersService {
       ratingAverage: provider.ratingAverage,
       totalTipsReceived: provider.totalTipsReceived,
       qrCodeUrl: provider.qrCodeUrl,
+      upiVpa: provider.upiVpa,
     };
   }
 
@@ -73,5 +74,57 @@ export class ProvidersService {
       where: { id: userId },
       data: dto,
     });
+  }
+
+  async searchProviders(query: string, category?: string, page = 1, limit = 20) {
+    if (!query || query.trim().length < 2) {
+      throw new BadRequestException('Search query must be at least 2 characters');
+    }
+
+    const sanitized = query.trim();
+    const skip = (page - 1) * limit;
+    const take = Math.min(limit, 50); // cap at 50
+
+    const where: any = {
+      user: {
+        status: 'ACTIVE',
+        type: 'PROVIDER',
+        OR: [
+          { name: { contains: sanitized, mode: 'insensitive' } },
+          { phone: { contains: sanitized } },
+        ],
+      },
+    };
+
+    if (category) {
+      where.category = category.toUpperCase();
+    }
+
+    const [providers, total] = await Promise.all([
+      this.prisma.provider.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { totalTipsReceived: 'desc' },
+        include: {
+          user: { select: { name: true, phone: true } },
+        },
+      }),
+      this.prisma.provider.count({ where }),
+    ]);
+
+    return {
+      providers: providers.map((p) => ({
+        id: p.id,
+        name: p.user.name,
+        phone: p.user.phone.replace(/(\d{2})\d{6}(\d{4})/, '$1******$2'), // mask phone
+        category: p.category,
+        ratingAverage: p.ratingAverage,
+        totalTipsReceived: p.totalTipsReceived,
+      })),
+      total,
+      page,
+      limit: take,
+    };
   }
 }

@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Patch, Param, Body, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ProvidersService } from './providers.service';
@@ -39,6 +39,26 @@ export class ProvidersController {
     @Body() dto: UpdateProviderProfileDto,
   ) {
     return this.providersService.updateProfile(userId, dto);
+  }
+
+  @Get('search')
+  @ApiOperation({ summary: 'Search providers by name or phone' })
+  @ApiQuery({ name: 'q', required: true, type: String })
+  @ApiQuery({ name: 'category', required: false, type: String })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  async searchProviders(
+    @Query('q') query: string,
+    @Query('category') category?: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.providersService.searchProviders(
+      query,
+      category,
+      page ? Number(page) : 1,
+      limit ? Number(limit) : 20,
+    );
   }
 
   @Get(':id/public')

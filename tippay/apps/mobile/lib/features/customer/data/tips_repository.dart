@@ -87,4 +87,27 @@ class TipsRepository {
     );
     return response.data as Map<String, dynamic>;
   }
+
+  Future<Map<String, dynamic>> getProviderPublic(String providerId) async {
+    final response = await _dio.get(ApiConstants.providerPublic(providerId));
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> searchProviders({
+    required String query,
+    String? category,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    final response = await _dio.get(
+      ApiConstants.searchProviders,
+      queryParameters: {
+        'q': query,
+        if (category != null) 'category': category,
+        'page': page,
+        'limit': limit,
+      },
+    );
+    return response.data as Map<String, dynamic>;
+  }
 }

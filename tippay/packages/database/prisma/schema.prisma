@@ -122,13 +122,17 @@ model User {
   createdAt          DateTime   @default(now()) @db.Timestamptz()
   updatedAt          DateTime   @updatedAt @db.Timestamptz()
 
-  providerProfile Provider?
-  wallets         Wallet[]
-  tipsGiven       Tip[]           @relation("CustomerTips")
-  tipsReceived    Tip[]           @relation("ProviderTips")
-  payouts         Payout[]
-  otpCodes        OtpCode[]
-  consentRecords  ConsentRecord[]
+  providerProfile    Provider?
+  wallets            Wallet[]
+  tipsGiven          Tip[]              @relation("CustomerTips")
+  tipsReceived       Tip[]              @relation("ProviderTips")
+  payouts            Payout[]
+  otpCodes           OtpCode[]
+  consentRecords     ConsentRecord[]
+  badges             UserBadge[]
+  tipStreak          TipStreak?
+  ownedTipPools      TipPool[]          @relation("TipPoolOwner")
+  tipPoolMemberships TipPoolMember[]
 
   @@map("users")
 }
@@ -151,7 +155,8 @@ model Provider {
   qrCodeUrl                  String?
   createdAt                  DateTime         @default(now()) @db.Timestamptz()
 
-  qrCodes QrCode[]
+  qrCodes      QrCode[]
+  paymentLinks PaymentLink[]
 
   @@map("providers")
 }
@@ -227,11 +232,14 @@ model Tip {
   createdAt            DateTime       @default(now()) @db.Timestamptz()
   updatedAt            DateTime       @updatedAt @db.Timestamptz()
 
+  tipPoolId            String?        @db.Uuid
+  tipPool              TipPool?       @relation(fields: [tipPoolId], references: [id])
   transactions Transaction[]
 
   @@index([providerId, createdAt])
   @@index([customerId, createdAt])
   @@index([gatewayPaymentId])
+  @@index([tipPoolId])
   @@map("tips")
 }
 
@@ -320,6 +328,23 @@ model OutboxEvent {
   @@map("outbox_events")
 }
 
+model PaymentLink {
+  id                 String   @id @default(uuid()) @db.Uuid
+  providerId         String   @db.Uuid
+  provider           Provider @relation(fields: [providerId], references: [id])
+  shortCode          String   @unique @db.VarChar(8)
+  description        String?  @db.VarChar(255)
+  suggestedAmountPaise Int?
+  allowCustomAmount  Boolean  @default(true)
+  clickCount         Int      @default(0)
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now()) @db.Timestamptz()
+  updatedAt          DateTime @updatedAt @db.Timestamptz()
+
+  @@index([providerId])
+  @@map("payment_links")
+}
+
 model ConsentRecord {
   id            String    @id @default(uuid()) @db.Uuid
   userId        String    @db.Uuid
@@ -332,4 +357,81 @@ model ConsentRecord {
   channel       String    @db.VarChar(20)
 
   @@map("consent_records")
+}
+
+// ─── Tip Pools ──────────────────────────────────────────────────────────────
+
+model TipPool {
+  id          String          @id @default(uuid()) @db.Uuid
+  name        String          @db.VarChar(100)
+  ownerId     String          @db.Uuid
+  owner       User            @relation("TipPoolOwner", fields: [ownerId], references: [id])
+  description String?         @db.VarChar(500)
+  splitMethod String          @default("EQUAL") @db.VarChar(20) // EQUAL, PERCENTAGE, ROLE_BASED
+  isActive    Boolean         @default(true)
+  members     TipPoolMember[]
+  tips        Tip[]
+  createdAt   DateTime        @default(now()) @db.Timestamptz()
+  updatedAt   DateTime        @updatedAt @db.Timestamptz()
+
+  @@index([ownerId])
+  @@map("tip_pools")
+}
+
+model TipPoolMember {
+  id              String   @id @default(uuid()) @db.Uuid
+  poolId          String   @db.Uuid
+  pool            TipPool  @relation(fields: [poolId], references: [id])
+  userId          String   @db.Uuid
+  user            User     @relation(fields: [userId], references: [id])
+  role            String?  @db.VarChar(50) // "waiter", "chef", "host", etc.
+  splitPercentage Float?   // Used when splitMethod is PERCENTAGE
+  isActive        Boolean  @default(true)
+  joinedAt        DateTime @default(now()) @db.Timestamptz()
+
+  @@unique([poolId, userId])
+  @@index([userId])
+  @@map("tip_pool_members")
+}
+
+// ─── Gamification ────────────────────────────────────────────────────────────
+
+model Badge {
+  id          String      @id @default(uuid()) @db.Uuid
+  code        String      @unique @db.VarChar(50)
+  name        String      @db.VarChar(100)
+  description String      @db.VarChar(255)
+  iconUrl     String?
+  category    String      @db.VarChar(20) // TIPPER, PROVIDER, STREAK, MILESTONE
+  threshold   Int         // e.g., 7 for "streak_7", 50000 for "big_tipper" (paise)
+  createdAt   DateTime    @default(now()) @db.Timestamptz()
+
+  userBadges  UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id       String   @id @default(uuid()) @db.Uuid
+  userId   String   @db.Uuid
+  user     User     @relation(fields: [userId], references: [id])
+  badgeId  String   @db.Uuid
+  badge    Badge    @relation(fields: [badgeId], references: [id])
+  earnedAt DateTime @default(now()) @db.Timestamptz()
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@map("user_badges")
+}
+
+model TipStreak {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @unique @db.Uuid
+  user          User      @relation(fields: [userId], references: [id])
+  currentStreak Int       @default(0)
+  longestStreak Int       @default(0)
+  lastTipDate   DateTime? @db.Timestamptz()
+  updatedAt     DateTime  @updatedAt @db.Timestamptz()
+
+  @@map("tip_streaks")
 }

@@ -14,6 +14,9 @@ import { QrCodesModule } from './modules/qrcodes/qrcodes.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { OutboxModule } from './modules/outbox/outbox.module';
+import { PaymentLinksModule } from './modules/payment-links/payment-links.module';
+import { GamificationModule } from './modules/gamification/gamification.module';
+import { TipPoolsModule } from './modules/tip-pools/tip-pools.module';
 
 @Module({
   imports: [
@@ -37,6 +40,9 @@ import { OutboxModule } from './modules/outbox/outbox.module';
     NotificationsModule,
     AdminModule,
     OutboxModule,
+    PaymentLinksModule,
+    GamificationModule,
+    TipPoolsModule,
   ],
   controllers: [AppController],
 })

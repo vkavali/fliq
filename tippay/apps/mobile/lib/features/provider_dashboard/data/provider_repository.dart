@@ -51,4 +51,28 @@ class ProviderRepository {
     );
     return response.data as Map<String, dynamic>;
   }
+
+  // ===== Payment Links =====
+
+  Future<Map<String, dynamic>> createPaymentLink({
+    String? description,
+    int? suggestedAmountPaise,
+    bool? allowCustomAmount,
+  }) async {
+    final response = await _dio.post(ApiConstants.createPaymentLink, data: {
+      if (description != null) 'description': description,
+      if (suggestedAmountPaise != null) 'suggestedAmountPaise': suggestedAmountPaise,
+      if (allowCustomAmount != null) 'allowCustomAmount': allowCustomAmount,
+    });
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<List<dynamic>> getMyPaymentLinks() async {
+    final response = await _dio.get(ApiConstants.myPaymentLinks);
+    return response.data as List<dynamic>;
+  }
+
+  Future<void> deletePaymentLink(String id) async {
+    await _dio.delete(ApiConstants.deletePaymentLink(id));
+  }
 }

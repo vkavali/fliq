@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tip on Fliq</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pri: #6C5CE7;
+      --pri-dark: #5A4BD1;
+      --pri-light: #A29BFE;
+      --pri-bg: #F0EDFF;
+      --green: #00B894;
+      --green-bg: #E8FFF8;
+      --yellow: #FDCB6E;
+      --red: #E17055;
+      --red-bg: #FFEDE9;
+      --text: #2D3436;
+      --text2: #636E72;
+      --muted: #B2BEC3;
+      --bg: #F8F9FA;
+      --card: #FFFFFF;
+      --border: #E9ECEF;
+      --shadow: 0 2px 16px rgba(0,0,0,0.07);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+      --r: 16px;
+      --r-sm: 10px;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: linear-gradient(180deg, #6C5CE7 0%, #A29BFE 30%, #F8F9FA 60%);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px 16px 40px;
+    }
+
+    .hidden { display: none !important; }
+
+    .tip-card {
+      background: white;
+      border-radius: 24px;
+      box-shadow: var(--shadow-lg);
+      padding: 32px 24px;
+      width: 100%;
+      max-width: 420px;
+      margin-top: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tip-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--pri), var(--pri-light), var(--green));
+    }
+
+    /* Loading */
+    .loading-state {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .loading-spinner {
+      width: 48px; height: 48px;
+      border: 4px solid var(--border);
+      border-top-color: var(--pri);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Provider Header */
+    .provider-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .avatar {
+      width: 80px; height: 80px;
+      background: linear-gradient(135deg, var(--pri), var(--pri-light));
+      color: white;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; font-weight: 700;
+      margin: 0 auto 14px;
+      box-shadow: 0 4px 20px rgba(108, 92, 231, 0.3);
+    }
+    .provider-name {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .category-badge {
+      display: inline-block;
+      background: var(--pri-bg);
+      color: var(--pri);
+      padding: 4px 16px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .rating-row {
+      margin-top: 8px;
+      font-size: 14px;
+      color: var(--text2);
+    }
+    .rating-row .stars { color: var(--yellow); }
+    .trust-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      background: var(--green-bg);
+      color: var(--green);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .trust-badge::before {
+      content: '\2713';
+      width: 18px; height: 18px;
+      background: var(--green);
+      color: white;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* Description */
+    .link-description {
+      text-align: center;
+      background: var(--bg);
+      border-radius: var(--r-sm);
+      padding: 10px 16px;
+      margin-bottom: 24px;
+      font-size: 14px;
+      color: var(--text2);
+      font-style: italic;
+    }
+
+    /* Section labels */
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 10px;
+    }
+
+    /* Amount Selection */
+    .amount-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .amt-btn {
+      padding: 14px 8px;
+      border: 2px solid var(--border);
+      border-radius: var(--r-sm);
+      background: white;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      position: relative;
+    }
+    .amt-btn:hover { border-color: var(--pri); }
+    .amt-btn.active { border-color: var(--pri); background: var(--pri-bg); }
+    .amt-btn .amount { font-size: 20px; font-weight: 800; color: var(--text); }
+    .amt-btn.active .amount { color: var(--pri); }
+    .amt-btn .label { font-size: 10px; color: var(--text2); font-weight: 500; }
+    .amt-btn.active .label { color: var(--pri); }
+    .popular-tag {
+      position: absolute;
+      top: -8px;
+      background: var(--pri);
+      color: white;
+      font-size: 8px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    /* Custom amount */
+    .custom-row {
+      display: flex;
+      align-items: center;
+      border: 2px solid var(--border);
+      border-radius: var(--r-sm);
+      overflow: hidden;
+      margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+    .custom-row:focus-within { border-color: var(--pri); }
+    .rupee {
+      padding: 10px 14px;
+      background: var(--bg);
+      color: var(--text2);
+      font-weight: 700;
+      font-size: 16px;
+      border-right: 2px solid var(--border);
+    }
+    .custom-row input {
+      flex: 1; border: none; outline: none;
+      padding: 10px 14px;
+      font-size: 16px;
+      font-family: inherit;
+    }
+
+    /* Breakdown */
+    .breakdown {
+      background: var(--bg);
+      border-radius: var(--r-sm);
+      padding: 14px 16px;
+      margin-bottom: 20px;
+    }
+    .bd-line {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 13px;
+      color: var(--text2);
+    }
+    .bd-line.net {
+      border-top: 2px solid var(--border);
+      margin-top: 6px;
+      padding-top: 10px;
+      font-weight: 700;
+      color: var(--text);
+      font-size: 15px;
+    }
+    .bd-line.commission { font-size: 12px; }
+
+    /* Stars */
+    .stars-row { display: flex; gap: 4px; margin-bottom: 16px; }
+    .star-btn {
+      font-size: 32px;
+      background: none; border: none;
+      cursor: pointer;
+      color: var(--border);
+      transition: color 0.15s, transform 0.15s;
+    }
+    .star-btn.active { color: var(--yellow); }
+    .star-btn:hover { color: var(--yellow); transform: scale(1.1); }
+
+    /* Quick messages */
+    .msg-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .chip {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: var(--text2);
+    }
+    .chip:hover, .chip.active { border-color: var(--pri); color: var(--pri); background: var(--pri-bg); }
+
+    textarea {
+      width: 100%;
+      border: 2px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      resize: none;
+      margin-bottom: 20px;
+      transition: border-color 0.2s;
+    }
+    textarea:focus { border-color: var(--pri); outline: none; }
+
+    /* Pay button */
+    .pay-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--pri), var(--pri-dark));
+      color: white;
+      border: none;
+      border-radius: var(--r-sm);
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+      box-shadow: 0 4px 16px rgba(108, 92, 231, 0.3);
+    }
+    .pay-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(108, 92, 231, 0.4); }
+    .pay-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .pay-btn.outline {
+      background: white;
+      color: var(--pri);
+      border: 2px solid var(--pri);
+      box-shadow: none;
+      margin-top: 12px;
+    }
+    .pay-btn.outline:hover { background: var(--pri-bg); }
+
+    .pay-hint {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    /* Success */
+    .success-section { text-align: center; }
+    .success-circle {
+      width: 80px; height: 80px;
+      background: linear-gradient(135deg, var(--green), #55efc4);
+      color: white;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 40px;
+      margin: 0 auto 16px;
+      box-shadow: 0 4px 20px rgba(0, 184, 148, 0.3);
+      animation: pop 0.4s ease-out;
+    }
+    @keyframes pop {
+      0% { transform: scale(0); }
+      70% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    .success-section h2 { font-size: 24px; margin-bottom: 4px; }
+    .success-sub { color: var(--text2); margin-bottom: 20px; }
+
+    .receipt {
+      background: var(--bg);
+      border-radius: var(--r-sm);
+      padding: 16px;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+    .receipt-line {
+      display: flex; justify-content: space-between;
+      padding: 6px 0;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+    }
+    .receipt-line:last-child { border-bottom: none; }
+    .mono { font-family: monospace; font-size: 12px; }
+    .badge-ok {
+      background: var(--green-bg); color: var(--green);
+      padding: 2px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 600;
+    }
+    .receipt-note {
+      font-size: 12px; color: var(--muted);
+      margin-bottom: 16px; font-style: italic;
+    }
+
+    /* Error */
+    .error-box {
+      background: var(--red-bg);
+      color: var(--red);
+      padding: 10px 14px;
+      border-radius: var(--r-sm);
+      font-size: 13px;
+      margin-top: 14px;
+      text-align: center;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .footer strong { color: var(--pri); }
+
+    /* WhatsApp badge */
+    .via-badge {
+      text-align: center;
+      margin-bottom: 16px;
+      font-size: 11px;
+      color: var(--text2);
+    }
+    .via-badge span {
+      background: #25D366;
+      color: white;
+      padding: 2px 10px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 10px;
+      margin-left: 4px;
+    }
+
+    @media (max-width: 420px) {
+      body { padding: 16px 10px 32px; }
+      .tip-card { padding: 24px 18px; border-radius: 20px; }
+      .amount-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+      .amt-btn { padding: 10px 6px; }
+      .amt-btn .amount { font-size: 17px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="tip-card">
+  <!-- Loading -->
+  <div id="loading" class="loading-state">
+    <div class="loading-spinner"></div>
+    <p style="color: var(--text2);">Loading tip page...</p>
+  </div>
+
+  <!-- Main content (hidden until loaded) -->
+  <div id="main-content" class="hidden">
+
+    <!-- Provider Header -->
+    <div class="provider-header">
+      <div class="avatar" id="avatar">?</div>
+      <div class="provider-name" id="provider-name">Loading...</div>
+      <span class="category-badge" id="provider-category">-</span>
+      <div class="rating-row" id="rating-row"></div>
+      <div class="trust-badge" id="trust-badge">100% goes directly to <span id="trust-name">them</span></div>
+    </div>
+
+    <div id="link-desc" class="link-description hidden"></div>
+
+    <div class="via-badge">Sent via <span>WhatsApp Tip Link</span></div>
+
+    <!-- Tip Form -->
+    <div id="tip-form">
+      <p class="section-label">Choose tip amount</p>
+      <div class="amount-grid" id="amount-grid">
+        <button class="amt-btn" onclick="pickAmt(2000)" data-amt="2000">
+          <span class="amount">&#8377;20</span>
+          <span class="label">Quick thanks</span>
+        </button>
+        <button class="amt-btn" onclick="pickAmt(5000)" data-amt="5000">
+          <span class="amount">&#8377;50</span>
+          <span class="label">Buy chai</span>
+        </button>
+        <button class="amt-btn active" onclick="pickAmt(10000)" data-amt="10000">
+          <span class="amount">&#8377;100</span>
+          <span class="label">Great service</span>
+          <span class="popular-tag">Popular</span>
+        </button>
+        <button class="amt-btn" onclick="pickAmt(20000)" data-amt="20000">
+          <span class="amount">&#8377;200</span>
+          <span class="label">Above & beyond</span>
+        </button>
+        <button class="amt-btn" onclick="pickAmt(50000)" data-amt="50000">
+          <span class="amount">&#8377;500</span>
+          <span class="label">Exceptional</span>
+        </button>
+        <button class="amt-btn" onclick="pickAmt(100000)" data-amt="100000">
+          <span class="amount">&#8377;1000</span>
+          <span class="label">VIP</span>
+        </button>
+      </div>
+
+      <div class="custom-row" id="custom-row">
+        <span class="rupee">&#8377;</span>
+        <input type="number" id="custom-amount" placeholder="Custom amount" min="10" max="10000" oninput="onCustomAmount()">
+      </div>
+
+      <div class="breakdown">
+        <div class="bd-line">
+          <span>Tip amount</span>
+          <span id="bd-amount">&#8377;100</span>
+        </div>
+        <div class="bd-line commission hidden" id="bd-commission">
+          <span>Platform fee (5%)</span>
+          <span id="bd-comm-val">&#8377;0</span>
+        </div>
+        <div class="bd-line net">
+          <span><strong id="net-name">Provider</strong> receives</span>
+          <span id="bd-net">&#8377;100</span>
+        </div>
+      </div>
+
+      <p class="section-label">Rate your experience</p>
+      <div class="stars-row">
+        <button class="star-btn" onclick="setRating(1)" data-v="1">&#9733;</button>
+        <button class="star-btn" onclick="setRating(2)" data-v="2">&#9733;</button>
+        <button class="star-btn" onclick="setRating(3)" data-v="3">&#9733;</button>
+        <button class="star-btn active" onclick="setRating(4)" data-v="4">&#9733;</button>
+        <button class="star-btn active" onclick="setRating(5)" data-v="5">&#9733;</button>
+      </div>
+
+      <div class="msg-chips">
+        <button class="chip" onclick="setMessage('Great service!')">Great service!</button>
+        <button class="chip" onclick="setMessage('Thank you!')">Thank you!</button>
+        <button class="chip" onclick="setMessage('You made my day!')">Made my day!</button>
+      </div>
+      <textarea id="tip-message" placeholder="Or write a personal message..." rows="2"></textarea>
+
+      <button class="pay-btn" id="pay-btn" onclick="payTip()">
+        Tip &#8377;<span id="pay-amount">100</span> via UPI
+      </button>
+      <p class="pay-hint">Secure payment via Razorpay. No account needed.</p>
+    </div>
+
+    <!-- Success -->
+    <div id="success-section" class="success-section hidden">
+      <div class="success-circle">&#10003;</div>
+      <h2>You made <span id="success-name">their</span> day!</h2>
+      <p class="success-sub">Your tip of <strong id="success-amount">&#8377;100</strong> is on its way</p>
+      <div class="receipt">
+        <div class="receipt-line"><span>Amount</span><span id="r-amount">-</span></div>
+        <div class="receipt-line"><span>Tip ID</span><span id="r-tipid" class="mono">-</span></div>
+        <div class="receipt-line"><span>Status</span><span class="badge-ok">INITIATED</span></div>
+      </div>
+      <p class="receipt-note">In production, your UPI app opens to complete payment instantly.</p>
+      <button class="pay-btn outline" onclick="resetForm()">Tip Again</button>
+    </div>
+
+    <div id="tip-error" class="error-box hidden"></div>
+  </div>
+
+  <!-- Error state (link not found) -->
+  <div id="error-state" class="hidden" style="text-align:center; padding:40px 20px;">
+    <div style="font-size:48px; margin-bottom:16px;">&#128533;</div>
+    <h2 style="margin-bottom:8px;">Link not found</h2>
+    <p style="color:var(--text2);" id="error-msg">This tip link may have expired or been deactivated.</p>
+  </div>
+
+  <div class="footer">
+    <span>Powered by</span>
+    <strong> Fliq</strong>
+    <span> &#183; Scan. Fliq. Done.</span>
+  </div>
+</div>
+
+<script>
+// ===== Config =====
+const API = location.origin;
+let state = {
+  shortCode: null,
+  providerId: null,
+  provider: null,
+  amount: 10000,
+  rating: 5,
+};
+
+// ===== Init =====
+(async function init() {
+  // Extract short code from URL: /tip/{shortCode}
+  const parts = location.pathname.split('/');
+  const code = parts[parts.length - 1] || parts[parts.length - 2];
+  if (!code) {
+    showError('Invalid tip link');
+    return;
+  }
+  state.shortCode = code;
+
+  try {
+    // Resolve the payment link
+    const data = await api('GET', `/payment-links/${code}/resolve`);
+    state.providerId = data.providerId;
+    state.provider = data;
+
+    // Populate UI
+    const name = data.providerName || 'Service Provider';
+    document.getElementById('avatar').textContent = name[0].toUpperCase();
+    document.getElementById('provider-name').textContent = name;
+    document.getElementById('provider-category').textContent = data.category || 'SERVICE';
+    document.getElementById('trust-name').textContent = name.split(' ')[0];
+    document.getElementById('net-name').textContent = name.split(' ')[0];
+
+    // Rating
+    const rating = data.ratingAverage ? Number(data.ratingAverage) : 0;
+    const stars = Math.round(rating);
+    const ratingEl = document.getElementById('rating-row');
+    if (rating > 0) {
+      ratingEl.innerHTML = `<span class="stars">${'\u2605'.repeat(stars)}${'\u2606'.repeat(5 - stars)}</span> ${rating.toFixed(1)} &middot; ${data.totalTipsReceived || 0} tips`;
+    } else {
+      ratingEl.innerHTML = '<span style="color:var(--muted)">New provider</span>';
+    }
+
+    // Description
+    if (data.description) {
+      const descEl = document.getElementById('link-desc');
+      descEl.textContent = data.description;
+      descEl.classList.remove('hidden');
+    }
+
+    // Suggested amount
+    if (data.suggestedAmountPaise && data.suggestedAmountPaise >= 1000) {
+      pickAmt(data.suggestedAmountPaise);
+    } else {
+      pickAmt(10000);
+    }
+
+    // Hide custom amount if not allowed
+    if (data.allowCustomAmount === false) {
+      document.getElementById('custom-row').classList.add('hidden');
+    }
+
+    // Show content
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('main-content').classList.remove('hidden');
+  } catch (e) {
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('error-state').classList.remove('hidden');
+    document.getElementById('error-msg').textContent = e.message || 'This tip link may have expired or been deactivated.';
+  }
+})();
+
+// ===== API =====
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.message || `Error ${r.status}`);
+  return d;
+}
+
+// ===== Amount Selection =====
+function pickAmt(paise) {
+  state.amount = paise;
+  document.getElementById('custom-amount').value = '';
+  document.querySelectorAll('.amt-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.amt) === paise);
+  });
+  updateBreakdown();
+}
+
+function onCustomAmount() {
+  const v = parseInt(document.getElementById('custom-amount').value) || 0;
+  if (v > 0) {
+    state.amount = v * 100;
+    document.querySelectorAll('.amt-btn').forEach(b => b.classList.remove('active'));
+    updateBreakdown();
+  }
+}
+
+function updateBreakdown() {
+  const p = state.amount;
+  const r = p / 100;
+  let comm = 0;
+  if (p > 10000) comm = Math.round(p * 0.05);
+  const net = p - comm;
+
+  document.getElementById('bd-amount').textContent = `\u20B9${r.toFixed(0)}`;
+  document.getElementById('bd-comm-val').textContent = `\u20B9${(comm / 100).toFixed(0)}`;
+  const cr = document.getElementById('bd-commission');
+  if (comm > 0) { cr.classList.remove('hidden'); cr.style.display = 'flex'; }
+  else { cr.classList.add('hidden'); cr.style.display = 'none'; }
+  document.getElementById('bd-net').textContent = `\u20B9${(net / 100).toFixed(0)}`;
+  document.getElementById('pay-amount').textContent = r.toFixed(0);
+}
+
+// ===== Rating =====
+function setRating(v) {
+  state.rating = v;
+  document.querySelectorAll('.star-btn').forEach(s => {
+    s.classList.toggle('active', parseInt(s.dataset.v) <= v);
+  });
+}
+
+// ===== Message =====
+function setMessage(msg) {
+  document.getElementById('tip-message').value = msg;
+  document.querySelectorAll('.chip').forEach(c => {
+    c.classList.toggle('active', c.textContent.trim() === msg || c.textContent.trim() === msg.replace('!', ''));
+  });
+}
+
+// ===== Pay =====
+async function payTip() {
+  const btn = document.getElementById('pay-btn');
+  btn.disabled = true;
+  btn.textContent = 'Processing...';
+  hideError();
+
+  try {
+    const body = {
+      providerId: state.providerId,
+      amountPaise: state.amount,
+      source: 'PAYMENT_LINK',
+      rating: state.rating,
+      message: document.getElementById('tip-message').value.trim() || undefined,
+    };
+
+    const d = await api('POST', '/tips', body);
+
+    const provName = state.provider?.providerName?.split(' ')[0] || 'their';
+    document.getElementById('success-name').textContent = `${provName}'s`;
+    document.getElementById('success-amount').textContent = `\u20B9${(d.amount / 100).toFixed(0)}`;
+    document.getElementById('r-amount').textContent = `\u20B9${(d.amount / 100).toFixed(0)}`;
+    document.getElementById('r-tipid').textContent = d.tipId?.substring(0, 12) + '...';
+
+    document.getElementById('tip-form').classList.add('hidden');
+    document.getElementById('success-section').classList.remove('hidden');
+  } catch (e) {
+    showTipError(e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `Tip \u20B9<span id="pay-amount">${(state.amount / 100).toFixed(0)}</span> via UPI`;
+  }
+}
+
+function resetForm() {
+  document.getElementById('tip-form').classList.remove('hidden');
+  document.getElementById('success-section').classList.add('hidden');
+  document.getElementById('tip-message').value = '';
+  pickAmt(10000);
+  setRating(5);
+}
+
+function showTipError(msg) {
+  const e = document.getElementById('tip-error');
+  e.textContent = msg;
+  e.classList.remove('hidden');
+}
+function hideError() {
+  document.getElementById('tip-error').classList.add('hidden');
+}
+function showError(msg) {
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('error-state').classList.remove('hidden');
+  document.getElementById('error-msg').textContent = msg;
+}
+</script>
+
+</body>
+</html>

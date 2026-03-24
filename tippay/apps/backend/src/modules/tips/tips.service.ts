@@ -55,6 +55,17 @@ export class TipsService {
     );
     const netAmountPaise = amountPaise - commissionPaise - gstOnCommission;
 
+    // Check if the provider belongs to an active tip pool
+    const poolMembership = await this.prisma.tipPoolMember.findFirst({
+      where: {
+        userId: dto.providerId,
+        isActive: true,
+        pool: { isActive: true },
+      },
+      include: { pool: true },
+    });
+    const tipPoolId = poolMembership?.poolId ?? null;
+
     // Create tip record
     const tip = await this.prisma.tip.create({
       data: {
@@ -71,6 +82,7 @@ export class TipsService {
         message: dto.message,
         rating: dto.rating,
         gateway: 'razorpay',
+        tipPoolId,
       },
     });
 
