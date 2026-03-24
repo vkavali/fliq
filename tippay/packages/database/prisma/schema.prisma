@@ -33,6 +33,10 @@ enum ProviderCategory {
   HOUSEHOLD
   RESTAURANT
   HOTEL
+  TRANSPORT
+  HEALTHCARE
+  EDUCATION
+  FITNESS
   OTHER
 }
 
@@ -147,6 +151,9 @@ model Provider {
   panVerified                Boolean          @default(false)
   bankVerified               Boolean          @default(false)
   category                   ProviderCategory @default(OTHER)
+  displayName                String?          @db.VarChar(100)
+  bio                        String?          @db.VarChar(500)
+  avatarUrl                  String?          @db.Text
   ratingAverage              Decimal?         @db.Decimal(3, 2)
   totalTipsReceived          Int              @default(0)
   payoutPreference           PayoutPreference @default(DAILY_BATCH)
@@ -333,6 +340,8 @@ model PaymentLink {
   providerId         String   @db.Uuid
   provider           Provider @relation(fields: [providerId], references: [id])
   shortCode          String   @unique @db.VarChar(8)
+  role               String?  @db.VarChar(100)
+  workplace          String?  @db.VarChar(200)
   description        String?  @db.VarChar(255)
   suggestedAmountPaise Int?
   allowCustomAmount  Boolean  @default(true)

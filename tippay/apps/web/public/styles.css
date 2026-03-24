@@ -743,6 +743,86 @@ html { scroll-behavior: smooth; }
 .onboard-card h2 { margin-bottom: 8px; }
 .onboard-card p { color: var(--text2); margin-bottom: 20px; }
 
+/* Avatar upload */
+.avatar-upload {
+  width: 96px; height: 96px;
+  border: 3px dashed var(--border);
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  transition: border-color 0.2s;
+  position: relative;
+}
+.avatar-upload:hover { border-color: var(--pri); }
+.avatar-preview {
+  width: 100%; height: 100%;
+  object-fit: cover; border-radius: 50%;
+}
+.avatar-placeholder {
+  display: flex; flex-direction: column; align-items: center;
+  color: var(--muted);
+}
+.avatar-plus { font-size: 24px; font-weight: 700; line-height: 1; }
+.avatar-label { font-size: 10px; font-weight: 600; margin-top: 2px; }
+
+/* Full-width inputs for onboarding */
+.input-full {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: 14px;
+  font-family: inherit;
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
+}
+.input-full:focus { border-color: var(--pri); outline: none; }
+textarea.input-full { resize: none; }
+
+/* Tip link create row */
+.tip-link-create {
+  display: flex; gap: 8px; margin-bottom: 16px;
+  align-items: center; flex-wrap: wrap;
+}
+.input-sm {
+  padding: 8px 12px;
+  border: 2px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-family: inherit;
+  flex: 1; min-width: 120px;
+  transition: border-color 0.2s;
+}
+.input-sm:focus { border-color: var(--pri); outline: none; }
+
+/* Tip link cards */
+.tip-links-list { display: flex; flex-direction: column; gap: 8px; }
+.tip-link-card {
+  background: white;
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: var(--shadow);
+}
+.tip-link-info { flex: 1; min-width: 0; }
+.tip-link-title { font-weight: 600; font-size: 14px; }
+.tip-link-url { font-size: 11px; color: var(--pri); word-break: break-all; }
+.tip-link-stats { font-size: 11px; color: var(--muted); }
+
+/* Provider subtitle on tip page */
+.provider-subtitle {
+  color: var(--text2);
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 2px;
+  margin-bottom: 4px;
+}
+
 .select-full {
   width: 100%;
   padding: 12px 14px;

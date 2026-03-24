@@ -18,6 +18,7 @@
       <div class="tip-header">
         <div class="tip-provider-avatar" id="tip-provider-avatar">?</div>
         <h2 id="tip-provider-name">Loading...</h2>
+        <div id="tip-provider-subtitle" class="provider-subtitle hidden"></div>
         <span class="category-badge" id="tip-provider-category">-</span>
         <div class="tip-provider-rating" id="tip-provider-rating"></div>
         <div class="trust-signal">100% goes directly to <span id="trust-name">them</span></div>
@@ -173,7 +174,19 @@
       <div class="container">
         <div class="onboard-card">
           <h2>Create Your Provider Profile</h2>
-          <p>Set up your profile to start receiving tips via QR code</p>
+          <p>Tell us about yourself to start receiving tips</p>
+
+          <div class="avatar-upload" onclick="document.getElementById('avatar-input').click()">
+            <img id="avatar-preview" class="avatar-preview hidden" alt="Avatar">
+            <div id="avatar-placeholder" class="avatar-placeholder">
+              <span class="avatar-plus">+</span>
+              <span class="avatar-label">Add Photo</span>
+            </div>
+            <input type="file" id="avatar-input" accept="image/*" class="hidden" onchange="previewAvatar(this)">
+          </div>
+
+          <input type="text" id="name-input" class="input-full" placeholder="Your name (required)" maxlength="100">
+
           <select id="cat-select" class="select-full">
             <option value="">Select your category</option>
             <option value="RESTAURANT">Restaurant / Cafe</option>
@@ -182,8 +195,13 @@
             <option value="HOTEL">Hotel</option>
             <option value="TRANSPORT">Transport / Auto / Cab</option>
             <option value="HEALTHCARE">Healthcare</option>
+            <option value="EDUCATION">Education / Tutoring</option>
+            <option value="FITNESS">Fitness / Trainer</option>
             <option value="OTHER">Other</option>
           </select>
+
+          <textarea id="bio-input" class="input-full" placeholder="Tell customers about yourself (optional)" rows="2" maxlength="500"></textarea>
+
           <button class="auth-btn" onclick="createProfile()">Create Profile</button>
         </div>
       </div>
@@ -219,6 +237,21 @@
           </div>
           <div class="share-hint">
             <p>Share your tip link: <code id="tip-link"></code></p>
+          </div>
+        </div>
+
+        <!-- Tip Links Section -->
+        <div class="section">
+          <div class="section-header">
+            <h3>Your Tip Links</h3>
+          </div>
+          <div class="tip-link-create">
+            <input type="text" id="link-role" class="input-sm" placeholder="Your role (e.g. Waiter)" maxlength="100">
+            <input type="text" id="link-workplace" class="input-sm" placeholder="Workplace (e.g. Cafe Mocha)" maxlength="200">
+            <button class="small-btn" onclick="createTipLink()">+ Create Tip Link</button>
+          </div>
+          <div id="tip-links-list" class="tip-links-list">
+            <p class="muted">Loading...</p>
           </div>
         </div>
 

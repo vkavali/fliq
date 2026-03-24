@@ -54,10 +54,18 @@ async function goTipPage() {
 async function resolveProvider(code) {
   try {
     const p = await api('GET', `/payment-links/${code}/resolve`, null, false);
-    return { id: p.providerId, name: p.providerName || 'Service Provider', category: p.category, ratingAverage: p.ratingAverage, suggestedAmountPaise: p.suggestedAmountPaise };
+    return {
+      id: p.providerId, name: p.providerName || 'Service Provider',
+      role: p.role, workplace: p.workplace, avatarUrl: p.avatarUrl, bio: p.bio,
+      category: p.category, ratingAverage: p.ratingAverage, suggestedAmountPaise: p.suggestedAmountPaise,
+    };
   } catch {
     const p = await api('GET', `/providers/${code}/public`, null, false);
-    return { id: code, name: p.name || 'Service Provider', category: p.category, ratingAverage: p.ratingAverage };
+    return {
+      id: code, name: p.displayName || p.name || 'Service Provider',
+      avatarUrl: p.avatarUrl, bio: p.bio,
+      category: p.category, ratingAverage: p.ratingAverage,
+    };
   }
 }
 
@@ -115,8 +123,30 @@ async function openTipPage(code, provider) {
   document.getElementById('tip-error').classList.add('hidden');
 
   const name = provider.name;
-  document.getElementById('tip-provider-avatar').textContent = name[0].toUpperCase();
+  const avatarEl = document.getElementById('tip-provider-avatar');
+  if (provider.avatarUrl) {
+    avatarEl.innerHTML = `<img src="${provider.avatarUrl}" alt="${name}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+  } else {
+    avatarEl.textContent = name[0].toUpperCase();
+  }
   document.getElementById('tip-provider-name').textContent = name;
+
+  // Show "Role at Workplace" subtitle or category badge
+  const subtitleEl = document.getElementById('tip-provider-subtitle');
+  if (subtitleEl) {
+    if (provider.role && provider.workplace) {
+      subtitleEl.textContent = `${provider.role} at ${provider.workplace}`;
+      subtitleEl.classList.remove('hidden');
+      document.getElementById('tip-provider-category').classList.add('hidden');
+    } else if (provider.role) {
+      subtitleEl.textContent = provider.role;
+      subtitleEl.classList.remove('hidden');
+      document.getElementById('tip-provider-category').classList.add('hidden');
+    } else {
+      subtitleEl.classList.add('hidden');
+      document.getElementById('tip-provider-category').classList.remove('hidden');
+    }
+  }
   document.getElementById('tip-provider-category').textContent = provider.category || 'SERVICE';
 
   // Trust signal
@@ -329,6 +359,7 @@ async function loadDashboard() {
     document.getElementById('tip-link').textContent = `${location.origin}/app/#tip/${p.id}`;
 
     loadQrCodes();
+    loadTipLinks();
     loadProviderTips();
     loadPayouts();
   } catch (e) {
@@ -338,14 +369,79 @@ async function loadDashboard() {
   }
 }
 
+function previewAvatar(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = document.getElementById('avatar-preview');
+    img.src = e.target.result;
+    img.classList.remove('hidden');
+    document.getElementById('avatar-placeholder').classList.add('hidden');
+  };
+  reader.readAsDataURL(file);
+}
+
+async function uploadAvatar(file) {
+  const formData = new FormData();
+  formData.append('avatar', file);
+  const h = {};
+  if (token) h['Authorization'] = `Bearer ${token}`;
+  const r = await fetch(API + '/providers/profile/avatar', { method: 'POST', headers: h, body: formData });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.message || 'Avatar upload failed');
+  return d;
+}
+
 async function createProfile() {
+  const name = document.getElementById('name-input').value.trim();
   const cat = document.getElementById('cat-select').value;
+  const bio = document.getElementById('bio-input').value.trim();
+  if (!name) return toast('Enter your name');
   if (!cat) return toast('Pick a category');
   try {
-    await api('POST', '/providers/profile', { category: cat });
+    await api('POST', '/providers/profile', { displayName: name, category: cat, bio: bio || undefined });
+    // Upload avatar if selected
+    const avatarFile = document.getElementById('avatar-input').files[0];
+    if (avatarFile) {
+      try { await uploadAvatar(avatarFile); } catch (e) { toast('Profile created, but avatar upload failed: ' + e.message); }
+    }
     toast('Profile created!');
     loadDashboard();
   } catch (e) { toast('Error: ' + e.message); }
+}
+
+async function createTipLink() {
+  const role = document.getElementById('link-role').value.trim();
+  const workplace = document.getElementById('link-workplace').value.trim();
+  try {
+    const result = await api('POST', '/payment-links', { role: role || undefined, workplace: workplace || undefined });
+    toast('Tip link created!');
+    document.getElementById('link-role').value = '';
+    document.getElementById('link-workplace').value = '';
+    loadTipLinks();
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+async function loadTipLinks() {
+  const list = document.getElementById('tip-links-list');
+  try {
+    const links = await api('GET', '/payment-links/my');
+    const items = Array.isArray(links) ? links : [];
+    if (items.length === 0) { list.innerHTML = '<p class="muted">No tip links yet. Create one above!</p>'; return; }
+    list.innerHTML = items.map(l => {
+      const subtitle = [l.role, l.workplace].filter(Boolean).join(' at ');
+      return `
+        <div class="tip-link-card">
+          <div class="tip-link-info">
+            <div class="tip-link-title">${subtitle || 'Tip Link'}</div>
+            <div class="tip-link-url">${l.shareableUrl}</div>
+            <div class="tip-link-stats">${l.clickCount || 0} clicks</div>
+          </div>
+          <button class="small-btn" onclick="navigator.clipboard.writeText('${l.shareableUrl}');toast('Copied!')">Copy</button>
+        </div>`;
+    }).join('');
+  } catch (e) { list.innerHTML = '<p class="muted">Could not load tip links</p>'; }
 }
 
 async function loadQrCodes() {

@@ -1,8 +1,20 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsEnum, Matches } from 'class-validator';
+import { IsOptional, IsString, IsEnum, Matches, MaxLength } from 'class-validator';
 import { ProviderCategory, PayoutPreference } from '@fliq/shared';
 
 export class UpdateProviderProfileDto {
+  @ApiPropertyOptional({ example: 'Amit Kumar', description: 'Your display name' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  displayName?: string;
+
+  @ApiPropertyOptional({ example: 'Love making great coffee!', description: 'Short bio about yourself' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  bio?: string;
+
   @ApiPropertyOptional({ enum: ProviderCategory })
   @IsOptional()
   @IsEnum(ProviderCategory)

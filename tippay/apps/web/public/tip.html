@@ -97,11 +97,22 @@
       font-size: 32px; font-weight: 700;
       margin: 0 auto 14px;
       box-shadow: 0 4px 20px rgba(108, 92, 231, 0.3);
+      overflow: hidden;
+    }
+    .avatar img {
+      width: 100%; height: 100%;
+      object-fit: cover; border-radius: 50%;
     }
     .provider-name {
       font-size: 24px;
       font-weight: 800;
       color: var(--text);
+      margin-bottom: 2px;
+    }
+    .provider-subtitle {
+      font-size: 14px;
+      color: var(--text2);
+      font-weight: 500;
       margin-bottom: 6px;
     }
     .category-badge {
@@ -439,6 +450,7 @@
     <div class="provider-header">
       <div class="avatar" id="avatar">?</div>
       <div class="provider-name" id="provider-name">Loading...</div>
+      <div class="provider-subtitle hidden" id="provider-subtitle"></div>
       <span class="category-badge" id="provider-category">-</span>
       <div class="rating-row" id="rating-row"></div>
       <div class="trust-badge" id="trust-badge">100% goes directly to <span id="trust-name">them</span></div>
@@ -582,8 +594,24 @@ let state = {
 
     // Populate UI
     const name = data.providerName || 'Service Provider';
-    document.getElementById('avatar').textContent = name[0].toUpperCase();
+    const avatarEl = document.getElementById('avatar');
+    if (data.avatarUrl) {
+      avatarEl.innerHTML = `<img src="${data.avatarUrl}" alt="${name}">`;
+    } else {
+      avatarEl.textContent = name[0].toUpperCase();
+    }
     document.getElementById('provider-name').textContent = name;
+
+    // Show "Role at Workplace" subtitle
+    const subtitleEl = document.getElementById('provider-subtitle');
+    if (data.role && data.workplace) {
+      subtitleEl.textContent = `${data.role} at ${data.workplace}`;
+      subtitleEl.classList.remove('hidden');
+    } else if (data.role) {
+      subtitleEl.textContent = data.role;
+      subtitleEl.classList.remove('hidden');
+    }
+
     document.getElementById('provider-category').textContent = data.category || 'SERVICE';
     document.getElementById('trust-name').textContent = name.split(' ')[0];
     document.getElementById('net-name').textContent = name.split(' ')[0];

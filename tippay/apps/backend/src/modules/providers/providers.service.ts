@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, BadRequestException, PayloadTooLargeException } from '@nestjs/common';
 import { PrismaService } from '@fliq/database';
 import { WalletType, UserType } from '@fliq/shared';
 import { CreateProviderProfileDto } from './dto/create-provider-profile.dto';
@@ -21,13 +21,15 @@ export class ProvidersService {
         data: {
           id: userId,
           category: dto.category,
+          displayName: dto.displayName,
+          bio: dto.bio,
           upiVpa: dto.upiVpa,
         },
       }),
-      // Upgrade user type to PROVIDER
+      // Upgrade user type to PROVIDER and set name for backward compat
       this.prisma.user.update({
         where: { id: userId },
-        data: { type: UserType.PROVIDER },
+        data: { type: UserType.PROVIDER, name: dto.displayName },
       }),
       // Create earnings wallet
       this.prisma.wallet.create({
@@ -59,7 +61,10 @@ export class ProvidersService {
     if (!provider) throw new NotFoundException('Provider not found');
     return {
       id: provider.id,
-      name: provider.user.name,
+      name: provider.displayName || provider.user.name,
+      displayName: provider.displayName || provider.user.name,
+      bio: provider.bio,
+      avatarUrl: provider.avatarUrl,
       category: provider.category,
       ratingAverage: provider.ratingAverage,
       totalTipsReceived: provider.totalTipsReceived,
@@ -86,13 +91,20 @@ export class ProvidersService {
     const take = Math.min(limit, 50); // cap at 50
 
     const where: any = {
+      OR: [
+        { displayName: { contains: sanitized, mode: 'insensitive' } },
+        {
+          user: {
+            OR: [
+              { name: { contains: sanitized, mode: 'insensitive' } },
+              { phone: { contains: sanitized } },
+            ],
+          },
+        },
+      ],
       user: {
         status: 'ACTIVE',
         type: 'PROVIDER',
-        OR: [
-          { name: { contains: sanitized, mode: 'insensitive' } },
-          { phone: { contains: sanitized } },
-        ],
       },
     };
 
@@ -116,7 +128,7 @@ export class ProvidersService {
     return {
       providers: providers.map((p) => ({
         id: p.id,
-        name: p.user.name,
+        name: p.displayName || p.user.name,
         phone: p.user.phone.replace(/(\d{2})\d{6}(\d{4})/, '$1******$2'), // mask phone
         category: p.category,
         ratingAverage: p.ratingAverage,
@@ -126,5 +138,33 @@ export class ProvidersService {
       page,
       limit: take,
     };
+  }
+
+  async updateAvatar(userId: string, file: Express.Multer.File) {
+    await this.getProfile(userId);
+
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    // Convert to base64 data URL
+    const mimeType = file.mimetype;
+    if (!mimeType.startsWith('image/')) {
+      throw new BadRequestException('File must be an image');
+    }
+
+    const base64 = file.buffer.toString('base64');
+    const dataUrl = `data:${mimeType};base64,${base64}`;
+
+    // Reject if encoded data exceeds 100KB
+    if (dataUrl.length > 100_000) {
+      throw new PayloadTooLargeException('Avatar image too large. Please use an image under 75KB.');
+    }
+
+    return this.prisma.provider.update({
+      where: { id: userId },
+      data: { avatarUrl: dataUrl },
+      select: { avatarUrl: true },
+    });
   }
 }

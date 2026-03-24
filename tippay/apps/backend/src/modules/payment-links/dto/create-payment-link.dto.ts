@@ -2,6 +2,18 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString, IsInt, IsBoolean, Min, Max, MaxLength } from 'class-validator';
 
 export class CreatePaymentLinkDto {
+  @ApiPropertyOptional({ example: 'Waiter', description: 'Your role (e.g. Waiter, Driver, Barber)' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  role?: string;
+
+  @ApiPropertyOptional({ example: 'Cafe Mocha', description: 'Workplace name' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  workplace?: string;
+
   @ApiPropertyOptional({ example: 'Tips for great service', description: 'Description shown on the tip page' })
   @IsOptional()
   @IsString()

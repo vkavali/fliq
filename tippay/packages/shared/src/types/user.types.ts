@@ -22,6 +22,10 @@ export enum ProviderCategory {
   HOUSEHOLD = 'HOUSEHOLD',
   RESTAURANT = 'RESTAURANT',
   HOTEL = 'HOTEL',
+  TRANSPORT = 'TRANSPORT',
+  HEALTHCARE = 'HEALTHCARE',
+  EDUCATION = 'EDUCATION',
+  FITNESS = 'FITNESS',
   OTHER = 'OTHER',
 }
 
@@ -44,6 +48,8 @@ export interface UserPublic {
 export interface ProviderPublic {
   id: string;
   displayName: string | null;
+  bio: string | null;
+  avatarUrl: string | null;
   category: ProviderCategory;
   ratingAverage: number | null;
   totalTipsReceived: number;
