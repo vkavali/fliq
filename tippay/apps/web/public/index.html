@@ -261,7 +261,7 @@
           <img src="logo-full.png" alt="Fliq" class="lp-logo-img">
           <span class="lp-beta-badge">BETA</span>
         </div>
-        <button class="lp-nav-btn" onclick="goTo('login')">Provider Login</button>
+        <a class="lp-nav-btn" href="#lp-download">Download App</a>
       </div>
     </nav>
 
@@ -271,15 +271,15 @@
         <h1 class="lp-hero-title">Tipping Made Instant</h1>
         <p class="lp-hero-sub">India's UPI-native tipping platform. Customers scan, tip, done — no app needed.</p>
         <div class="lp-hero-actions">
-          <button class="lp-btn-primary" onclick="goTo('login')">Get Started</button>
-          <button class="lp-btn-outline" onclick="scrollToSection('lp-how')">See How It Works</button>
+          <a class="lp-store-btn" href="#" id="playstore-link">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" class="lp-store-img">
+          </a>
+          <a class="lp-store-btn" href="#" id="appstore-link">
+            <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" class="lp-store-img">
+          </a>
         </div>
-        <div class="lp-hero-tip-link">
-          Have a provider ID? <a href="javascript:void(0)" onclick="demoCust()">Tip directly</a>
-          <div id="demo-tip-input" class="lp-demo-input hidden">
-            <input type="text" id="demo-provider-id" placeholder="Paste provider ID here">
-            <button class="small-btn" onclick="goTipPage()">Go</button>
-          </div>
+        <div class="lp-hero-hint">
+          <a href="javascript:void(0)" onclick="scrollToSection('lp-how')">See how it works &#8595;</a>
         </div>
       </div>
       <div class="lp-hero-visual">
@@ -326,7 +326,38 @@
       </div>
     </section>
 
-    <!-- 4. Features Grid -->
+    <!-- 4. Customer Tip Section -->
+    <section class="lp-section" id="lp-tip-section">
+      <div class="lp-container">
+        <h2 class="lp-section-title">Want to Tip Someone?</h2>
+        <p class="lp-section-sub">No app needed. No sign up. Just enter a provider ID or scan their QR code.</p>
+        <div class="lp-tip-box">
+          <div class="lp-tip-option">
+            <div class="lp-tip-option-icon">&#128247;</div>
+            <h3>Scan QR Code</h3>
+            <p>Point your phone camera at the provider's QR code — it opens the tip page instantly.</p>
+          </div>
+          <div class="lp-tip-option">
+            <div class="lp-tip-option-icon">&#128279;</div>
+            <h3>Use a Tip Link</h3>
+            <p>Got a WhatsApp or SMS link? Just tap it to open the tip page directly.</p>
+          </div>
+          <div class="lp-tip-option">
+            <div class="lp-tip-option-icon">&#128270;</div>
+            <h3>Enter Provider ID</h3>
+            <p>Have their ID? Enter it below to tip right now.</p>
+          </div>
+        </div>
+        <div class="lp-tip-input-row">
+          <div id="demo-tip-input" class="lp-demo-input">
+            <input type="text" id="demo-provider-id" placeholder="Enter provider ID (e.g. abc12345-...)">
+            <button class="lp-btn-tip" onclick="goTipPage()">Tip Now</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Features Grid -->
     <section class="lp-section">
       <div class="lp-container">
         <h2 class="lp-section-title">Why Fliq?</h2>
@@ -365,16 +396,20 @@
       </div>
     </section>
 
-    <!-- 5. Provider CTA -->
+    <!-- 5. Download CTA -->
     <section class="lp-cta" id="lp-cta-section">
-      <div class="lp-container">
-        <h2 class="lp-cta-title">Start receiving tips in 2 minutes</h2>
-        <ul class="lp-cta-list">
-          <li>Free QR code — print and place anywhere</li>
-          <li>Earnings dashboard — track every tip in real time</li>
-          <li>Instant payouts — withdraw to your bank anytime</li>
-        </ul>
-        <button class="lp-btn-primary lp-btn-lg" onclick="goTo('login')">Create Provider Account</button>
+      <div class="lp-container" id="lp-download">
+        <h2 class="lp-cta-title">Download Fliq</h2>
+        <p class="lp-cta-sub">Available for providers and customers. Scan QR codes, send tips, track earnings — all in one app.</p>
+        <div class="lp-store-row">
+          <a class="lp-store-btn-lg" href="#" id="playstore-link-2">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" class="lp-store-img-lg">
+          </a>
+          <a class="lp-store-btn-lg" href="#" id="appstore-link-2">
+            <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" class="lp-store-img-lg">
+          </a>
+        </div>
+        <p class="lp-cta-web">Or use the <a href="javascript:void(0)" onclick="goTo('login')">web dashboard</a> for provider management</p>
       </div>
     </section>
 
@@ -387,6 +422,7 @@
         <p class="lp-footer-tagline">Built for India. UPI-native. Zero friction.</p>
         <div class="lp-footer-links">
           <a href="javascript:void(0)" onclick="goTo('login')">Provider Login</a>
+          <a href="#lp-download">Download App</a>
           <a href="/api/docs">API Docs</a>
         </div>
       </div>

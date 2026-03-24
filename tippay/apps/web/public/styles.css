@@ -126,22 +126,60 @@ html { scroll-behavior: smooth; }
 
 .lp-btn-lg { padding: 16px 40px; font-size: 17px; }
 
-.lp-hero-tip-link {
-  font-size: 14px; color: rgba(255,255,255,0.7);
-}
-.lp-hero-tip-link a { color: white; text-decoration: underline; font-weight: 600; }
+/* -- Store buttons -- */
+.lp-store-btn { display: inline-block; transition: transform 0.2s; }
+.lp-store-btn:hover { transform: translateY(-2px); }
+.lp-store-img { height: 48px; width: auto; }
 
+.lp-store-row { display: flex; gap: 16px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+.lp-store-btn-lg { display: inline-block; transition: transform 0.2s; }
+.lp-store-btn-lg:hover { transform: translateY(-2px); }
+.lp-store-img-lg { height: 56px; width: auto; }
+
+.lp-hero-hint { font-size: 14px; margin-top: 8px; }
+.lp-hero-hint a { color: rgba(255,255,255,0.7); text-decoration: none; }
+.lp-hero-hint a:hover { color: white; }
+
+/* -- Customer tip section -- */
+.lp-section-sub { text-align: center; color: var(--text2); font-size: 16px; margin-top: -32px; margin-bottom: 40px; }
+.lp-tip-box {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 24px; margin-bottom: 32px;
+}
+.lp-tip-option {
+  text-align: center; padding: 24px 16px;
+  background: var(--bg); border-radius: var(--r);
+  border: 1px solid var(--border);
+}
+.lp-tip-option-icon { font-size: 36px; margin-bottom: 10px; }
+.lp-tip-option h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+.lp-tip-option p { font-size: 13px; color: var(--text2); line-height: 1.5; }
+
+.lp-tip-input-row { display: flex; justify-content: center; }
 .lp-demo-input {
-  margin-top: 12px;
   display: flex; gap: 8px;
   background: white; border-radius: var(--r);
   padding: 6px; box-shadow: var(--shadow);
+  border: 2px solid var(--border);
 }
 .lp-demo-input input {
   border: none; outline: none;
   padding: 10px 16px; font-size: 14px;
-  font-family: inherit; width: 260px;
+  font-family: inherit; width: 300px;
 }
+.lp-btn-tip {
+  background: var(--pri); color: white; border: none;
+  border-radius: var(--r-sm); padding: 10px 24px;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  transition: background 0.2s; white-space: nowrap;
+}
+.lp-btn-tip:hover { background: var(--pri-dark); }
+
+/* -- CTA extras -- */
+.lp-cta-sub { color: rgba(255,255,255,0.8); font-size: 16px; margin-bottom: 28px; }
+.lp-cta-web { color: rgba(255,255,255,0.6); font-size: 13px; margin-top: 8px; }
+.lp-cta-web a { color: white; text-decoration: underline; }
 
 /* -- Phone Mockup -- */
 .lp-hero-visual { flex-shrink: 0; }
@@ -863,19 +901,22 @@ html { scroll-behavior: smooth; }
 @media (max-width: 900px) {
   .lp-steps { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
   .lp-features { grid-template-columns: repeat(2, 1fr); }
+  .lp-tip-box { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto 32px; }
 }
 @media (max-width: 640px) {
   .lp-hero { padding: 80px 20px 40px; gap: 40px; }
   .lp-hero-title { font-size: 36px; }
   .lp-hero-sub { font-size: 16px; }
-  .lp-hero-actions { flex-direction: column; }
-  .lp-btn-primary, .lp-btn-outline { width: 100%; text-align: center; }
+  .lp-hero-actions { flex-direction: column; align-items: center; }
   .lp-hero-visual { display: none; }
   .lp-features { grid-template-columns: 1fr; }
   .lp-section { padding: 56px 20px; }
   .lp-section-title { font-size: 26px; margin-bottom: 32px; }
   .lp-cta { padding: 56px 20px; }
   .lp-cta-title { font-size: 26px; }
+  .lp-demo-input { flex-direction: column; }
+  .lp-demo-input input { width: 100%; }
+  .lp-store-row { flex-direction: column; align-items: center; }
   .earnings-banner { flex-direction: column; gap: 16px; }
   .auth-box { padding: 28px 20px; }
   .tip-container { padding: 24px 20px; }
