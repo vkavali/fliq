@@ -22,7 +22,18 @@ async function bootstrap() {
   const env = configService.get<string>('APP_ENV', 'development');
 
   app.use(helmet({
-    contentSecurityPolicy: env === 'production' ? undefined : false,
+    contentSecurityPolicy: env === 'production'
+      ? {
+          directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            imgSrc: ["'self'", "data:", "https:"],
+            connectSrc: ["'self'"],
+          },
+        }
+      : false,
     crossOriginEmbedderPolicy: false,
   }));
 
