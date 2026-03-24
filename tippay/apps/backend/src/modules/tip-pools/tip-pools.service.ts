@@ -322,7 +322,7 @@ export class TipPoolsService {
     totalPaise: number,
     members: Array<{ id: string; userId: string; role?: string | null; splitPercentage?: number | null; user?: any }>,
     splitMethod: SplitMethod,
-  ) {
+  ): Array<{ memberId: string; userId: string; userName: string | null; userPhone: string | null; role: string | null | undefined; splitPercentage: number; amountPaise: number }> {
     if (members.length === 0) return [];
 
     switch (splitMethod) {
