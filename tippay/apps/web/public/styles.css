@@ -272,8 +272,7 @@ html { scroll-behavior: smooth; }
   font-size: 18px; color: white; margin-bottom: 6px;
   display: flex; align-items: center; justify-content: center; gap: 8px;
 }
-.lp-footer-logo { height: 28px; width: auto; }
-.lp-footer-brand .lp-nav-icon { width: 28px; height: 28px; font-size: 14px; }
+.lp-footer-logo { height: 28px; width: auto; filter: brightness(0) invert(1); }
 .lp-footer-tagline { font-size: 13px; margin-bottom: 16px; color: rgba(255,255,255,0.5); }
 .lp-footer-links { display: flex; gap: 20px; justify-content: center; }
 .lp-footer-links a {
@@ -282,19 +281,12 @@ html { scroll-behavior: smooth; }
 }
 .lp-footer-links a:hover { color: white; }
 
-/* -- Landing: keep brand classes for login page -- */
+/* -- Brand classes (login page, etc.) -- */
 .brand { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 8px; }
-.brand-icon {
-  width: 64px; height: 64px;
-  background: white;
-  color: var(--pri);
-  border-radius: 16px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 32px; font-weight: 800;
-  box-shadow: var(--shadow);
-}
-.brand h1 { font-size: 36px; font-weight: 800; color: white; }
+.brand-logo { height: 60px; width: auto; }
 .brand-sub { color: rgba(255,255,255,0.8); font-size: 16px; font-weight: 500; }
+.topbar-logo { height: 28px; width: auto; }
+.tip-footer-logo { height: 20px; width: auto; vertical-align: middle; margin-left: 4px; }
 
 /* ========== AUTH ========== */
 #login-page {
@@ -315,8 +307,7 @@ html { scroll-behavior: smooth; }
   text-align: center;
 }
 .auth-box .brand { margin-bottom: 28px; }
-.auth-box .brand-icon { background: var(--pri); color: white; }
-.auth-box .brand h1 { color: var(--pri); font-size: 28px; }
+.auth-box .brand-logo { height: 48px; }
 .auth-box .brand-sub { color: var(--text2); }
 .auth-box h3 { font-size: 18px; margin-bottom: 16px; }
 
