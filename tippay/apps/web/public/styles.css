@@ -58,13 +58,13 @@ html { scroll-behavior: smooth; }
 }
 .lp-nav-inner {
   max-width: 1100px; margin: 0 auto;
-  padding: 0 24px; height: 56px;
+  padding: 0 24px; height: 64px;
   display: flex; align-items: center; justify-content: space-between;
 }
 .lp-nav-brand {
   display: flex; align-items: center; gap: 8px;
 }
-.lp-logo-img { height: 32px; width: auto; }
+.lp-logo-img { height: 48px; width: auto; }
 .lp-beta-badge {
   background: var(--green); color: white;
   font-size: 9px; font-weight: 800;
@@ -272,7 +272,7 @@ html { scroll-behavior: smooth; }
   font-size: 18px; color: white; margin-bottom: 6px;
   display: flex; align-items: center; justify-content: center; gap: 8px;
 }
-.lp-footer-logo { height: 28px; width: auto; filter: brightness(0) invert(1); }
+.lp-footer-logo { height: 36px; width: auto; filter: brightness(0) invert(1); }
 .lp-footer-tagline { font-size: 13px; margin-bottom: 16px; color: rgba(255,255,255,0.5); }
 .lp-footer-links { display: flex; gap: 20px; justify-content: center; }
 .lp-footer-links a {
@@ -283,10 +283,10 @@ html { scroll-behavior: smooth; }
 
 /* -- Brand classes (login page, etc.) -- */
 .brand { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 8px; }
-.brand-logo { height: 60px; width: auto; }
+.brand-logo { height: 80px; width: auto; }
 .brand-sub { color: rgba(255,255,255,0.8); font-size: 16px; font-weight: 500; }
-.topbar-logo { height: 28px; width: auto; }
-.tip-footer-logo { height: 20px; width: auto; vertical-align: middle; margin-left: 4px; }
+.topbar-logo { height: 40px; width: auto; }
+.tip-footer-logo { height: 28px; width: auto; vertical-align: middle; margin-left: 4px; }
 
 /* ========== AUTH ========== */
 #login-page {
