@@ -22,12 +22,14 @@ async function bootstrap() {
   const env = configService.get<string>('APP_ENV', 'development');
 
   app.use(helmet({
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: env === 'production' ? undefined : false,
     crossOriginEmbedderPolicy: false,
   }));
-  app.enableCors({
-    origin: '*',
-  });
+
+  const allowedOrigins = env === 'production'
+    ? ['https://fliq.co.in', 'https://www.fliq.co.in']
+    : ['http://localhost:3000', 'http://localhost:5173'];
+  app.enableCors({ origin: allowedOrigins, credentials: true });
 
   // Serve web app static files from /app (if present)
   const webAppPath = join(__dirname, '..', '..', 'web', 'public');
@@ -52,19 +54,21 @@ async function bootstrap() {
     new BigIntSerializationInterceptor(),
   );
 
-  // Swagger
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Fliq API')
-    .setDescription('Indian UPI Tipping & Services Platform API')
-    .setVersion('0.1.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, document);
+  // Swagger — only in development
+  if (env !== 'production') {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Fliq API')
+      .setDescription('Indian UPI Tipping & Services Platform API')
+      .setVersion('0.1.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api/docs', app, document);
+  }
 
   await app.listen(port);
   console.log(`Fliq backend running on http://localhost:${port}`);
-  if (env === 'development') {
+  if (env !== 'production') {
     console.log(`Swagger docs at http://localhost:${port}/api/docs`);
   }
 }

@@ -28,7 +28,7 @@ export class AuthService {
     private readonly redis: RedisService,
   ) {}
 
-  async sendOtp(phone: string): Promise<{ message: string; otp?: string }> {
+  async sendOtp(phone: string): Promise<{ message: string }> {
     await this.checkOtpRateLimit(phone);
 
     const code = this.generateOtp();
@@ -54,16 +54,15 @@ export class AuthService {
     await this.redis.incr(dayKey);
     await this.redis.setex(dayKey, 86400, (await this.redis.get(dayKey)) || '1');
 
-    // In production, send via SMS. Otherwise return in response for testing.
     const env = this.config.get<string>('APP_ENV', 'development');
-    if (env === 'production') {
+    if (env !== 'production') {
+      this.logger.warn(`[DEV] OTP for ${phone}: ${code}`);
+    } else {
       // TODO: Send SMS via MSG91
       this.logger.log(`OTP sent to ${phone}`);
-      return { message: 'OTP sent successfully' };
     }
 
-    this.logger.warn(`[DEV] OTP for ${phone}: ${code}`);
-    return { message: 'OTP sent successfully', otp: code };
+    return { message: 'OTP sent successfully' };
   }
 
   async verifyOtp(

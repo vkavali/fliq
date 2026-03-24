@@ -86,3 +86,39 @@ pnpm --filter @fliq/database build
 - DTOs use `!:` for class-validator populated properties
 - Backend doesn't emit declarations (app, not library)
 - Tests use mocked Prisma and services — no DB required
+
+## Deployment & Infrastructure
+- Railway deployment from `master` branch via `apps/backend/Dockerfile`
+- PostgreSQL (Railway managed), Redis (Railway managed)
+- Web frontend served as static files from `apps/web/public/` via NestJS `useStaticAssets` at `/app/`
+- Domain: `fliq.co.in`
+- Dedicated tip page: `tip.html` (separate from SPA, uses payment-links API)
+
+## Web Frontend (SPA)
+- `apps/web/public/` — vanilla JS single-page app (no framework)
+- Pages: `#landing-page`, `#login-page`, `#dashboard-page`, `#tip-page`
+- Navigation: `goTo(page)` function toggles page divs
+- CSS classes: landing page uses `lp-` prefix; existing brand/tip/dashboard classes untouched
+- Logo: `logo-full.png` (purple Fl₹q with gold rupee as 'i')
+
+## Environment Variables (Critical)
+- `APP_ENV` — controls dev/prod behavior (OTP logging, Swagger visibility, CORS). Must be `production` in Railway.
+- `NODE_ENV` — set in Dockerfile. Some services historically checked this instead of `APP_ENV` (now fixed).
+- `JWT_SECRET` — must be strong random value in production (min 16 chars), not the hardcoded dev default.
+- `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` — live keys required for production payments.
+- `RAZORPAY_WEBHOOK_SECRET` — required for webhook signature verification.
+- `MSG91_AUTH_KEY` — required for production SMS delivery.
+- Env validation via Joi schema in `src/config/env.validation.ts` — app fails fast if critical vars missing.
+
+## API Endpoints (key ones)
+- `GET /providers/:id/public` — provider lookup by UUID only
+- `GET /payment-links/:code/resolve` — resolves short code OR UUID (preferred for tip flow)
+- `POST /auth/otp/send` — sends OTP, rate-limited
+- `POST /auth/otp/verify` — verifies OTP, returns JWT
+- `POST /tips` — create tip + Razorpay order
+- `POST /tips/:id/verify` — verify payment after Razorpay checkout
+- `GET /api/docs` — Swagger (dev-only, hidden in production)
+
+## Branch Strategy
+- `master` — production deployments (Railway auto-deploys)
+- `dev` — development branch (merge to master for deploy)

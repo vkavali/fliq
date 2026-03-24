@@ -7,7 +7,7 @@ export class NotificationsService {
   private readonly isDev: boolean;
 
   constructor(private readonly config: ConfigService) {
-    this.isDev = this.config.get<string>('NODE_ENV', 'development') !== 'production';
+    this.isDev = this.config.get<string>('APP_ENV', 'development') !== 'production';
   }
 
   /**

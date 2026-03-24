@@ -28,6 +28,7 @@ RUN corepack enable
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV APP_ENV=production
 
 # Copy workspace config for production install
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./

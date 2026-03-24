@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
+import { envValidationSchema } from './config/env.validation';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { RedisModule } from './modules/redis/redis.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -26,6 +27,7 @@ import { TipPoolsModule } from './modules/tip-pools/tip-pools.module';
         '../../.env',       // monorepo root
         '../../.env.local', // local overrides
       ],
+      validationSchema: envValidationSchema,
     }),
     PrismaModule,
     RedisModule,

@@ -17,7 +17,7 @@ import {
 import { RazorpayService } from '../payments/razorpay.service';
 import { CreateTipDto } from './dto/create-tip.dto';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
-import { randomUUID } from 'crypto';
+
 
 @Injectable()
 export class TipsService {
@@ -86,28 +86,17 @@ export class TipsService {
       },
     });
 
-    // Create Razorpay order (or mock in dev mode)
-    let orderId: string;
-    try {
-      const order = await this.razorpay.createOrder({
-        amount: dto.amountPaise,
-        currency: CURRENCY,
-        receipt: tip.id,
-        notes: {
-          tipId: tip.id,
-          providerId: dto.providerId,
-        },
-      });
-      orderId = order.id;
-    } catch (err) {
-      if (this.isDev) {
-        // Mock order in dev mode when Razorpay keys aren't configured
-        orderId = `order_dev_${randomUUID().replace(/-/g, '').substring(0, 14)}`;
-        this.logger.warn(`Dev mode: mocked Razorpay order ${orderId}`);
-      } else {
-        throw err;
-      }
-    }
+    // Create Razorpay order
+    const order = await this.razorpay.createOrder({
+      amount: dto.amountPaise,
+      currency: CURRENCY,
+      receipt: tip.id,
+      notes: {
+        tipId: tip.id,
+        providerId: dto.providerId,
+      },
+    });
+    const orderId = order.id;
 
     // Store order ID on tip
     await this.prisma.tip.update({

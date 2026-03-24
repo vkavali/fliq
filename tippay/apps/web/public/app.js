@@ -69,8 +69,7 @@ async function api(method, path, body, auth = true) {
 }
 
 // ===== TIP PAGE (no login needed) =====
-async function openTipPage(providerId) {
-  tipState.providerId = providerId;
+async function openTipPage(code) {
   goTo('tip');
 
   // Reset
@@ -80,10 +79,11 @@ async function openTipPage(providerId) {
   document.getElementById('tip-error').classList.add('hidden');
 
   try {
-    const p = await api('GET', `/providers/${providerId}/public`, null, false);
+    const p = await api('GET', `/payment-links/${code}/resolve`, null, false);
+    tipState.providerId = p.providerId;
     tipState.provider = p;
 
-    const name = p.name || 'Service Provider';
+    const name = p.providerName || 'Service Provider';
     document.getElementById('tip-provider-avatar').textContent = name[0].toUpperCase();
     document.getElementById('tip-provider-name').textContent = name;
     document.getElementById('tip-provider-category').textContent = p.category || 'SERVICE';
@@ -98,7 +98,8 @@ async function openTipPage(providerId) {
       ? `<span class="star-display">${'★'.repeat(stars)}${'☆'.repeat(5 - stars)}</span> ${rating.toFixed(1)}`
       : '<span class="muted">New provider</span>';
 
-    pickAmount(10000);
+    // Use suggested amount from payment link, or default
+    pickAmount(p.suggestedAmountPaise || 10000);
   } catch (e) {
     document.getElementById('tip-provider-name').textContent = 'Provider not found';
     document.getElementById('tip-amount-section').classList.add('hidden');
