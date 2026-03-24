@@ -54,4 +54,4 @@ COPY apps/web/public apps/web/public
 EXPOSE 3000
 
 # Push schema to DB (creates/updates tables without migrations) then start
-CMD pnpm --filter @fliq/database exec prisma db push --skip-generate --accept-data-loss && node apps/backend/dist/main.js
+CMD cd packages/database && npx prisma db push --skip-generate --accept-data-loss 2>&1 && cd /app && node apps/backend/dist/main.js

@@ -96,8 +96,39 @@ async function api(method, path, body, auth = true) {
   if (body) opts.body = JSON.stringify(body);
   const r = await fetch(API + path, opts);
   const d = await r.json().catch(() => ({}));
+  // Auto-refresh token on 401 (expired JWT)
+  if (r.status === 401 && auth && token) {
+    const refreshed = await tryRefreshToken();
+    if (refreshed) {
+      h['Authorization'] = `Bearer ${token}`;
+      const r2 = await fetch(API + path, { ...opts, headers: h });
+      const d2 = await r2.json().catch(() => ({}));
+      if (!r2.ok) throw new Error(d2.message || `Error ${r2.status}`);
+      return d2;
+    }
+    // Refresh failed — clear session and redirect to login
+    logout();
+    throw new Error('Session expired — please log in again');
+  }
   if (!r.ok) throw new Error(d.message || `Error ${r.status}`);
   return d;
+}
+
+async function tryRefreshToken() {
+  const refresh = localStorage.getItem('tp_refresh');
+  if (!refresh) return false;
+  try {
+    const r = await fetch(API + '/auth/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: refresh }),
+    });
+    if (!r.ok) return false;
+    const d = await r.json();
+    token = d.accessToken;
+    localStorage.setItem('tp_token', token);
+    return true;
+  } catch { return false; }
 }
 
 // ===== TIP PAGE (no login needed) =====
