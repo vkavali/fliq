@@ -21,6 +21,16 @@ async function bootstrap() {
   const port = configService.get<number>('PORT') || configService.get<number>('APP_PORT', 3000);
   const env = configService.get<string>('APP_ENV', 'development');
 
+  // Prevent CDN/edge from caching API responses (especially errors)
+  app.use((req: any, res: any, next: any) => {
+    // Skip static files — only set no-cache for API routes
+    if (!req.path.startsWith('/app/')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Surrogate-Control', 'no-store');
+    }
+    next();
+  });
+
   app.use(helmet({
     contentSecurityPolicy: env === 'production'
       ? {
