@@ -79,11 +79,20 @@ async function openTipPage(code) {
   document.getElementById('tip-error').classList.add('hidden');
 
   try {
-    const p = await api('GET', `/payment-links/${code}/resolve`, null, false);
-    tipState.providerId = p.providerId;
+    // Try payment-links resolve first (handles short codes + UUIDs)
+    // Falls back to providers/public for direct UUID lookups
+    let p, name;
+    try {
+      p = await api('GET', `/payment-links/${code}/resolve`, null, false);
+      tipState.providerId = p.providerId;
+      name = p.providerName || 'Service Provider';
+    } catch {
+      p = await api('GET', `/providers/${code}/public`, null, false);
+      tipState.providerId = code;
+      name = p.name || 'Service Provider';
+    }
     tipState.provider = p;
 
-    const name = p.providerName || 'Service Provider';
     document.getElementById('tip-provider-avatar').textContent = name[0].toUpperCase();
     document.getElementById('tip-provider-name').textContent = name;
     document.getElementById('tip-provider-category').textContent = p.category || 'SERVICE';
