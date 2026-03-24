@@ -1,6 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 80" fill="none">
-  <!-- ₹ icon in gold -->
-  <text x="0" y="68" font-family="Inter, -apple-system, sans-serif" font-size="78" font-weight="800" fill="#E8A800">&#8377;</text>
-  <!-- "Fliq" full word in white -->
-  <text x="55" y="68" font-family="Inter, -apple-system, sans-serif" font-size="72" font-weight="800" fill="#FFFFFF" letter-spacing="-2">Fliq</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 330 80" fill="none">
+
+  <!-- Merged F/₹ character in gold -->
+  <g stroke="#E8A800" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="10" y1="8" x2="10" y2="72" stroke-width="7"/>
+    <line x1="10" y1="8" x2="52" y2="8" stroke-width="6"/>
+    <line x1="10" y1="30" x2="45" y2="30" stroke-width="6"/>
+    <path d="M48 12 C40 32, 28 50, 10 68" stroke-width="6"/>
+  </g>
+
+  <!-- "liq" in white -->
+  <text x="68" y="68" font-family="Inter, -apple-system, sans-serif" font-size="72" font-weight="800" fill="#FFFFFF" letter-spacing="-2">liq</text>
 </svg>
