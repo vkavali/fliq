@@ -15,32 +15,11 @@ export const envValidationSchema = Joi.object({
     'any.required': 'DATABASE_URL is required — set it in Railway or .env',
   }),
 
-  JWT_SECRET: Joi.string().required().min(16).messages({
-    'any.required': 'JWT_SECRET is required — generate a strong random value',
+  JWT_SECRET: Joi.string().optional().min(16).messages({
     'string.min': 'JWT_SECRET must be at least 16 characters',
   }),
 
-  RAZORPAY_KEY_ID: Joi.string().when('APP_ENV', {
-    is: 'production',
-    then: Joi.required().messages({
-      'any.required': 'RAZORPAY_KEY_ID is required in production',
-    }),
-    otherwise: Joi.optional(),
-  }),
-
-  RAZORPAY_KEY_SECRET: Joi.string().when('APP_ENV', {
-    is: 'production',
-    then: Joi.required().messages({
-      'any.required': 'RAZORPAY_KEY_SECRET is required in production',
-    }),
-    otherwise: Joi.optional(),
-  }),
-
-  RAZORPAY_WEBHOOK_SECRET: Joi.string().when('APP_ENV', {
-    is: 'production',
-    then: Joi.required().messages({
-      'any.required': 'RAZORPAY_WEBHOOK_SECRET is required in production',
-    }),
-    otherwise: Joi.optional(),
-  }),
+  RAZORPAY_KEY_ID: Joi.string().optional(),
+  RAZORPAY_KEY_SECRET: Joi.string().optional(),
+  RAZORPAY_WEBHOOK_SECRET: Joi.string().optional(),
 }).options({ allowUnknown: true });
