@@ -1,4 +1,4 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Module, OnModuleInit, Logger } from '@nestjs/common';
 import { GamificationController } from './gamification.controller';
 import { GamificationService } from './gamification.service';
 
@@ -8,10 +8,17 @@ import { GamificationService } from './gamification.service';
   exports: [GamificationService],
 })
 export class GamificationModule implements OnModuleInit {
+  private readonly logger = new Logger(GamificationModule.name);
+
   constructor(private readonly gamification: GamificationService) {}
 
   async onModuleInit() {
-    // Seed badges on startup (idempotent)
-    await this.gamification.seedBadges();
+    try {
+      await this.gamification.seedBadges();
+    } catch (error) {
+      this.logger.warn(
+        `Badge seeding skipped — tables may not exist yet. Run prisma migrate. Error: ${error.message}`,
+      );
+    }
   }
 }
