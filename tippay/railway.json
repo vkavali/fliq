@@ -5,7 +5,7 @@
     "dockerfilePath": "apps/backend/Dockerfile"
   },
   "deploy": {
-    "startCommand": "node apps/backend/dist/main.js",
+    "startCommand": "cd packages/database && npx prisma db push --skip-generate --accept-data-loss && cd /app && node apps/backend/dist/main.js",
     "healthcheckPath": "/health",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
