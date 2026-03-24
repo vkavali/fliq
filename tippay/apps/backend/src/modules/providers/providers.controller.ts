@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards, UseInterceptors, UploadedFile, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiConsumes } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -77,7 +77,7 @@ export class ProvidersController {
 
   @Get(':id/public')
   @ApiOperation({ summary: 'Get public provider info (for tip page)' })
-  async getPublicProfile(@Param('id') id: string) {
+  async getPublicProfile(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.providersService.getPublicProfile(id);
   }
 }

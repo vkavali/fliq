@@ -112,9 +112,14 @@ export class PaymentLinksService {
    * Resolve a short code to provider info (public endpoint).
    */
   async resolvePaymentLink(shortCodeOrId: string) {
+    // Only include UUID lookup if the input looks like a valid UUID
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(shortCodeOrId);
+    const orConditions: any[] = [{ shortCode: shortCodeOrId }];
+    if (isUuid) orConditions.push({ id: shortCodeOrId });
+
     const paymentLink = await this.prisma.paymentLink.findFirst({
       where: {
-        OR: [{ shortCode: shortCodeOrId }, { id: shortCodeOrId }],
+        OR: orConditions,
         isActive: true,
       },
       include: {
