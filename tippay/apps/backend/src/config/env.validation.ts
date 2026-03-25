@@ -22,4 +22,10 @@ export const envValidationSchema = Joi.object({
   RAZORPAY_KEY_ID: Joi.string().optional(),
   RAZORPAY_KEY_SECRET: Joi.string().optional(),
   RAZORPAY_WEBHOOK_SECRET: Joi.string().optional(),
+
+  // WhatsApp Business API (Meta Cloud API)
+  WHATSAPP_ACCESS_TOKEN: Joi.string().optional(),
+  WHATSAPP_PHONE_NUMBER_ID: Joi.string().optional(),
+  WHATSAPP_APP_SECRET: Joi.string().optional(),
+  WHATSAPP_WEBHOOK_VERIFY_TOKEN: Joi.string().optional().default('fliq_whatsapp_verify'),
 }).options({ allowUnknown: true });

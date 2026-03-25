@@ -123,6 +123,7 @@ model User {
   languagePreference String     @default("en") @db.VarChar(5)
   kycStatus          KycStatus  @default(PENDING)
   status             UserStatus @default(ACTIVE)
+  whatsappOptIn      Boolean    @default(false)
   createdAt          DateTime   @default(now()) @db.Timestamptz()
   updatedAt          DateTime   @updatedAt @db.Timestamptz()
 

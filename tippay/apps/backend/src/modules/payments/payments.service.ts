@@ -134,6 +134,31 @@ export class PaymentsService {
           },
         },
       });
+
+      // Queue WhatsApp notification for provider (if opted in)
+      const providerUser = await tx.user.findUnique({
+        where: { id: tip.providerId },
+        select: { phone: true, name: true, whatsappOptIn: true },
+      });
+      if (providerUser?.whatsappOptIn && providerUser.phone) {
+        const rupees = (Number(tip.amountPaise) / 100).toFixed(2);
+        const stars = tip.rating ? ` ${'⭐'.repeat(tip.rating)}` : '';
+        const msg = tip.message ? `\n"${tip.message}"` : '';
+        await tx.outboxEvent.create({
+          data: {
+            aggregateType: 'whatsapp',
+            aggregateId: tip.id,
+            eventType: 'tip.notify.provider',
+            payload: {
+              to: providerUser.phone,
+              text:
+                `💰 *New Tip Received!*\n\n` +
+                `Amount: ₹${rupees}${stars}${msg}\n\n` +
+                `Reply *balance* to check your wallet.`,
+            },
+          },
+        });
+      }
     });
 
     this.logger.log(`Tip ${tip.id} settled successfully`);
