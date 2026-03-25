@@ -3,9 +3,10 @@ import { PayoutsController } from './payouts.controller';
 import { PayoutsService } from './payouts.service';
 import { PaymentsModule } from '../payments/payments.module';
 import { WalletsModule } from '../wallets/wallets.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [PaymentsModule, WalletsModule],
+  imports: [PaymentsModule, WalletsModule, NotificationsModule],
   controllers: [PayoutsController],
   providers: [PayoutsService],
   exports: [PayoutsService],

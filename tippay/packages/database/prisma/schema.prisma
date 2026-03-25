@@ -137,6 +137,7 @@ model User {
   tipStreak          TipStreak?
   ownedTipPools      TipPool[]          @relation("TipPoolOwner")
   tipPoolMemberships TipPoolMember[]
+  fcmToken           FcmToken?
 
   @@map("users")
 }
@@ -443,4 +444,15 @@ model TipStreak {
   updatedAt     DateTime  @updatedAt @db.Timestamptz()
 
   @@map("tip_streaks")
+}
+
+model FcmToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @db.VarChar(500)
+  platform  String   @db.VarChar(10)
+  updatedAt DateTime @updatedAt @db.Timestamptz()
+
+  @@map("fcm_tokens")
 }

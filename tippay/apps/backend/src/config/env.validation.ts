@@ -22,4 +22,12 @@ export const envValidationSchema = Joi.object({
   RAZORPAY_KEY_ID: Joi.string().optional(),
   RAZORPAY_KEY_SECRET: Joi.string().optional(),
   RAZORPAY_WEBHOOK_SECRET: Joi.string().optional(),
+
+  // Firebase Cloud Messaging (base64-encoded service account JSON)
+  FIREBASE_SERVICE_ACCOUNT_BASE64: Joi.string().optional(),
+
+  // AES-256 encryption key for PAN/bank account (64 hex chars = 32 bytes)
+  ENCRYPTION_KEY: Joi.string().length(64).optional().messages({
+    'string.length': 'ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)',
+  }),
 }).options({ allowUnknown: true });

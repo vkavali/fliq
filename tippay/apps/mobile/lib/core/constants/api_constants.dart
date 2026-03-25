@@ -49,4 +49,8 @@ class ApiConstants {
   static const String streak = '/gamification/streak';
   static const String leaderboardTippers = '/gamification/leaderboard';
   static const String leaderboardProviders = '/gamification/leaderboard/providers';
+
+  // Push Notifications
+  static const String registerFcmToken = '/notifications/fcm-token';
+  static const String removeFcmToken = '/notifications/fcm-token';
 }

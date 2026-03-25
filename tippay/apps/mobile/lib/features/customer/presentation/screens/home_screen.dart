@@ -222,6 +222,11 @@ class HomeScreen extends ConsumerWidget {
               const _CategoriesGrid(),
 
               const SizedBox(height: AppSpacing.xl),
+
+              // ── Become a Provider banner ───────────────────────────────
+              _BecomeProviderBanner(),
+
+              const SizedBox(height: AppSpacing.xl),
             ],
           ),
         ),
@@ -750,6 +755,68 @@ class _RecentBadges extends StatelessWidget {
 
 // ---------------------------------------------------------------------------
 // Utility
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Become a Provider Banner
+// ---------------------------------------------------------------------------
+
+class _BecomeProviderBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push('/onboarding/registration'),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.secondary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.secondary.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.secondary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.storefront_outlined,
+                  color: AppColors.secondary, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Are you a service provider?',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Register to receive tips from customers',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios,
+                size: 14, color: AppColors.textSecondary),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ---------------------------------------------------------------------------
 
 String _timeAgo(DateTime dateTime) {

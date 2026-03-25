@@ -56,6 +56,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Re-fetch user from backend and update state (used after provider onboarding).
+  Future<void> refreshUser() async {
+    final user = await _repo.refreshUser();
+    if (user != null) {
+      state = state.copyWith(status: AuthStatus.authenticated, user: user);
+    }
+  }
+
   Future<void> logout() async {
     await _repo.logout();
     state = const AuthState();

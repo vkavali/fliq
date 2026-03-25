@@ -24,6 +24,11 @@ import '../../features/tip_pools/presentation/screens/pool_detail_screen.dart';
 import '../../features/tip_pools/presentation/screens/create_pool_screen.dart';
 import '../navigation/customer_shell.dart';
 import '../navigation/provider_shell.dart';
+import '../../features/onboarding/presentation/screens/provider_registration_screen.dart';
+import '../../features/onboarding/presentation/screens/bank_details_screen.dart';
+import '../../features/onboarding/presentation/screens/kyc_status_screen.dart';
+import '../../features/onboarding/presentation/screens/qr_generation_screen.dart';
+import '../../features/onboarding/presentation/screens/onboarding_success_screen.dart';
 
 // Root navigator key for full-screen routes that sit above the shell
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -164,6 +169,33 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final poolId = state.pathParameters['id'] ?? '';
           return PoolDetailScreen(poolId: poolId);
         },
+      ),
+
+      // ── Provider onboarding (full-screen, above customer shell) ─────────
+      GoRoute(
+        path: '/onboarding/registration',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ProviderRegistrationScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/bank-details',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const BankDetailsScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/kyc',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const KycStatusScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/qr',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const QrGenerationScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/success',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const OnboardingSuccessScreen(),
       ),
 
       // ── Provider shell (bottom nav) ───────────────────────────────────

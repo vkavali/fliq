@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../providers/auth_provider.dart';
 
@@ -26,8 +27,12 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
-    ref.listen(authProvider, (prev, next) {
+    ref.listen(authProvider, (prev, next) async {
       if (next.status == AuthStatus.authenticated) {
+        // Register FCM token after successful login
+        final notifService = ref.read(notificationServiceProvider);
+        await notifService.registerToken();
+
         final user = next.user;
         if (user != null && user.isProvider) {
           context.go('/dashboard');

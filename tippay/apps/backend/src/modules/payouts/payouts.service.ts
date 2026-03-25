@@ -7,6 +7,7 @@ import { PrismaService } from '@fliq/database';
 import { WalletType, LedgerEntryType } from '@fliq/shared';
 import { RazorpayService } from '../payments/razorpay.service';
 import { WalletsService } from '../wallets/wallets.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { RequestPayoutDto } from './dto/request-payout.dto';
 
 @Injectable()
@@ -17,12 +18,14 @@ export class PayoutsService {
     private readonly prisma: PrismaService,
     private readonly razorpay: RazorpayService,
     private readonly wallets: WalletsService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async requestPayout(userId: string, dto: RequestPayoutDto) {
     // Verify provider exists and has fund account set up
     const provider = await this.prisma.provider.findUnique({
       where: { id: userId },
+      include: { user: { select: { phone: true } } },
     });
     if (!provider) {
       throw new BadRequestException('Provider profile not found');
@@ -96,8 +99,15 @@ export class PayoutsService {
         transaction.id,
         `Payout reversal ${payout.id}`,
       );
+      this.notifications
+        .notifyPayoutFailed(userId, provider.user.phone, dto.amountPaise)
+        .catch((err) => this.logger.error('Failed to send payout failed notification', err));
       throw new BadRequestException('Payout initiation failed. Amount refunded to wallet.');
     }
+
+    this.notifications
+      .notifyPayoutProcessed(userId, provider.user.phone, dto.amountPaise)
+      .catch((err) => this.logger.error('Failed to send payout notification', err));
 
     return {
       payoutId: payout.id,

@@ -39,6 +39,18 @@ class AuthRepository {
     return UserModel.fromJson(data);
   }
 
+  /// Fetch fresh user data from the backend and update local cache.
+  Future<UserModel?> refreshUser() async {
+    try {
+      final response = await _dio.get('/users/me');
+      final userJson = response.data as Map<String, dynamic>;
+      await _storage.saveUserData(userJson);
+      return UserModel.fromJson(userJson);
+    } catch (_) {
+      return await getCurrentUser();
+    }
+  }
+
   Future<void> logout() async {
     await _storage.clearAll();
   }

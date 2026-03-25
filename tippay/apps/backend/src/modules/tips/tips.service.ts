@@ -15,6 +15,7 @@ import {
   CURRENCY,
 } from '@fliq/shared';
 import { RazorpayService } from '../payments/razorpay.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateTipDto } from './dto/create-tip.dto';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
 
@@ -28,6 +29,7 @@ export class TipsService {
     private readonly prisma: PrismaService,
     private readonly razorpay: RazorpayService,
     private readonly config: ConfigService,
+    private readonly notifications: NotificationsService,
   ) {
     this.isDev = this.config.get<string>('APP_ENV', 'development') === 'development';
   }
@@ -139,13 +141,28 @@ export class TipsService {
     }
 
     // Mark as paid (webhook will handle full settlement, but this gives immediate feedback)
-    await this.prisma.tip.update({
+    const paidTip = await this.prisma.tip.update({
       where: { id: tipId },
       data: {
         status: 'PAID',
         gatewayPaymentId: dto.razorpay_payment_id,
       },
+      include: {
+        provider: { include: { user: { select: { phone: true, name: true } } } },
+        customer: { select: { name: true } },
+      },
     });
+
+    // Fire push + SMS notification (non-blocking)
+    this.notifications
+      .notifyTipReceived(
+        paidTip.providerId,
+        paidTip.provider.user.phone,
+        Number(paidTip.amountPaise),
+        paidTip.customer?.name ?? undefined,
+        paidTip.message ?? undefined,
+      )
+      .catch((err) => this.logger.error('Failed to send tip notification', err));
 
     return { status: 'verified', tipId };
   }
