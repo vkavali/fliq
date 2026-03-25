@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { envValidationSchema } from './config/env.validation';
 import { PrismaModule } from './modules/prisma/prisma.module';
@@ -18,6 +19,8 @@ import { OutboxModule } from './modules/outbox/outbox.module';
 import { PaymentLinksModule } from './modules/payment-links/payment-links.module';
 import { GamificationModule } from './modules/gamification/gamification.module';
 import { TipPoolsModule } from './modules/tip-pools/tip-pools.module';
+import { TipJarsModule } from './modules/tip-jars/tip-jars.module';
+import { TipLaterModule } from './modules/tip-later/tip-later.module';
 
 @Module({
   imports: [
@@ -29,6 +32,7 @@ import { TipPoolsModule } from './modules/tip-pools/tip-pools.module';
       ],
       validationSchema: envValidationSchema,
     }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     RedisModule,
     AuthModule,
@@ -45,6 +49,8 @@ import { TipPoolsModule } from './modules/tip-pools/tip-pools.module';
     PaymentLinksModule,
     GamificationModule,
     TipPoolsModule,
+    TipJarsModule,
+    TipLaterModule,
   ],
   controllers: [AppController],
 })

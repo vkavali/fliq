@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/tips_repository.dart';
@@ -169,6 +170,26 @@ class _TipAmountScreenState extends ConsumerState<TipAmountScreen> {
           content:
               Text('Payment failed: ${response.message ?? "Unknown error"}')),
     );
+  }
+
+  // ---------- Tip Later flow ----------
+
+  void _tipLater() {
+    if (_amountPaise < AppConstants.minTipPaise ||
+        _amountPaise > AppConstants.maxTipPaise) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Amount must be between \u20B91 and \u20B91,00,000')),
+      );
+      return;
+    }
+
+    context.push('/tip-later/confirm', extra: {
+      'providerId': widget.providerId,
+      'providerName': widget.providerName,
+      'amountPaise': _amountPaise,
+      'message': _messageController.text.isEmpty ? null : _messageController.text,
+      'rating': _rating > 0 ? _rating : null,
+    });
   }
 
   // ---------- UPI Intent flow ----------
@@ -438,7 +459,7 @@ class _TipAmountScreenState extends ConsumerState<TipAmountScreen> {
             ),
           ),
 
-          // ── Pay button (sticky bottom) ─────────────────────────────
+          // ── Pay / Tip Later buttons (sticky bottom) ────────────────
           Container(
             padding: EdgeInsets.only(
               left: AppSpacing.lg,
@@ -456,47 +477,74 @@ class _TipAmountScreenState extends ConsumerState<TipAmountScreen> {
                 ),
               ],
             ),
-            child: SizedBox(
-              width: double.infinity,
-              height: 54,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primary, AppColors.primaryDark],
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _startPayment,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2.5, color: Colors.white),
-                        )
-                      : Text(
-                          'Pay \u20B9$rupeeDisplay',
-                          style: const TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Pay Now button
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [AppColors.primary, AppColors.primaryDark],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
                         ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _startPayment,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 22,
+                              width: 22,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2.5, color: Colors.white),
+                            )
+                          : Text(
+                              'Pay \u20B9$rupeeDisplay',
+                              style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
+                    ),
+                  ),
                 ),
-              ),
+                // Tip Later button — only for logged-in customers
+                if (ref.watch(authServiceProvider).isLoggedIn) ...[
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: OutlinedButton.icon(
+                      onPressed: _isLoading ? null : _tipLater,
+                      icon: const Icon(Icons.schedule, size: 18),
+                      label: Text(
+                        'Tip Later — Promise \u20B9$rupeeDisplay',
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        side: const BorderSide(color: AppColors.primary),
+                        foregroundColor: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],

@@ -4,9 +4,16 @@ import { PaymentsService } from './payments.service';
 import { WebhooksController } from './webhooks.controller';
 import { WalletsModule } from '../wallets/wallets.module';
 import { GamificationModule } from '../gamification/gamification.module';
+import { TipJarsModule } from '../tip-jars/tip-jars.module';
+import { TipLaterModule } from '../tip-later/tip-later.module';
 
 @Module({
-  imports: [WalletsModule, forwardRef(() => GamificationModule)],
+  imports: [
+    WalletsModule,
+    forwardRef(() => GamificationModule),
+    forwardRef(() => TipJarsModule),
+    forwardRef(() => TipLaterModule),
+  ],
   controllers: [WebhooksController],
   providers: [RazorpayService, PaymentsService],
   exports: [RazorpayService, PaymentsService],

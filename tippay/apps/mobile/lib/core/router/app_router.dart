@@ -22,6 +22,13 @@ import '../../features/gamification/presentation/screens/streak_screen.dart';
 import '../../features/tip_pools/presentation/screens/tip_pools_screen.dart';
 import '../../features/tip_pools/presentation/screens/pool_detail_screen.dart';
 import '../../features/tip_pools/presentation/screens/create_pool_screen.dart';
+import '../../features/tip_jars/presentation/screens/tip_jars_screen.dart';
+import '../../features/tip_jars/presentation/screens/create_tip_jar_screen.dart';
+import '../../features/tip_jars/presentation/screens/tip_jar_detail_screen.dart';
+import '../../features/tip_jars/presentation/screens/tip_jar_tip_screen.dart';
+import '../../features/tip_later/presentation/screens/tip_later_confirm_screen.dart';
+import '../../features/tip_later/presentation/screens/my_promises_screen.dart';
+import '../../features/offline/presentation/screens/pending_tips_screen.dart';
 import '../navigation/customer_shell.dart';
 import '../navigation/provider_shell.dart';
 
@@ -164,6 +171,62 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final poolId = state.pathParameters['id'] ?? '';
           return PoolDetailScreen(poolId: poolId);
         },
+      ),
+
+      // ── Tip Jar routes ────────────────────────────────────────────────
+      GoRoute(
+        path: '/tip-jars',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const TipJarsScreen(),
+      ),
+      GoRoute(
+        path: '/tip-jars/create',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const CreateTipJarScreen(),
+      ),
+      GoRoute(
+        path: '/tip-jars/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final jarId = state.pathParameters['id'] ?? '';
+          return TipJarDetailScreen(jarId: jarId);
+        },
+      ),
+      GoRoute(
+        path: '/jar/:shortCode',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final shortCode = state.pathParameters['shortCode'] ?? '';
+          return TipJarTipScreen(shortCode: shortCode);
+        },
+      ),
+
+      // ── Tip Later routes ──────────────────────────────────────────────
+      GoRoute(
+        path: '/tip-later/confirm',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final data = state.extra as Map<String, dynamic>? ?? {};
+          return TipLaterConfirmScreen(
+            providerId: data['providerId'] as String? ?? '',
+            providerName: data['providerName'] as String? ?? '',
+            amountPaise: data['amountPaise'] as int? ?? 0,
+            message: data['message'] as String?,
+            rating: data['rating'] as int?,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/my-promises',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const MyPromisesScreen(),
+      ),
+
+      // ── Offline / Pending tips ────────────────────────────────────────
+      GoRoute(
+        path: '/pending-tips',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const PendingTipsScreen(),
       ),
 
       // ── Provider shell (bottom nav) ───────────────────────────────────
