@@ -1,28 +1,64 @@
-import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
+import * as crypto from 'crypto';
 
-const ALGORITHM = 'aes-256-cbc';
-const IV_LENGTH = 16;
-// Key must be 32 bytes = 64 hex chars from ENCRYPTION_KEY env var
+const ALGORITHM = 'aes-256-gcm';
+const IV_LENGTH = 12; // 96-bit IV recommended for GCM
+const AUTH_TAG_LENGTH = 16;
 
 /**
- * Encrypt plaintext to a Buffer (IV prepended).
- * Stored as Prisma `Bytes` (bytea in PostgreSQL).
+ * Encrypt a UTF-8 string using AES-256-GCM.
+ *
+ * Wire format (all concatenated into one Buffer):
+ *   [ IV (12 bytes) | authTag (16 bytes) | ciphertext (variable) ]
+ *
+ * @param plaintext  The value to encrypt (e.g. Aadhaar VID, PAN).
+ * @param keyHex     32-byte key as a 64-char hex string, from env var.
+ * @returns          Buffer suitable for storing in a Prisma Bytes field.
  */
-export function encryptToBuffer(plaintext: string, hexKey: string): Buffer {
-  const key = Buffer.from(hexKey, 'hex');
-  const iv = randomBytes(IV_LENGTH);
-  const cipher = createCipheriv(ALGORITHM, key, iv);
-  const encrypted = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
-  return Buffer.concat([iv, encrypted]);
+export function encrypt(plaintext: string, keyHex: string): Buffer {
+  const key = Buffer.from(keyHex, 'hex');
+  if (key.length !== 32) {
+    throw new Error('Encryption key must be 32 bytes (64 hex chars)');
+  }
+
+  const iv = crypto.randomBytes(IV_LENGTH);
+  const cipher = crypto.createCipheriv(ALGORITHM, key, iv, {
+    authTagLength: AUTH_TAG_LENGTH,
+  });
+
+  const encrypted = Buffer.concat([
+    cipher.update(plaintext, 'utf8'),
+    cipher.final(),
+  ]);
+  const authTag = cipher.getAuthTag();
+
+  return Buffer.concat([iv, authTag, encrypted]);
 }
 
 /**
- * Decrypt a Buffer (with prepended IV) back to plaintext string.
+ * Decrypt a Buffer produced by {@link encrypt}.
+ *
+ * @param data    Raw bytes from the database.
+ * @param keyHex  Same key used during encryption.
+ * @returns       Original plaintext string.
  */
-export function decryptFromBuffer(data: Buffer, hexKey: string): string {
-  const key = Buffer.from(hexKey, 'hex');
+export function decrypt(data: Buffer, keyHex: string): string {
+  const key = Buffer.from(keyHex, 'hex');
+  if (key.length !== 32) {
+    throw new Error('Encryption key must be 32 bytes (64 hex chars)');
+  }
+
   const iv = data.subarray(0, IV_LENGTH);
-  const encrypted = data.subarray(IV_LENGTH);
-  const decipher = createDecipheriv(ALGORITHM, key, iv);
-  return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString('utf8');
+  const authTag = data.subarray(IV_LENGTH, IV_LENGTH + AUTH_TAG_LENGTH);
+  const ciphertext = data.subarray(IV_LENGTH + AUTH_TAG_LENGTH);
+
+  const decipher = crypto.createDecipheriv(ALGORITHM, key, iv, {
+    authTagLength: AUTH_TAG_LENGTH,
+  });
+  decipher.setAuthTag(authTag);
+
+  return decipher.update(ciphertext) + decipher.final('utf8');
 }
+
+// Aliases for backwards compatibility with providers.service.ts
+export const encryptToBuffer = encrypt;
+export const decryptFromBuffer = decrypt;

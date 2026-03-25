@@ -150,6 +150,11 @@ enum RecurringTipStatus {
   COMPLETED
 }
 
+enum KycMethod {
+  AADHAAR
+  MANUAL
+}
+
 // ─── Models ─────────────────────────────────────────────────────────────────
 
 model User {
@@ -206,6 +211,9 @@ model Provider {
   razorpayLinkedAccountId    String?          @db.VarChar(50)
   razorpayFundAccountId      String?          @db.VarChar(50)
   qrCodeUrl                  String?
+  kycVerified                Boolean          @default(false)
+  kycMethod                  KycMethod?
+  kycCompletedAt             DateTime?        @db.Timestamptz()
   createdAt                  DateTime         @default(now()) @db.Timestamptz()
 
   qrCodes      QrCode[]

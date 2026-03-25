@@ -22,6 +22,7 @@ import { PushNotificationsModule } from './modules/push-notifications/push-notif
 import { RecurringTipsModule } from './modules/recurring-tips/recurring-tips.module';
 import { BusinessModule } from './modules/business/business.module';
 import { WhatsAppModule } from './modules/whatsapp/whatsapp.module';
+import { EkycModule } from './modules/ekyc/ekyc.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { WhatsAppModule } from './modules/whatsapp/whatsapp.module';
     RecurringTipsModule,
     BusinessModule,
     WhatsAppModule,
+    EkycModule,
   ],
   controllers: [AppController],
 })

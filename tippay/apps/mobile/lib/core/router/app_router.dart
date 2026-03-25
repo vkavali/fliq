@@ -32,6 +32,9 @@ import '../../features/business/presentation/screens/business_dashboard_screen.d
 import '../../features/business/presentation/screens/business_staff_screen.dart';
 import '../../features/business/presentation/screens/business_qr_screen.dart';
 import '../../features/business/presentation/screens/business_invitations_screen.dart';
+import '../../features/onboarding/presentation/screens/ekyc_onboarding_screen.dart';
+import '../../features/onboarding/presentation/screens/ekyc_otp_screen.dart';
+import '../../features/onboarding/presentation/screens/ekyc_success_screen.dart';
 import '../navigation/customer_shell.dart';
 import '../navigation/provider_shell.dart';
 import '../../features/onboarding/presentation/screens/provider_registration_screen.dart';
@@ -207,6 +210,37 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/onboarding/success',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const OnboardingSuccessScreen(),
+      ),
+
+      // ── Aadhaar eKYC onboarding flow ─────────────────────────────────
+      GoRoute(
+        path: '/onboarding/ekyc',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const EkycOnboardingScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/ekyc/otp',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final data = state.extra as Map<String, dynamic>? ?? {};
+          return EkycOtpScreen(
+            sessionToken: data['sessionToken'] as String? ?? '',
+            maskedPhone: data['maskedPhone'] as String? ?? '',
+          );
+        },
+      ),
+      GoRoute(
+        path: '/onboarding/ekyc/success',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final data = state.extra as Map<String, dynamic>? ?? {};
+          return EkycSuccessScreen(
+            name: data['name'] as String? ?? '',
+            dob: data['dob'] as String? ?? '',
+            gender: data['gender'] as String? ?? '',
+            address: data['address'] as String? ?? '',
+          );
+        },
       ),
 
       // ── Recurring Tips routes ─────────────────────────────────────────
