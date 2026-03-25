@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { envValidationSchema } from './config/env.validation';
 import { PrismaModule } from './modules/prisma/prisma.module';
@@ -23,6 +24,8 @@ import { RecurringTipsModule } from './modules/recurring-tips/recurring-tips.mod
 import { BusinessModule } from './modules/business/business.module';
 import { WhatsAppModule } from './modules/whatsapp/whatsapp.module';
 import { EkycModule } from './modules/ekyc/ekyc.module';
+import { TipJarsModule } from './modules/tip-jars/tip-jars.module';
+import { TipLaterModule } from './modules/tip-later/tip-later.module';
 
 @Module({
   imports: [
@@ -34,6 +37,7 @@ import { EkycModule } from './modules/ekyc/ekyc.module';
       ],
       validationSchema: envValidationSchema,
     }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     RedisModule,
     AuthModule,
@@ -55,6 +59,8 @@ import { EkycModule } from './modules/ekyc/ekyc.module';
     BusinessModule,
     WhatsAppModule,
     EkycModule,
+    TipJarsModule,
+    TipLaterModule,
   ],
   controllers: [AppController],
 })

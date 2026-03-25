@@ -4,6 +4,8 @@ import { RAZORPAY_EVENTS, WalletType } from '@fliq/shared';
 import { WalletsService } from '../wallets/wallets.service';
 import { GamificationService } from '../gamification/gamification.service';
 import { RecurringChargeScheduler } from '../recurring-tips/recurring-charge.scheduler';
+import { TipJarsService } from '../tip-jars/tip-jars.service';
+import { TipLaterService } from '../tip-later/tip-later.service';
 
 @Injectable()
 export class PaymentsService {
@@ -16,6 +18,10 @@ export class PaymentsService {
     private readonly gamification: GamificationService,
     @Optional() @Inject(forwardRef(() => RecurringChargeScheduler))
     private readonly recurringChargeScheduler: RecurringChargeScheduler | null,
+    @Inject(forwardRef(() => TipJarsService))
+    private readonly tipJars: TipJarsService,
+    @Inject(forwardRef(() => TipLaterService))
+    private readonly tipLater: TipLaterService,
   ) {}
 
   /**
@@ -59,6 +65,11 @@ export class PaymentsService {
 
     const tip = await this.prisma.tip.findFirst({
       where: { gatewayOrderId: payment.order_id },
+      select: {
+        id: true, status: true, providerId: true, customerId: true,
+        amountPaise: true, netAmountPaise: true, commissionPaise: true,
+        rating: true, tipJarId: true,
+      },
     });
     if (!tip || tip.status !== 'INITIATED') return;
 
@@ -86,18 +97,20 @@ export class PaymentsService {
         },
       });
 
-      // Credit provider wallet
-      const providerWallet = await this.wallets.getOrCreateWallet(
-        tip.providerId,
-        WalletType.PROVIDER_EARNINGS,
-      );
-      await this.wallets.creditWallet(
-        providerWallet.id,
-        tip.netAmountPaise,
-        transaction.id,
-        `Tip received: ${tip.amountPaise} paise`,
-        tx,
-      );
+      // Credit provider wallet — skip for jar tips (distributeContribution handles splits)
+      if (!tip.tipJarId) {
+        const providerWallet = await this.wallets.getOrCreateWallet(
+          tip.providerId,
+          WalletType.PROVIDER_EARNINGS,
+        );
+        await this.wallets.creditWallet(
+          providerWallet.id,
+          tip.netAmountPaise,
+          transaction.id,
+          `Tip received: ${tip.amountPaise} paise`,
+          tx,
+        );
+      }
 
       // Credit platform commission wallet (if commission > 0)
       if (tip.commissionPaise > 0n) {
@@ -177,6 +190,22 @@ export class PaymentsService {
     });
 
     this.logger.log(`Tip ${tip.id} settled successfully`);
+
+    // ── Tip Jar: distribute contribution to all members ─────────────
+    if (tip.tipJarId) {
+      try {
+        await this.tipJars.distributeContribution(tip.id);
+      } catch (err) {
+        this.logger.error(`Tip jar distribution failed for tip ${tip.id}: ${err}`);
+      }
+    }
+
+    // ── Deferred Tip: mark as collected ─────────────────────────────
+    try {
+      await this.tipLater.markAsCollected(tip.id);
+    } catch (err) {
+      this.logger.error(`Deferred tip mark-collected failed for tip ${tip.id}: ${err}`);
+    }
 
     // ── Gamification: award badges & update streak ──────────────────
     try {
