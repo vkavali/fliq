@@ -22,6 +22,11 @@ import '../../features/gamification/presentation/screens/streak_screen.dart';
 import '../../features/tip_pools/presentation/screens/tip_pools_screen.dart';
 import '../../features/tip_pools/presentation/screens/pool_detail_screen.dart';
 import '../../features/tip_pools/presentation/screens/create_pool_screen.dart';
+import '../../features/business/presentation/screens/business_registration_screen.dart';
+import '../../features/business/presentation/screens/business_dashboard_screen.dart';
+import '../../features/business/presentation/screens/business_staff_screen.dart';
+import '../../features/business/presentation/screens/business_qr_screen.dart';
+import '../../features/business/presentation/screens/business_invitations_screen.dart';
 import '../navigation/customer_shell.dart';
 import '../navigation/provider_shell.dart';
 
@@ -163,6 +168,39 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final poolId = state.pathParameters['id'] ?? '';
           return PoolDetailScreen(poolId: poolId);
+        },
+      ),
+
+      // ── Business (B2B) routes ─────────────────────────────────────────
+      GoRoute(
+        path: '/business/register',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const BusinessRegistrationScreen(),
+      ),
+      GoRoute(
+        path: '/business/dashboard',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const BusinessDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/business/invitations',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const BusinessInvitationsScreen(),
+      ),
+      GoRoute(
+        path: '/business/staff',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final businessId = state.extra as String? ?? '';
+          return BusinessStaffScreen(businessId: businessId);
+        },
+      ),
+      GoRoute(
+        path: '/business/qrcodes',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final businessId = state.extra as String? ?? '';
+          return BusinessQrScreen(businessId: businessId);
         },
       ),
 

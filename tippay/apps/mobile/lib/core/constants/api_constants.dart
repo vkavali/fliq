@@ -49,4 +49,19 @@ class ApiConstants {
   static const String streak = '/gamification/streak';
   static const String leaderboardTippers = '/gamification/leaderboard';
   static const String leaderboardProviders = '/gamification/leaderboard/providers';
+
+  // Business (B2B)
+  static const String registerBusiness = '/business/register';
+  static const String myBusiness = '/business/mine';
+  static const String myInvitations = '/business/invitations/mine';
+  static String businessById(String id) => '/business/$id';
+  static String inviteMember(String id) => '/business/$id/invite';
+  static String removeMember(String id, String memberId) =>
+      '/business/$id/members/$memberId';
+  static String respondInvitation(String id) => '/business/invitations/$id/respond';
+  static String businessDashboard(String id) => '/business/$id/dashboard';
+  static String businessStaff(String id) => '/business/$id/staff';
+  static String businessSatisfaction(String id) => '/business/$id/satisfaction';
+  static String businessQrCodes(String id) => '/business/$id/qrcodes';
+  static String businessExport(String id) => '/business/$id/export';
 }

@@ -13,6 +13,30 @@ enum UserType {
   CUSTOMER
   PROVIDER
   ADMIN
+  BUSINESS_ADMIN
+}
+
+enum BusinessType {
+  HOTEL
+  SALON
+  RESTAURANT
+  SPA
+  CAFE
+  RETAIL
+  OTHER
+}
+
+enum BusinessMemberRole {
+  ADMIN
+  MANAGER
+  STAFF
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
 }
 
 enum UserStatus {
@@ -126,17 +150,21 @@ model User {
   createdAt          DateTime   @default(now()) @db.Timestamptz()
   updatedAt          DateTime   @updatedAt @db.Timestamptz()
 
-  providerProfile    Provider?
-  wallets            Wallet[]
-  tipsGiven          Tip[]              @relation("CustomerTips")
-  tipsReceived       Tip[]              @relation("ProviderTips")
-  payouts            Payout[]
-  otpCodes           OtpCode[]
-  consentRecords     ConsentRecord[]
-  badges             UserBadge[]
-  tipStreak          TipStreak?
-  ownedTipPools      TipPool[]          @relation("TipPoolOwner")
-  tipPoolMemberships TipPoolMember[]
+  providerProfile       Provider?
+  wallets               Wallet[]
+  tipsGiven             Tip[]              @relation("CustomerTips")
+  tipsReceived          Tip[]              @relation("ProviderTips")
+  payouts               Payout[]
+  otpCodes              OtpCode[]
+  consentRecords        ConsentRecord[]
+  badges                UserBadge[]
+  tipStreak             TipStreak?
+  ownedTipPools         TipPool[]          @relation("TipPoolOwner")
+  tipPoolMemberships    TipPoolMember[]
+  ownedBusinesses       Business[]         @relation("BusinessOwner")
+  businessMemberships   BusinessMember[]
+  sentInvitations       BusinessInvitation[] @relation("InvitationSender")
+  receivedInvitations   BusinessInvitation[] @relation("InvitationRecipient")
 
   @@map("users")
 }
@@ -443,4 +471,64 @@ model TipStreak {
   updatedAt     DateTime  @updatedAt @db.Timestamptz()
 
   @@map("tip_streaks")
+}
+
+// ─── Business (B2B) ──────────────────────────────────────────────────────────
+
+model Business {
+  id           String       @id @default(uuid()) @db.Uuid
+  name         String       @db.VarChar(200)
+  type         BusinessType @default(OTHER)
+  address      String?      @db.VarChar(500)
+  contactPhone String?      @db.VarChar(15)
+  contactEmail String?      @db.VarChar(255)
+  gstin        String?      @db.VarChar(15)
+  logoUrl      String?      @db.Text
+  isActive     Boolean      @default(true)
+  ownerId      String       @db.Uuid
+  owner        User         @relation("BusinessOwner", fields: [ownerId], references: [id])
+  createdAt    DateTime     @default(now()) @db.Timestamptz()
+  updatedAt    DateTime     @updatedAt @db.Timestamptz()
+
+  members     BusinessMember[]
+  invitations BusinessInvitation[]
+
+  @@index([ownerId])
+  @@map("businesses")
+}
+
+model BusinessMember {
+  id         String             @id @default(uuid()) @db.Uuid
+  businessId String             @db.Uuid
+  business   Business           @relation(fields: [businessId], references: [id])
+  providerId String             @db.Uuid
+  provider   User               @relation(fields: [providerId], references: [id])
+  role       BusinessMemberRole @default(STAFF)
+  isActive   Boolean            @default(true)
+  joinedAt   DateTime           @default(now()) @db.Timestamptz()
+
+  @@unique([businessId, providerId])
+  @@index([providerId])
+  @@map("business_members")
+}
+
+model BusinessInvitation {
+  id         String           @id @default(uuid()) @db.Uuid
+  businessId String           @db.Uuid
+  business   Business         @relation(fields: [businessId], references: [id])
+  phone      String           @db.VarChar(15)
+  senderId   String           @db.Uuid
+  sender     User             @relation("InvitationSender", fields: [senderId], references: [id])
+  recipientId String?         @db.Uuid
+  recipient  User?            @relation("InvitationRecipient", fields: [recipientId], references: [id])
+  role       BusinessMemberRole @default(STAFF)
+  status     InvitationStatus @default(PENDING)
+  expiresAt  DateTime         @db.Timestamptz()
+  createdAt  DateTime         @default(now()) @db.Timestamptz()
+  updatedAt  DateTime         @updatedAt @db.Timestamptz()
+
+  @@index([businessId])
+  @@index([phone])
+  @@index([recipientId])
+  @@map("business_invitations")
 }

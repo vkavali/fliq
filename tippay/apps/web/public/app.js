@@ -18,6 +18,8 @@ function goTo(page) {
     el.style.display = isFlex ? 'flex' : 'block';
     el.classList.remove('hidden');
   }
+  // Close modals on navigation
+  document.getElementById('invite-modal')?.classList.add('hidden');
 }
 
 function demoCust() {
@@ -558,6 +560,301 @@ async function loadPayouts() {
       `;
     }).join('');
   } catch (e) { list.innerHTML = '<p class="muted">Could not load</p>'; }
+}
+
+// ===== BUSINESS (B2B) MODULE =====
+
+let bizState = { business: null, businessId: null };
+
+const BIZ_TYPE_EMOJIS = {
+  HOTEL: '🏨', SALON: '💇', RESTAURANT: '🍽️',
+  SPA: '🧖', CAFE: '☕', RETAIL: '🛍️', OTHER: '🏢',
+};
+
+async function goToBusiness() {
+  document.getElementById('biz-phone').textContent = user?.phone || '';
+  goTo('business');
+  try {
+    const biz = await api('GET', '/business/mine');
+    bizState.business = biz;
+    bizState.businessId = biz.id;
+    showBizDashboard(biz);
+  } catch (e) {
+    // No business yet — show registration
+    document.getElementById('biz-register-section').classList.remove('hidden');
+    document.getElementById('biz-dashboard-section').classList.add('hidden');
+  }
+}
+
+async function registerBusiness(e) {
+  e.preventDefault();
+  const btn = document.getElementById('biz-register-btn');
+  const errEl = document.getElementById('biz-register-error');
+  errEl.classList.add('hidden');
+  btn.disabled = true; btn.textContent = 'Registering...';
+
+  const name = document.getElementById('biz-name').value.trim();
+  const type = document.getElementById('biz-type').value;
+  const address = document.getElementById('biz-address').value.trim();
+  const contactPhone = document.getElementById('biz-contact-phone').value.trim();
+  const contactEmail = document.getElementById('biz-contact-email').value.trim();
+  const gstin = document.getElementById('biz-gstin').value.trim().toUpperCase();
+
+  const payload = { name, type };
+  if (address) payload.address = address;
+  if (contactPhone) payload.contactPhone = contactPhone;
+  if (contactEmail) payload.contactEmail = contactEmail;
+  if (gstin) payload.gstin = gstin;
+
+  try {
+    const biz = await api('POST', '/business/register', payload);
+    bizState.business = biz;
+    bizState.businessId = biz.id;
+    toast('Business registered!');
+    showBizDashboard(biz);
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Register Business';
+  }
+}
+
+async function showBizDashboard(biz) {
+  document.getElementById('biz-register-section').classList.add('hidden');
+  document.getElementById('biz-dashboard-section').classList.remove('hidden');
+
+  const emoji = BIZ_TYPE_EMOJIS[biz.type] || '🏢';
+  document.getElementById('biz-type-emoji').textContent = emoji;
+  document.getElementById('biz-header-name').textContent = biz.name;
+  document.getElementById('biz-header-meta').textContent =
+    [biz.type, biz.address].filter(Boolean).join(' • ');
+
+  loadBizStats(biz.id);
+  bizTab('staff');
+}
+
+async function loadBizStats(bizId) {
+  try {
+    const stats = await api('GET', `/business/${bizId}/dashboard`);
+    const fmtRs = (paise) => '₹' + (paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    document.getElementById('stat-total-tips').textContent = fmtRs(stats.totalAmountPaise || 0);
+    document.getElementById('stat-tip-count').textContent = stats.totalTipsCount || 0;
+    document.getElementById('stat-avg-rating').textContent =
+      stats.averageRating ? Number(stats.averageRating).toFixed(1) + ' ★' : 'N/A';
+    document.getElementById('stat-staff-count').textContent = stats.staffCount || 0;
+  } catch (e) { /* non-fatal */ }
+}
+
+function bizTab(tab) {
+  document.querySelectorAll('.biz-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.biz-tab-content').forEach(t => t.classList.add('hidden'));
+
+  const idx = { staff: 0, satisfaction: 1, qrcodes: 2 }[tab] ?? 0;
+  document.querySelectorAll('.biz-tab')[idx]?.classList.add('active');
+  document.getElementById(`biz-tab-${tab}`)?.classList.remove('hidden');
+
+  if (tab === 'staff') loadBizStaff();
+  else if (tab === 'satisfaction') loadBizSatisfaction();
+  else if (tab === 'qrcodes') loadBizQrCodes();
+}
+
+async function loadBizStaff() {
+  const wrap = document.getElementById('biz-staff-table-wrap');
+  wrap.innerHTML = '<div class="biz-loading">Loading...</div>';
+  try {
+    const staff = await api('GET', `/business/${bizState.businessId}/staff`);
+    if (!staff.length) {
+      wrap.innerHTML = '<p class="biz-muted">No staff yet. Invite team members to get started.</p>';
+      return;
+    }
+    const fmtRs = (paise) => '₹' + (paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    const rows = staff.map(m => {
+      const p = m.provider || {};
+      const prof = p.providerProfile || {};
+      const name = prof.displayName || p.name || 'Unknown';
+      const phone = (p.phone || '').replace(/(\d{6})(\d{4})$/, '••••••$2');
+      const tips = m.tips || {};
+      const rating = tips.averageRating ? Number(tips.averageRating).toFixed(1) : '—';
+      const roleColor = { ADMIN: '#e53935', MANAGER: '#1565c0', STAFF: '#555' }[m.role] || '#555';
+      return `
+        <tr>
+          <td>
+            <div class="staff-name-cell">
+              <div class="staff-avatar">${name[0]?.toUpperCase() || '?'}</div>
+              <div>
+                <strong>${name}</strong>
+                <div class="staff-phone">${phone}</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="role-badge" style="color:${roleColor};border-color:${roleColor}">${m.role}</span></td>
+          <td>${fmtRs(tips.totalAmountPaise || 0)}</td>
+          <td>${tips.count || 0}</td>
+          <td>${rating} ${tips.averageRating ? '★' : ''}</td>
+          <td>
+            <button class="biz-danger-btn" onclick="removeMember('${m.memberId}', '${name}')">Remove</button>
+          </td>
+        </tr>`;
+    }).join('');
+    wrap.innerHTML = `
+      <table class="biz-table">
+        <thead><tr>
+          <th>Staff Member</th><th>Role</th><th>Total Tips</th><th>Transactions</th><th>Rating</th><th></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  } catch (e) {
+    wrap.innerHTML = `<p class="error-box">${e.message}</p>`;
+  }
+}
+
+async function removeMember(memberId, name) {
+  if (!confirm(`Remove ${name} from your business?`)) return;
+  try {
+    await api('DELETE', `/business/${bizState.businessId}/members/${memberId}`);
+    toast(`${name} removed`);
+    loadBizStaff();
+    loadBizStats(bizState.businessId);
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+async function loadBizSatisfaction() {
+  const distEl = document.getElementById('biz-rating-dist');
+  const listEl = document.getElementById('biz-reviews-list');
+  distEl.innerHTML = '<div class="biz-loading">Loading...</div>';
+  listEl.innerHTML = '';
+  try {
+    const data = await api('GET', `/business/${bizState.businessId}/satisfaction`);
+    const dist = data.ratingDistribution || [];
+    const max = Math.max(...dist.map(d => d.count), 1);
+    distEl.innerHTML = `
+      <div class="rating-dist-wrap">
+        ${dist.reverse().map(d => `
+          <div class="rating-row">
+            <span class="rating-star">${d.star} ★</span>
+            <div class="rating-bar-bg">
+              <div class="rating-bar" style="width:${(d.count / max * 100).toFixed(0)}%"></div>
+            </div>
+            <span class="rating-count">${d.count}</span>
+          </div>`).join('')}
+      </div>`;
+
+    const reviews = (data.tips || []).filter(t => t.message || t.rating);
+    if (!reviews.length) {
+      listEl.innerHTML = '<p class="biz-muted">No reviews yet.</p>';
+      return;
+    }
+    listEl.innerHTML = `
+      <h4 style="margin:16px 0 8px">Recent Feedback</h4>
+      ${reviews.slice(0, 50).map(t => {
+        const pname = t.provider?.providerProfile?.displayName || t.provider?.name || 'Staff';
+        const stars = t.rating ? '★'.repeat(t.rating) + '☆'.repeat(5 - t.rating) : '';
+        return `
+          <div class="review-card">
+            <div class="review-header">
+              <span class="review-staff">${pname}</span>
+              <span class="review-stars">${stars}</span>
+              <span class="review-date">${new Date(t.createdAt).toLocaleDateString('en-IN')}</span>
+            </div>
+            ${t.message ? `<p class="review-message">"${t.message}"</p>` : ''}
+          </div>`;
+      }).join('')}`;
+  } catch (e) {
+    distEl.innerHTML = `<p class="error-box">${e.message}</p>`;
+  }
+}
+
+async function loadBizQrCodes() {
+  const grid = document.getElementById('biz-qr-grid');
+  grid.innerHTML = '<div class="biz-loading">Loading QR codes...</div>';
+  try {
+    const staff = await api('GET', `/business/${bizState.businessId}/qrcodes`);
+    if (!staff.length) {
+      grid.innerHTML = '<p class="biz-muted">No staff QR codes yet. Staff members can generate QR codes from their provider dashboard.</p>';
+      return;
+    }
+    grid.innerHTML = staff.map(m => {
+      const name = m.displayName || 'Staff';
+      const qrs = m.qrCodes || [];
+      const qrCards = qrs.length
+        ? qrs.map(q => `
+            <div class="qr-standee" data-name="${name}" data-qr="${q.qrImageUrl || ''}">
+              <div class="qr-standee-inner">
+                <div class="qr-standee-header">
+                  <img src="logo-full.png" alt="Fliq" class="qr-standee-logo">
+                </div>
+                ${q.qrImageUrl
+                  ? `<img src="${q.qrImageUrl}" alt="QR" class="qr-standee-img">`
+                  : `<div class="qr-standee-placeholder">📷 QR</div>`}
+                <div class="qr-standee-name">${name}</div>
+                ${q.locationLabel ? `<div class="qr-standee-label">${q.locationLabel}</div>` : ''}
+                <div class="qr-standee-tagline">Scan to tip via UPI</div>
+              </div>
+            </div>`).join('')
+        : `<p class="biz-muted" style="font-size:12px">No QR codes yet</p>`;
+      return `
+        <div class="qr-staff-group">
+          <div class="qr-staff-name">${name}</div>
+          <div class="qr-standees-row">${qrCards}</div>
+        </div>`;
+    }).join('');
+  } catch (e) {
+    grid.innerHTML = `<p class="error-box">${e.message}</p>`;
+  }
+}
+
+function printAllQr() {
+  const printArea = document.getElementById('print-area');
+  const standees = document.querySelectorAll('.qr-standee');
+  if (!standees.length) { toast('No QR codes to print'); return; }
+  printArea.innerHTML = Array.from(standees).map(s => s.outerHTML).join('');
+  window.print();
+}
+
+function showInviteModal() {
+  document.getElementById('invite-modal').classList.remove('hidden');
+  document.getElementById('invite-phone').value = '';
+  document.getElementById('invite-error').classList.add('hidden');
+}
+
+function closeInviteModal() {
+  document.getElementById('invite-modal').classList.add('hidden');
+}
+
+async function sendInvite() {
+  const phone = document.getElementById('invite-phone').value.trim();
+  const role = document.getElementById('invite-role').value;
+  const errEl = document.getElementById('invite-error');
+  errEl.classList.add('hidden');
+  if (!phone) { errEl.textContent = 'Enter phone number'; errEl.classList.remove('hidden'); return; }
+  try {
+    await api('POST', `/business/${bizState.businessId}/invite`, { phone, role });
+    toast('Invitation sent to ' + phone);
+    closeInviteModal();
+    loadBizStaff();
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.classList.remove('hidden');
+  }
+}
+
+async function exportCsv() {
+  const a = document.createElement('a');
+  a.href = `${API}/business/${bizState.businessId}/export`;
+  // Pass auth header via URL param is not ideal; open in new tab (requires backend to accept query param or use cookie)
+  // For now, fetch and download
+  try {
+    const h = { 'Authorization': `Bearer ${token}` };
+    const r = await fetch(`${API}/business/${bizState.businessId}/export`, { headers: h });
+    if (!r.ok) throw new Error('Export failed');
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    a.href = url;
+    a.download = 'fliq-business-tips.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (e) { toast('Export failed: ' + e.message); }
 }
 
 // ===== Toast =====
