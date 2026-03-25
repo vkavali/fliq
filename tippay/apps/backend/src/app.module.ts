@@ -19,6 +19,7 @@ import { PaymentLinksModule } from './modules/payment-links/payment-links.module
 import { GamificationModule } from './modules/gamification/gamification.module';
 import { TipPoolsModule } from './modules/tip-pools/tip-pools.module';
 import { PushNotificationsModule } from './modules/push-notifications/push-notifications.module';
+import { RecurringTipsModule } from './modules/recurring-tips/recurring-tips.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { PushNotificationsModule } from './modules/push-notifications/push-notif
     GamificationModule,
     TipPoolsModule,
     PushNotificationsModule,
+    RecurringTipsModule,
   ],
   controllers: [AppController],
 })

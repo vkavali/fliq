@@ -120,6 +120,83 @@ export class RazorpayService {
     });
   }
 
+  /**
+   * Create a Razorpay Plan for recurring billing.
+   * Returns the plan ID used when creating a subscription.
+   */
+  async createPlan(params: {
+    period: 'weekly' | 'monthly';
+    interval: number;
+    amountPaise: number;
+    name: string;
+    description?: string;
+  }): Promise<{ id: string }> {
+    const client = await this.getClient();
+    const plan = await client.plans.create({
+      period: params.period,
+      interval: params.interval,
+      item: {
+        name: params.name,
+        amount: params.amountPaise,
+        currency: 'INR',
+        description: params.description || params.name,
+      },
+    });
+    this.logger.log(`Razorpay plan created: ${plan.id}`);
+    return plan;
+  }
+
+  /**
+   * Create a Razorpay Subscription (UPI Autopay mandate).
+   * Returns the subscription object including the short_url for mandate setup.
+   */
+  async createSubscription(params: {
+    planId: string;
+    totalCount: number;
+    startAt?: number; // Unix timestamp
+    notes?: Record<string, string>;
+  }): Promise<{ id: string; short_url: string; status: string }> {
+    const client = await this.getClient();
+    const subscription = await client.subscriptions.create({
+      plan_id: params.planId,
+      total_count: params.totalCount,
+      quantity: 1,
+      ...(params.startAt ? { start_at: params.startAt } : {}),
+      customer_notify: 1,
+      notes: params.notes || {},
+    });
+    this.logger.log(`Razorpay subscription created: ${subscription.id}`);
+    return subscription;
+  }
+
+  /**
+   * Cancel a Razorpay Subscription.
+   * cancelAtCycleEnd: if true, cancels after the current billing cycle.
+   */
+  async cancelSubscription(subscriptionId: string, cancelAtCycleEnd = false): Promise<void> {
+    const client = await this.getClient();
+    await client.subscriptions.cancel(subscriptionId, cancelAtCycleEnd);
+    this.logger.log(`Razorpay subscription cancelled: ${subscriptionId}`);
+  }
+
+  /**
+   * Pause a Razorpay Subscription.
+   */
+  async pauseSubscription(subscriptionId: string): Promise<void> {
+    const client = await this.getClient();
+    await client.subscriptions.pause(subscriptionId, { pause_at: 'now' });
+    this.logger.log(`Razorpay subscription paused: ${subscriptionId}`);
+  }
+
+  /**
+   * Resume a paused Razorpay Subscription.
+   */
+  async resumeSubscription(subscriptionId: string): Promise<void> {
+    const client = await this.getClient();
+    await client.subscriptions.resume(subscriptionId, { resume_at: 'now' });
+    this.logger.log(`Razorpay subscription resumed: ${subscriptionId}`);
+  }
+
   getRazorpayKeyId(): string {
     return this.config.get<string>('RAZORPAY_KEY_ID', '');
   }

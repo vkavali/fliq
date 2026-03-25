@@ -53,4 +53,12 @@ class ApiConstants {
   // Push Notifications
   static const String registerFcmToken = '/notifications/fcm-token';
   static const String removeFcmToken = '/notifications/fcm-token';
+
+  // Recurring Tips
+  static const String recurringTips = '/recurring-tips';
+  static const String myRecurringTips = '/recurring-tips';
+  static const String providerRecurringTips = '/recurring-tips/provider';
+  static String pauseRecurringTip(String id) => '/recurring-tips/$id/pause';
+  static String resumeRecurringTip(String id) => '/recurring-tips/$id/resume';
+  static String cancelRecurringTip(String id) => '/recurring-tips/$id';
 }

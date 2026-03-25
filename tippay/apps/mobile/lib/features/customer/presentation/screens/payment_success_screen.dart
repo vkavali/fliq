@@ -7,6 +7,7 @@ import '../../../../core/theme/app_theme.dart';
 class PaymentSuccessScreen extends StatefulWidget {
   final int amount;
   final String providerName;
+  final String? providerId;
   final int rating;
   final String message;
   final int fee;
@@ -15,6 +16,7 @@ class PaymentSuccessScreen extends StatefulWidget {
     super.key,
     required this.amount,
     required this.providerName,
+    this.providerId,
     this.rating = 0,
     this.message = '',
     this.fee = 0,
@@ -198,6 +200,31 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
               ),
 
               const Spacer(flex: 1),
+
+              // ── Set up recurring tip ────────────────────────────────────
+              if (widget.providerId != null)
+                OutlinedButton.icon(
+                  onPressed: () => context.push(
+                    '/recurring-tips/setup',
+                    extra: {
+                      'providerId': widget.providerId!,
+                      'providerName': widget.providerName,
+                      'initialAmountPaise': widget.amount,
+                    },
+                  ),
+                  icon: const Icon(Icons.autorenew_rounded, size: 18),
+                  label: const Text('Set up monthly auto-tip'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 48),
+                    foregroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    side: const BorderSide(color: AppColors.primary),
+                  ),
+                ),
+
+              if (widget.providerId != null)
+                const SizedBox(height: AppSpacing.sm),
 
               // ── Share button ────────────────────────────────────────────
               OutlinedButton.icon(
