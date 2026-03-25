@@ -49,4 +49,12 @@ class ApiConstants {
   static const String streak = '/gamification/streak';
   static const String leaderboardTippers = '/gamification/leaderboard';
   static const String leaderboardProviders = '/gamification/leaderboard/providers';
+
+  // Recurring Tips
+  static const String recurringTips = '/recurring-tips';
+  static const String myRecurringTips = '/recurring-tips';
+  static const String providerRecurringTips = '/recurring-tips/provider';
+  static String pauseRecurringTip(String id) => '/recurring-tips/$id/pause';
+  static String resumeRecurringTip(String id) => '/recurring-tips/$id/resume';
+  static String cancelRecurringTip(String id) => '/recurring-tips/$id';
 }

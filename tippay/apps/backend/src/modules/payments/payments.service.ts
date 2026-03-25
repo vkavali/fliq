@@ -1,8 +1,9 @@
-import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Logger, Inject, Optional, forwardRef } from '@nestjs/common';
 import { PrismaService, PaymentMethod } from '@fliq/database';
 import { RAZORPAY_EVENTS, WalletType } from '@fliq/shared';
 import { WalletsService } from '../wallets/wallets.service';
 import { GamificationService } from '../gamification/gamification.service';
+import { RecurringChargeScheduler } from '../recurring-tips/recurring-charge.scheduler';
 
 @Injectable()
 export class PaymentsService {
@@ -13,6 +14,8 @@ export class PaymentsService {
     private readonly wallets: WalletsService,
     @Inject(forwardRef(() => GamificationService))
     private readonly gamification: GamificationService,
+    @Optional() @Inject(forwardRef(() => RecurringChargeScheduler))
+    private readonly recurringChargeScheduler: RecurringChargeScheduler | null,
   ) {}
 
   /**
@@ -32,6 +35,18 @@ export class PaymentsService {
         break;
       case RAZORPAY_EVENTS.PAYOUT_FAILED:
         await this.handlePayoutFailed(payload);
+        break;
+      case RAZORPAY_EVENTS.SUBSCRIPTION_AUTHENTICATED:
+        await this.handleSubscriptionAuthenticated(payload);
+        break;
+      case RAZORPAY_EVENTS.SUBSCRIPTION_CHARGED:
+        await this.handleSubscriptionCharged(payload);
+        break;
+      case RAZORPAY_EVENTS.SUBSCRIPTION_CANCELLED:
+        await this.handleSubscriptionCancelled(payload);
+        break;
+      case RAZORPAY_EVENTS.SUBSCRIPTION_HALTED:
+        await this.handleSubscriptionHalted(payload);
         break;
       default:
         this.logger.log(`Unhandled webhook event: ${eventType}`);
@@ -225,6 +240,66 @@ export class PaymentsService {
 
     // Weighted average including the new rating
     return Number(((currentAvg * ratedCount + newRating) / (ratedCount + 1)).toFixed(2));
+  }
+
+  private async handleSubscriptionAuthenticated(payload: any): Promise<void> {
+    const subscription = payload?.subscription?.entity;
+    if (!subscription) return;
+
+    await this.prisma.recurringTip.updateMany({
+      where: {
+        razorpaySubscriptionId: subscription.id,
+        status: 'PENDING_AUTHORIZATION',
+      },
+      data: {
+        status: 'ACTIVE',
+        // First charge happens at subscription start_at; set nextChargeDate to now+period
+        nextChargeDate: new Date(),
+      },
+    });
+
+    this.logger.log(`Recurring tip mandate authenticated for subscription ${subscription.id}`);
+  }
+
+  private async handleSubscriptionCharged(payload: any): Promise<void> {
+    const subscription = payload?.subscription?.entity;
+    const payment = payload?.payment?.entity;
+    if (!subscription) return;
+
+    const recurringTip = await this.prisma.recurringTip.findUnique({
+      where: { razorpaySubscriptionId: subscription.id },
+    });
+    if (!recurringTip) return;
+
+    // Settle the charge via the scheduler (reuse settlement logic)
+    if (this.recurringChargeScheduler) {
+      await this.recurringChargeScheduler.settleRecurringCharge(
+        recurringTip.id,
+        payment?.id,
+      );
+    }
+  }
+
+  private async handleSubscriptionCancelled(payload: any): Promise<void> {
+    const subscription = payload?.subscription?.entity;
+    if (!subscription) return;
+
+    await this.prisma.recurringTip.updateMany({
+      where: { razorpaySubscriptionId: subscription.id },
+      data: { status: 'CANCELLED' },
+    });
+    this.logger.log(`Recurring tip cancelled for subscription ${subscription.id}`);
+  }
+
+  private async handleSubscriptionHalted(payload: any): Promise<void> {
+    const subscription = payload?.subscription?.entity;
+    if (!subscription) return;
+
+    await this.prisma.recurringTip.updateMany({
+      where: { razorpaySubscriptionId: subscription.id },
+      data: { status: 'HALTED' },
+    });
+    this.logger.log(`Recurring tip halted for subscription ${subscription.id}`);
   }
 
   private mapPaymentMethod(method: string): PaymentMethod {

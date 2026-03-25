@@ -112,6 +112,20 @@ enum QrCodeType {
   DYNAMIC
 }
 
+enum RecurringTipFrequency {
+  WEEKLY
+  MONTHLY
+}
+
+enum RecurringTipStatus {
+  PENDING_AUTHORIZATION
+  ACTIVE
+  PAUSED
+  CANCELLED
+  HALTED
+  COMPLETED
+}
+
 // ─── Models ─────────────────────────────────────────────────────────────────
 
 model User {
@@ -135,8 +149,10 @@ model User {
   consentRecords     ConsentRecord[]
   badges             UserBadge[]
   tipStreak          TipStreak?
-  ownedTipPools      TipPool[]          @relation("TipPoolOwner")
-  tipPoolMemberships TipPoolMember[]
+  ownedTipPools          TipPool[]          @relation("TipPoolOwner")
+  tipPoolMemberships     TipPoolMember[]
+  recurringTipsGiven     RecurringTip[]     @relation("CustomerRecurringTips")
+  recurringTipsReceived  RecurringTip[]     @relation("ProviderRecurringTips")
 
   @@map("users")
 }
@@ -443,4 +459,32 @@ model TipStreak {
   updatedAt     DateTime  @updatedAt @db.Timestamptz()
 
   @@map("tip_streaks")
+}
+
+// ─── Recurring Tips (UPI Autopay Mandates) ───────────────────────────────────
+
+model RecurringTip {
+  id                     String                @id @default(uuid()) @db.Uuid
+  customerId             String                @db.Uuid
+  customer               User                  @relation("CustomerRecurringTips", fields: [customerId], references: [id])
+  providerId             String                @db.Uuid
+  provider               User                  @relation("ProviderRecurringTips", fields: [providerId], references: [id])
+  amountPaise            BigInt
+  frequency              RecurringTipFrequency
+  status                 RecurringTipStatus    @default(PENDING_AUTHORIZATION)
+  // Razorpay Subscription fields
+  razorpayPlanId         String?               @db.VarChar(50)
+  razorpaySubscriptionId String?               @unique @db.VarChar(50)
+  // Next scheduled charge
+  nextChargeDate         DateTime?             @db.Timestamptz()
+  // Stats
+  totalCharges           Int                   @default(0)
+  failedCharges          Int                   @default(0)
+  createdAt              DateTime              @default(now()) @db.Timestamptz()
+  updatedAt              DateTime              @updatedAt @db.Timestamptz()
+
+  @@index([customerId])
+  @@index([providerId])
+  @@index([status, nextChargeDate])
+  @@map("recurring_tips")
 }

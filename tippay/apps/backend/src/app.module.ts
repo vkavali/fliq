@@ -18,6 +18,7 @@ import { OutboxModule } from './modules/outbox/outbox.module';
 import { PaymentLinksModule } from './modules/payment-links/payment-links.module';
 import { GamificationModule } from './modules/gamification/gamification.module';
 import { TipPoolsModule } from './modules/tip-pools/tip-pools.module';
+import { RecurringTipsModule } from './modules/recurring-tips/recurring-tips.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { TipPoolsModule } from './modules/tip-pools/tip-pools.module';
     PaymentLinksModule,
     GamificationModule,
     TipPoolsModule,
+    RecurringTipsModule,
   ],
   controllers: [AppController],
 })

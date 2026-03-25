@@ -22,6 +22,11 @@ import '../../features/gamification/presentation/screens/streak_screen.dart';
 import '../../features/tip_pools/presentation/screens/tip_pools_screen.dart';
 import '../../features/tip_pools/presentation/screens/pool_detail_screen.dart';
 import '../../features/tip_pools/presentation/screens/create_pool_screen.dart';
+import '../../features/recurring_tips/presentation/screens/setup_recurring_tip_screen.dart';
+import '../../features/recurring_tips/presentation/screens/my_recurring_tips_screen.dart';
+import '../../features/recurring_tips/presentation/screens/recurring_tip_detail_screen.dart';
+import '../../features/recurring_tips/presentation/screens/recurring_tip_success_screen.dart';
+import '../../features/recurring_tips/data/recurring_tips_repository.dart';
 import '../navigation/customer_shell.dart';
 import '../navigation/provider_shell.dart';
 
@@ -122,6 +127,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return PaymentSuccessScreen(
             amount: data['amount'] as int? ?? 0,
             providerName: data['providerName'] as String? ?? '',
+            providerId: data['providerId'] as String?,
             rating: data['rating'] as int? ?? 0,
             message: data['message'] as String? ?? '',
             fee: data['fee'] as int? ?? 0,
@@ -163,6 +169,46 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final poolId = state.pathParameters['id'] ?? '';
           return PoolDetailScreen(poolId: poolId);
+        },
+      ),
+
+      // ── Recurring Tips routes ─────────────────────────────────────────
+      GoRoute(
+        path: '/recurring-tips',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const MyRecurringTipsScreen(),
+      ),
+      GoRoute(
+        path: '/recurring-tips/setup',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final data = state.extra as Map<String, dynamic>? ?? {};
+          return SetupRecurringTipScreen(
+            providerId: data['providerId'] as String? ?? '',
+            providerName: data['providerName'] as String? ?? '',
+            initialAmountPaise: data['initialAmountPaise'] as int? ?? 10000,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/recurring-tips/success',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final data = state.extra as Map<String, dynamic>? ?? {};
+          return RecurringTipSuccessScreen(
+            providerName: data['providerName'] as String? ?? '',
+            amountPaise: data['amountPaise'] as int? ?? 0,
+            frequency: data['frequency'] as String? ?? 'Monthly',
+          );
+        },
+      ),
+      GoRoute(
+        path: '/recurring-tips/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final tip = state.extra as RecurringTip?;
+          if (tip == null) return const MyRecurringTipsScreen();
+          return RecurringTipDetailScreen(tip: tip);
         },
       ),
 
