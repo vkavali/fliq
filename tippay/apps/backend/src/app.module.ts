@@ -21,6 +21,7 @@ import { TipPoolsModule } from './modules/tip-pools/tip-pools.module';
 import { PushNotificationsModule } from './modules/push-notifications/push-notifications.module';
 import { RecurringTipsModule } from './modules/recurring-tips/recurring-tips.module';
 import { BusinessModule } from './modules/business/business.module';
+import { WhatsAppModule } from './modules/whatsapp/whatsapp.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { BusinessModule } from './modules/business/business.module';
     PushNotificationsModule,
     RecurringTipsModule,
     BusinessModule,
+    WhatsAppModule,
   ],
   controllers: [AppController],
 })

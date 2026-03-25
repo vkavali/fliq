@@ -30,4 +30,10 @@ export const envValidationSchema = Joi.object({
   ENCRYPTION_KEY: Joi.string().length(64).optional().messages({
     'string.length': 'ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)',
   }),
+
+  // WhatsApp Business API (Meta Cloud API)
+  WHATSAPP_ACCESS_TOKEN: Joi.string().optional(),
+  WHATSAPP_PHONE_NUMBER_ID: Joi.string().optional(),
+  WHATSAPP_APP_SECRET: Joi.string().optional(),
+  WHATSAPP_WEBHOOK_VERIFY_TOKEN: Joi.string().optional().default('fliq_whatsapp_verify'),
 }).options({ allowUnknown: true });
