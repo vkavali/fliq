@@ -20,6 +20,7 @@ import { GamificationModule } from './modules/gamification/gamification.module';
 import { TipPoolsModule } from './modules/tip-pools/tip-pools.module';
 import { PushNotificationsModule } from './modules/push-notifications/push-notifications.module';
 import { RecurringTipsModule } from './modules/recurring-tips/recurring-tips.module';
+import { BusinessModule } from './modules/business/business.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { RecurringTipsModule } from './modules/recurring-tips/recurring-tips.mod
     TipPoolsModule,
     PushNotificationsModule,
     RecurringTipsModule,
+    BusinessModule,
   ],
   controllers: [AppController],
 })

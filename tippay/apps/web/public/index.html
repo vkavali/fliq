@@ -164,6 +164,7 @@
         <div class="topbar-brand"><img src="logo-full.png" alt="Fliq" class="topbar-logo"></div>
         <div class="topbar-right">
           <span id="dash-phone" class="topbar-phone"></span>
+          <button class="topbar-btn" onclick="goToBusiness()">🏢 Business</button>
           <button class="topbar-logout" onclick="logout()">Logout</button>
         </div>
       </div>
@@ -456,6 +457,7 @@
         <p class="lp-footer-tagline">Built for India. UPI-native. Zero friction.</p>
         <div class="lp-footer-links">
           <a href="javascript:void(0)" onclick="goTo('login')">Provider Login</a>
+          <a href="javascript:void(0)" onclick="goTo('login')">Fliq for Business</a>
           <a href="#lp-download">Download App</a>
           <a href="/api/docs">API Docs</a>
         </div>
@@ -463,6 +465,196 @@
     </footer>
 
   </div>
+
+  <!-- ==================== FLIQ FOR BUSINESS ==================== -->
+  <div id="business-page" class="page hidden">
+    <nav class="topbar">
+      <div class="topbar-inner">
+        <div class="topbar-brand">
+          <img src="logo-full.png" alt="Fliq" class="topbar-logo">
+          <span class="biz-badge">for Business</span>
+        </div>
+        <div class="topbar-right">
+          <span id="biz-phone" class="topbar-phone"></span>
+          <button class="topbar-btn" onclick="goTo('dashboard')">Provider View</button>
+          <button class="topbar-logout" onclick="logout()">Logout</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Register Business -->
+    <div id="biz-register-section" class="hidden">
+      <div class="biz-container">
+        <div class="biz-register-card">
+          <div class="biz-register-hero">
+            <div class="biz-register-icon">🏢</div>
+            <h2>Register Your Business on Fliq</h2>
+            <p>Manage tips for your entire team from one dashboard. Hotels, salons, restaurants and more.</p>
+          </div>
+          <form onsubmit="registerBusiness(event)">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Business Name *</label>
+                <input type="text" id="biz-name" placeholder="The Grand Hotel" maxlength="200" required>
+              </div>
+              <div class="form-group">
+                <label>Business Type *</label>
+                <select id="biz-type" required>
+                  <option value="">Select type</option>
+                  <option value="HOTEL">🏨 Hotel</option>
+                  <option value="SALON">💇 Salon</option>
+                  <option value="RESTAURANT">🍽️ Restaurant</option>
+                  <option value="SPA">🧖 Spa</option>
+                  <option value="CAFE">☕ Café</option>
+                  <option value="RETAIL">🛍️ Retail</option>
+                  <option value="OTHER">🏢 Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Address</label>
+              <input type="text" id="biz-address" placeholder="12 MG Road, Bengaluru" maxlength="500">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Contact Phone</label>
+                <input type="tel" id="biz-contact-phone" placeholder="+919876543210">
+              </div>
+              <div class="form-group">
+                <label>Contact Email</label>
+                <input type="email" id="biz-contact-email" placeholder="manager@business.com">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>GSTIN (optional)</label>
+              <input type="text" id="biz-gstin" placeholder="29AABCU9603R1ZM" maxlength="15" style="text-transform:uppercase">
+            </div>
+            <div id="biz-register-error" class="error-box hidden"></div>
+            <button type="submit" class="biz-primary-btn" id="biz-register-btn">Register Business</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Business Dashboard (after registration) -->
+    <div id="biz-dashboard-section" class="hidden">
+      <div class="biz-container">
+
+        <!-- Business Header -->
+        <div class="biz-header-card" id="biz-header-card">
+          <div class="biz-header-left">
+            <div class="biz-type-emoji" id="biz-type-emoji">🏢</div>
+            <div>
+              <h2 id="biz-header-name">Business Name</h2>
+              <p id="biz-header-meta">Type • Address</p>
+            </div>
+          </div>
+          <div class="biz-header-right">
+            <button class="biz-outline-btn" onclick="showInviteModal()">+ Invite Staff</button>
+          </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="biz-stats-grid" id="biz-stats-grid">
+          <div class="biz-stat-card">
+            <div class="biz-stat-icon" style="background:#e8f5e9">💰</div>
+            <div>
+              <div class="biz-stat-value" id="stat-total-tips">—</div>
+              <div class="biz-stat-label">Total Tips</div>
+            </div>
+          </div>
+          <div class="biz-stat-card">
+            <div class="biz-stat-icon" style="background:#e3f2fd">🧾</div>
+            <div>
+              <div class="biz-stat-value" id="stat-tip-count">—</div>
+              <div class="biz-stat-label">Transactions</div>
+            </div>
+          </div>
+          <div class="biz-stat-card">
+            <div class="biz-stat-icon" style="background:#fff3e0">⭐</div>
+            <div>
+              <div class="biz-stat-value" id="stat-avg-rating">—</div>
+              <div class="biz-stat-label">Avg Rating</div>
+            </div>
+          </div>
+          <div class="biz-stat-card">
+            <div class="biz-stat-icon" style="background:#f3e5f5">👥</div>
+            <div>
+              <div class="biz-stat-value" id="stat-staff-count">—</div>
+              <div class="biz-stat-label">Staff Members</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="biz-tabs">
+          <button class="biz-tab active" onclick="bizTab('staff')">Staff &amp; Earnings</button>
+          <button class="biz-tab" onclick="bizTab('satisfaction')">Satisfaction</button>
+          <button class="biz-tab" onclick="bizTab('qrcodes')">QR Codes</button>
+        </div>
+
+        <!-- Staff Tab -->
+        <div id="biz-tab-staff" class="biz-tab-content">
+          <div class="biz-section-header">
+            <h3>Staff Earnings Breakdown</h3>
+            <button class="biz-outline-btn" onclick="exportCsv()">⬇ Export CSV</button>
+          </div>
+          <div id="biz-staff-table-wrap">
+            <div class="biz-loading">Loading staff data...</div>
+          </div>
+        </div>
+
+        <!-- Satisfaction Tab -->
+        <div id="biz-tab-satisfaction" class="biz-tab-content hidden">
+          <h3>Customer Satisfaction</h3>
+          <div class="biz-rating-dist" id="biz-rating-dist"></div>
+          <div id="biz-reviews-list"></div>
+        </div>
+
+        <!-- QR Codes Tab -->
+        <div id="biz-tab-qrcodes" class="biz-tab-content hidden">
+          <div class="biz-section-header">
+            <h3>Staff QR Codes</h3>
+            <button class="biz-outline-btn" onclick="printAllQr()">🖨 Print All</button>
+          </div>
+          <p class="biz-muted">Print these standee cards and place them on desks or counters.</p>
+          <div id="biz-qr-grid" class="biz-qr-grid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== INVITE MODAL ==================== -->
+  <div id="invite-modal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Invite Staff Member</h3>
+        <button class="modal-close" onclick="closeInviteModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" id="invite-phone" placeholder="+919876543210">
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <select id="invite-role">
+            <option value="STAFF">Staff</option>
+            <option value="MANAGER">Manager</option>
+            <option value="ADMIN">Admin</option>
+          </select>
+        </div>
+        <div id="invite-error" class="error-box hidden"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="biz-outline-btn" onclick="closeInviteModal()">Cancel</button>
+        <button class="biz-primary-btn" onclick="sendInvite()">Send Invite</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PRINT QR STANDEES ==================== -->
+  <div id="print-area" class="print-only"></div>
 
   <!-- Toast -->
   <div id="toast" class="toast"><span id="toast-msg"></span></div>
