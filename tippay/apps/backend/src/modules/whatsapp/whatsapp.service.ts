@@ -43,12 +43,10 @@ export class WhatsAppService {
 
   /**
    * Normalize a phone number to E.164 without '+' prefix for WhatsApp API.
-   * Strips non-digit characters. Adds '91' India prefix if 10-digit number.
+   * Strips non-digit characters. Expects full E.164 input (e.g. +919876543210 or +12125551234).
    */
   normalizePhone(phone: string): string {
-    const digits = phone.replace(/\D/g, '');
-    if (digits.length === 10) return `91${digits}`;
-    return digits;
+    return phone.replace(/\D/g, '');
   }
 
   /**

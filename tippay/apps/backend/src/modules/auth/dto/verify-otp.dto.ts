@@ -4,7 +4,7 @@ import { IsString, Matches, Length } from 'class-validator';
 export class VerifyOtpDto {
   @ApiProperty({ example: '+919876543210' })
   @IsString()
-  @Matches(/^\+91[6-9]\d{9}$/, { message: 'Phone must be a valid Indian mobile number with +91 prefix' })
+  @Matches(/^\+(91[6-9]\d{9}|1[2-9]\d{9})$/, { message: 'Phone must be a valid E.164 number with +91 (India) or +1 (US) prefix' })
   phone!: string;
 
   @ApiProperty({ example: '123456' })
