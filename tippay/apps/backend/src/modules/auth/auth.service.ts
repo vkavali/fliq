@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '@fliq/database';
 import { UserType } from '@fliq/shared';
 import { RedisService } from '../redis/redis.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import * as crypto from 'crypto';
 
 const OTP_EXPIRY_MINUTES = 5;
@@ -26,6 +27,7 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
     private readonly redis: RedisService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async sendOtp(phone: string): Promise<{ message: string }> {
@@ -54,13 +56,8 @@ export class AuthService {
     await this.redis.incr(dayKey);
     await this.redis.setex(dayKey, 86400, (await this.redis.get(dayKey)) || '1');
 
-    const env = this.config.get<string>('APP_ENV', 'development');
-    if (env !== 'production') {
-      this.logger.warn(`[DEV] OTP for ${phone}: ${code}`);
-    } else {
-      // TODO: Send SMS via MSG91
-      this.logger.log(`OTP sent to ${phone}`);
-    }
+    await this.notifications.sendOtpNotification(phone, code);
+    this.logger.log(`OTP dispatched to ${phone}`);
 
     return { message: 'OTP sent successfully' };
   }
