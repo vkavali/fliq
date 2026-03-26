@@ -148,7 +148,7 @@ export class TipsService {
         gatewayPaymentId: dto.razorpay_payment_id,
       },
       include: {
-        provider: { include: { user: { select: { phone: true, name: true } } } },
+        provider: { select: { phone: true, name: true } },
         customer: { select: { name: true } },
       },
     });
@@ -157,7 +157,7 @@ export class TipsService {
     this.notifications
       .notifyTipReceived(
         paidTip.providerId,
-        paidTip.provider.user.phone,
+        paidTip.provider.phone,
         Number(paidTip.amountPaise),
         paidTip.customer?.name ?? undefined,
         paidTip.message ?? undefined,
