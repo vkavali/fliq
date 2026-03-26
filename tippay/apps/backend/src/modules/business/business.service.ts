@@ -5,7 +5,7 @@ import {
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '@fliq/database';
 import { RegisterBusinessDto } from './dto/register-business.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
 import { RespondInvitationDto, InvitationResponse } from './dto/respond-invitation.dto';
@@ -244,7 +244,7 @@ export class BusinessService {
       where: { businessId, isActive: true },
       select: { providerId: true },
     });
-    const providerIds = members.map((m) => m.providerId);
+    const providerIds = members.map((m: any) => m.providerId);
 
     const [tipAggregates, ratingData, recentTips] = await Promise.all([
       // Total tips and amount for all staff
@@ -317,7 +317,7 @@ export class BusinessService {
       },
     });
 
-    const providerIds = members.map((m) => m.providerId);
+    const providerIds = members.map((m: any) => m.providerId);
 
     const tipsByProvider = await this.prisma.tip.groupBy({
       by: ['providerId'],
@@ -330,9 +330,9 @@ export class BusinessService {
       _avg: { rating: true },
     });
 
-    const statsMap = new Map(tipsByProvider.map((t) => [t.providerId, t]));
+    const statsMap = new Map(tipsByProvider.map((t: any) => [t.providerId, t]));
 
-    return members.map((m) => {
+    return members.map((m: any) => {
       const stats = statsMap.get(m.providerId);
       return {
         memberId: m.id,
@@ -356,7 +356,7 @@ export class BusinessService {
       where: { businessId, isActive: true },
       select: { providerId: true },
     });
-    const providerIds = members.map((m) => m.providerId);
+    const providerIds = members.map((m: any) => m.providerId);
 
     const tips = await this.prisma.tip.findMany({
       where: {
@@ -379,14 +379,14 @@ export class BusinessService {
 
     const ratingDistribution = [1, 2, 3, 4, 5].map((star) => ({
       star,
-      count: tips.filter((t) => t.rating === star).length,
+      count: tips.filter((t: any) => t.rating === star).length,
     }));
 
     return {
       tips,
       ratingDistribution,
-      totalWithRating: tips.filter((t) => t.rating !== null).length,
-      totalWithMessage: tips.filter((t) => t.message).length,
+      totalWithRating: tips.filter((t: any) => t.rating !== null).length,
+      totalWithMessage: tips.filter((t: any) => t.message).length,
     };
   }
 
@@ -397,7 +397,7 @@ export class BusinessService {
       where: { businessId, isActive: true },
       select: { providerId: true },
     });
-    const providerIds = members.map((m) => m.providerId);
+    const providerIds = members.map((m: any) => m.providerId);
 
     const tips = await this.prisma.tip.findMany({
       where: {
@@ -440,7 +440,7 @@ export class BusinessService {
       'Status',
     ];
 
-    const rows = tips.map((t) => [
+    const rows = tips.map((t: any) => [
       t.id,
       t.createdAt.toISOString(),
       t.provider.providerProfile?.displayName ?? t.provider.name ?? '',
@@ -454,7 +454,7 @@ export class BusinessService {
       t.status,
     ]);
 
-    return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    return [headers.join(','), ...rows.map((r: any) => r.join(','))].join('\n');
   }
 
   async getBulkQrCodes(businessId: string, requesterId: string) {
@@ -485,8 +485,8 @@ export class BusinessService {
     });
 
     return members
-      .filter((m) => m.provider.providerProfile)
-      .map((m) => ({
+      .filter((m: any) => m.provider.providerProfile)
+      .map((m: any) => ({
         memberId: m.id,
         providerId: m.providerId,
         displayName: m.provider.providerProfile?.displayName ?? m.provider.name,
