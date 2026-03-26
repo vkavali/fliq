@@ -1,17 +1,43 @@
 import { Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PushNotificationsService } from '../push-notifications/push-notifications.service';
+import { WhatsAppService } from '../whatsapp/whatsapp.service';
 
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
   private readonly isDev: boolean;
+  private readonly otpChannel: string;
 
   constructor(
     private readonly config: ConfigService,
     @Optional() private readonly push: PushNotificationsService,
+    @Optional() private readonly whatsapp: WhatsAppService,
   ) {
     this.isDev = this.config.get<string>('APP_ENV', 'development') !== 'production';
+    this.otpChannel = this.config.get<string>('OTP_CHANNEL', 'whatsapp');
+  }
+
+  /**
+   * Send OTP via WhatsApp (primary) with SMS fallback.
+   * In dev mode, always logs to console AND attempts WhatsApp if credentials are configured.
+   */
+  async sendOtpNotification(phone: string, otp: string): Promise<void> {
+    if (this.isDev) {
+      this.logger.warn(`[DEV] OTP for ${phone}: ${otp}`);
+    }
+
+    if (this.otpChannel === 'whatsapp' && this.whatsapp) {
+      try {
+        await this.whatsapp.sendOtpTemplate(phone, otp);
+        return;
+      } catch (error) {
+        this.logger.warn(`WhatsApp OTP delivery failed for ${phone}, falling back to SMS: ${error}`);
+      }
+    }
+
+    // Fallback: SMS
+    await this.sendSms(phone, `Your Fliq verification code is: ${otp}. It expires in 5 minutes. Do not share this code.`);
   }
 
   /**

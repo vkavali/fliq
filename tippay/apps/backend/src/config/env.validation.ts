@@ -36,4 +36,8 @@ export const envValidationSchema = Joi.object({
   WHATSAPP_PHONE_NUMBER_ID: Joi.string().optional(),
   WHATSAPP_APP_SECRET: Joi.string().optional(),
   WHATSAPP_WEBHOOK_VERIFY_TOKEN: Joi.string().optional().default('fliq_whatsapp_verify'),
+  WHATSAPP_BUSINESS_ACCOUNT_ID: Joi.string().optional(),
+
+  // OTP delivery channel: 'whatsapp' (default) or 'sms'
+  OTP_CHANNEL: Joi.string().valid('whatsapp', 'sms').default('whatsapp'),
 }).options({ allowUnknown: true });

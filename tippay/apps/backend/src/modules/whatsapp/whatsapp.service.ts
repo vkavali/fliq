@@ -151,6 +151,34 @@ export class WhatsAppService {
     });
   }
 
+  /**
+   * Send an OTP verification template message.
+   * Uses the pre-approved "otp_verification" WhatsApp Business template.
+   * Template body: "Your Fliq verification code is: {{1}}. It expires in 5 minutes."
+   */
+  async sendOtpTemplate(to: string, otp: string): Promise<void> {
+    const phone = this.normalizePhone(to);
+    if (this.isDev && !this.accessToken) {
+      this.logger.log(`[DEV WhatsApp] OTP to: ${phone} | code: ${otp}`);
+      return;
+    }
+    await this.callMessagesApi({
+      messaging_product: 'whatsapp',
+      to: phone,
+      type: 'template',
+      template: {
+        name: 'otp_verification',
+        language: { code: 'en' },
+        components: [
+          {
+            type: 'body',
+            parameters: [{ type: 'text', text: otp }],
+          },
+        ],
+      },
+    });
+  }
+
   private async callMessagesApi(body: Record<string, unknown>): Promise<void> {
     if (!this.accessToken || !this.phoneNumberId) {
       this.logger.warn('WhatsApp credentials not configured — skipping message send');
