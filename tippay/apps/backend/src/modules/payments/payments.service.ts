@@ -68,7 +68,7 @@ export class PaymentsService {
       select: {
         id: true, status: true, providerId: true, customerId: true,
         amountPaise: true, netAmountPaise: true, commissionPaise: true,
-        rating: true, tipJarId: true,
+        rating: true, message: true, tipJarId: true,
       },
     });
     if (!tip || tip.status !== 'INITIATED') return;
