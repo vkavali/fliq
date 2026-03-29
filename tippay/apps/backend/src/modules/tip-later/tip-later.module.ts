@@ -5,7 +5,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { PaymentsModule } from '../payments/payments.module';
 
 @Module({
-  imports: [NotificationsModule, forwardRef(() => PaymentsModule)],
+  imports: [forwardRef(() => NotificationsModule), forwardRef(() => PaymentsModule)],
   controllers: [TipLaterController],
   providers: [TipLaterService],
   exports: [TipLaterService],
