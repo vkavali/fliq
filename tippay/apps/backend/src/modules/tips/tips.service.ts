@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  ServiceUnavailableException,
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -39,6 +40,12 @@ export class TipsService {
    * Returns tipId + orderId for the mobile client to open Razorpay checkout.
    */
   async createTip(dto: CreateTipDto, customerId?: string) {
+    if (!this.razorpay.isConfigured()) {
+      throw new ServiceUnavailableException(
+        'Payment system not configured. Please contact support.',
+      );
+    }
+
     // Validate provider exists
     const provider = await this.prisma.provider.findUnique({
       where: { id: dto.providerId },

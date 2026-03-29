@@ -23,18 +23,33 @@ export class RazorpayService {
   private readonly logger = new Logger(RazorpayService.name);
   private razorpay: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   private readonly webhookSecret: string;
+  private readonly keyId: string;
+  private readonly keySecret: string;
 
   constructor(private readonly config: ConfigService) {
     // Lazy-init to avoid import issues in test
     this.webhookSecret = this.config.get<string>('RAZORPAY_WEBHOOK_SECRET', '');
+    this.keyId = this.config.get<string>('RAZORPAY_KEY_ID', '');
+    this.keySecret = this.config.get<string>('RAZORPAY_KEY_SECRET', '');
+
+    if (!this.keyId || !this.keySecret) {
+      this.logger.warn(
+        'RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET not set — payment endpoints will return 503',
+      );
+    }
+  }
+
+  /** Returns true only when both Razorpay API keys are present. */
+  isConfigured(): boolean {
+    return Boolean(this.keyId && this.keySecret);
   }
 
   private async getClient() {
     if (!this.razorpay) {
       const Razorpay = (await import('razorpay')).default;
       this.razorpay = new Razorpay({
-        key_id: this.config.get<string>('RAZORPAY_KEY_ID', ''),
-        key_secret: this.config.get<string>('RAZORPAY_KEY_SECRET', ''),
+        key_id: this.keyId,
+        key_secret: this.keySecret,
       });
     }
     return this.razorpay;
@@ -52,9 +67,8 @@ export class RazorpayService {
    * The signature is HMAC SHA256 of "orderId|paymentId" using key_secret.
    */
   verifyPaymentSignature(orderId: string, paymentId: string, signature: string): boolean {
-    const keySecret = this.config.get<string>('RAZORPAY_KEY_SECRET', '');
     const body = `${orderId}|${paymentId}`;
-    const expected = crypto.createHmac('sha256', keySecret).update(body).digest('hex');
+    const expected = crypto.createHmac('sha256', this.keySecret).update(body).digest('hex');
     return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
   }
 
@@ -198,6 +212,6 @@ export class RazorpayService {
   }
 
   getRazorpayKeyId(): string {
-    return this.config.get<string>('RAZORPAY_KEY_ID', '');
+    return this.keyId;
   }
 }

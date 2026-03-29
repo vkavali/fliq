@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  ServiceUnavailableException,
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -27,6 +28,12 @@ export class RecurringTipsService {
    * Returns the subscription short_url for the customer to authorize the mandate.
    */
   async createRecurringTip(dto: CreateRecurringTipDto, customerId: string) {
+    if (!this.razorpay.isConfigured()) {
+      throw new ServiceUnavailableException(
+        'Payment system not configured. Please contact support.',
+      );
+    }
+
     // Validate provider
     const provider = await this.prisma.provider.findUnique({
       where: { id: dto.providerId },
