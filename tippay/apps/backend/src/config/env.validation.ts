@@ -45,4 +45,8 @@ export const envValidationSchema = Joi.object({
 
   // OTP delivery channel: 'whatsapp' (default) or 'sms'
   OTP_CHANNEL: Joi.string().valid('whatsapp', 'sms').default('whatsapp'),
+
+  // Dev/test bypass: magic phone numbers accept OTP "123456", Razorpay calls are mocked.
+  // Safe to enable in production for specific test phones — controlled per-phone.
+  DEV_BYPASS_ENABLED: Joi.string().valid('true', 'false').default('false'),
 }).options({ allowUnknown: true });

@@ -33,15 +33,24 @@ export class RazorpayService {
     this.keySecret = this.config.get<string>('RAZORPAY_KEY_SECRET', '');
 
     if (!this.keyId || !this.keySecret) {
-      this.logger.warn(
-        'RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET not set — payment endpoints will return 503',
-      );
+      if (this.isBypassEnabled()) {
+        this.logger.warn('RAZORPAY keys not set — DEV_BYPASS_ENABLED=true, mock responses active');
+      } else {
+        this.logger.warn(
+          'RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET not set — payment endpoints will return 503',
+        );
+      }
     }
   }
 
-  /** Returns true only when both Razorpay API keys are present. */
+  /** Returns true when DEV_BYPASS_ENABLED=true (mock payments active). */
+  isBypassEnabled(): boolean {
+    return this.config.get<string>('DEV_BYPASS_ENABLED', 'false') === 'true';
+  }
+
+  /** Returns true when Razorpay keys are present OR bypass is active. */
   isConfigured(): boolean {
-    return Boolean(this.keyId && this.keySecret);
+    return this.isBypassEnabled() || Boolean(this.keyId && this.keySecret);
   }
 
   private async getClient() {
@@ -56,6 +65,11 @@ export class RazorpayService {
   }
 
   async createOrder(params: RazorpayOrderParams): Promise<RazorpayOrder> {
+    if (this.isBypassEnabled() && !this.keyId) {
+      const mockId = `mock_order_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+      this.logger.warn(`[DEV BYPASS] Mock Razorpay order: ${mockId}`);
+      return { id: mockId, amount: params.amount, currency: params.currency, receipt: params.receipt, status: 'created' };
+    }
     const client = await this.getClient();
     const order = await client.orders.create(params);
     this.logger.log(`Razorpay order created: ${order.id} for ${params.amount} paise`);
@@ -65,8 +79,13 @@ export class RazorpayService {
   /**
    * Verify payment signature after checkout completion.
    * The signature is HMAC SHA256 of "orderId|paymentId" using key_secret.
+   * When DEV_BYPASS_ENABLED=true and orderId starts with "mock_order_", always returns true.
    */
   verifyPaymentSignature(orderId: string, paymentId: string, signature: string): boolean {
+    if (this.isBypassEnabled() && orderId.startsWith('mock_order_')) {
+      this.logger.warn(`[DEV BYPASS] Skipping payment signature verification for mock order ${orderId}`);
+      return true;
+    }
     const body = `${orderId}|${paymentId}`;
     const expected = crypto.createHmac('sha256', this.keySecret).update(body).digest('hex');
     return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));

@@ -26,6 +26,7 @@ import { WhatsAppModule } from './modules/whatsapp/whatsapp.module';
 import { EkycModule } from './modules/ekyc/ekyc.module';
 import { TipJarsModule } from './modules/tip-jars/tip-jars.module';
 import { TipLaterModule } from './modules/tip-later/tip-later.module';
+import { DevModule } from './modules/dev/dev.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { TipLaterModule } from './modules/tip-later/tip-later.module';
     EkycModule,
     TipJarsModule,
     TipLaterModule,
+    DevModule,
   ],
   controllers: [AppController],
 })

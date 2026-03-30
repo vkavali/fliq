@@ -16,6 +16,7 @@ import {
   CURRENCY,
 } from '@fliq/shared';
 import { RazorpayService } from '../payments/razorpay.service';
+import { PaymentsService } from '../payments/payments.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CreateTipDto } from './dto/create-tip.dto';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
@@ -29,6 +30,7 @@ export class TipsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly razorpay: RazorpayService,
+    private readonly payments: PaymentsService,
     private readonly config: ConfigService,
     private readonly notifications: NotificationsService,
   ) {
@@ -129,6 +131,8 @@ export class TipsService {
   /**
    * Verify payment after Razorpay checkout completes on the client side.
    * This is a client-side verification; the authoritative confirmation comes via webhook.
+   * When DEV_BYPASS_ENABLED=true and the order is a mock order, settlement runs immediately
+   * (no webhook needed — full tip lifecycle completes in this call).
    */
   async verifyPayment(tipId: string, dto: VerifyPaymentDto) {
     const tip = await this.prisma.tip.findUnique({ where: { id: tipId } });
@@ -136,6 +140,8 @@ export class TipsService {
     if (tip.status !== 'INITIATED') {
       throw new BadRequestException('Tip already processed');
     }
+
+    const isMockOrder = dto.razorpay_order_id.startsWith('mock_order_');
 
     const isValid = this.razorpay.verifyPaymentSignature(
       dto.razorpay_order_id,
@@ -145,6 +151,23 @@ export class TipsService {
 
     if (!isValid) {
       throw new BadRequestException('Invalid payment signature');
+    }
+
+    // When bypass is active with a mock order, run the full settlement immediately
+    // so wallets are credited without needing a real Razorpay webhook.
+    if (isMockOrder && this.razorpay.isBypassEnabled()) {
+      this.logger.warn(`[DEV BYPASS] Auto-settling mock tip ${tipId}`);
+      const mockPayload = {
+        payment: {
+          entity: {
+            id: dto.razorpay_payment_id,
+            order_id: dto.razorpay_order_id,
+            method: 'upi',
+          },
+        },
+      };
+      await this.payments.handleWebhookEvent('payment.captured', mockPayload);
+      return { status: 'verified', tipId, bypass: true };
     }
 
     // Mark as paid (webhook will handle full settlement, but this gives immediate feedback)

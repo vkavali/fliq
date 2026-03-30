@@ -18,6 +18,10 @@ const OTP_MAX_ATTEMPTS = 3;
 const OTP_RATE_LIMIT_HOUR = 5;
 const OTP_RATE_LIMIT_DAY = 10;
 
+// Test accounts that bypass real OTP when DEV_BYPASS_ENABLED=true
+const BYPASS_TEST_PHONES = ['+919999999999', '+919999999998'];
+const BYPASS_TEST_OTP = '123456';
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -30,7 +34,17 @@ export class AuthService {
     private readonly notifications: NotificationsService,
   ) {}
 
+  private isBypassEnabled(): boolean {
+    return this.config.get<string>('DEV_BYPASS_ENABLED', 'false') === 'true';
+  }
+
   async sendOtp(phone: string): Promise<{ message: string }> {
+    // Dev bypass: test phones always accept OTP "123456" — no SMS/WhatsApp sent
+    if (this.isBypassEnabled() && BYPASS_TEST_PHONES.includes(phone)) {
+      this.logger.warn(`[DEV BYPASS] OTP for ${phone} is always: ${BYPASS_TEST_OTP}`);
+      return { message: `OTP sent (dev bypass active — use ${BYPASS_TEST_OTP})` };
+    }
+
     await this.checkOtpRateLimit(phone);
 
     const code = this.generateOtp();
@@ -66,6 +80,24 @@ export class AuthService {
     phone: string,
     code: string,
   ): Promise<{ accessToken: string; refreshToken: string; user: Record<string, unknown> }> {
+    // Dev bypass: test phones accept magic OTP without a DB record
+    if (this.isBypassEnabled() && BYPASS_TEST_PHONES.includes(phone) && code === BYPASS_TEST_OTP) {
+      this.logger.warn(`[DEV BYPASS] Accepting magic OTP for ${phone}`);
+      let user = await this.prisma.user.findUnique({ where: { phone } });
+      if (!user) {
+        user = await this.prisma.user.create({
+          data: { phone, type: 'CUSTOMER' as any, status: 'ACTIVE' },
+        });
+      }
+      const accessToken = this.generateAccessToken(user.id, user.type as UserType);
+      const refreshToken = this.generateRefreshToken(user.id);
+      return {
+        accessToken,
+        refreshToken,
+        user: { id: user.id, phone: user.phone, name: user.name, type: user.type, kycStatus: user.kycStatus },
+      };
+    }
+
     const otpRecord = await this.prisma.otpCode.findFirst({
       where: {
         phone,
