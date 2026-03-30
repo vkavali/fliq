@@ -30,4 +30,22 @@ export class UpdateProviderProfileDto {
   @IsOptional()
   @IsEnum(PayoutPreference)
   payoutPreference?: PayoutPreference;
+
+  @ApiPropertyOptional({ example: '1234567890123456', description: 'Bank account number (stored encrypted)' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(18)
+  bankAccountNumber?: string;
+
+  @ApiPropertyOptional({ example: 'SBIN0001234', description: 'IFSC code of the bank branch' })
+  @IsOptional()
+  @IsString()
+  @Matches(/^[A-Z]{4}0[A-Z0-9]{6}$/, { message: 'Invalid IFSC code format' })
+  ifscCode?: string;
+
+  @ApiPropertyOptional({ example: 'ABCDE1234F', description: 'PAN number (stored encrypted)' })
+  @IsOptional()
+  @IsString()
+  @Matches(/^[A-Z]{5}[0-9]{4}[A-Z]$/, { message: 'Invalid PAN format' })
+  pan?: string;
 }

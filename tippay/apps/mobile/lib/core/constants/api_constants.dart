@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = 'https://fliq-production-9ac7.up.railway.app';
+  static const String baseUrl = 'https://fliq-dev.up.railway.app';
 
   // Auth
   static const String sendOtp = '/auth/otp/send';
@@ -49,4 +49,31 @@ class ApiConstants {
   static const String streak = '/gamification/streak';
   static const String leaderboardTippers = '/gamification/leaderboard';
   static const String leaderboardProviders = '/gamification/leaderboard/providers';
+
+  // Push Notifications
+  static const String registerFcmToken = '/notifications/fcm-token';
+  static const String removeFcmToken = '/notifications/fcm-token';
+
+  // Recurring Tips
+  static const String recurringTips = '/recurring-tips';
+  static const String myRecurringTips = '/recurring-tips';
+  static const String providerRecurringTips = '/recurring-tips/provider';
+  static String pauseRecurringTip(String id) => '/recurring-tips/$id/pause';
+  static String resumeRecurringTip(String id) => '/recurring-tips/$id/resume';
+  static String cancelRecurringTip(String id) => '/recurring-tips/$id';
+
+  // Business (B2B)
+  static const String registerBusiness = '/business/register';
+  static const String myBusiness = '/business/mine';
+  static const String myInvitations = '/business/invitations/mine';
+  static String businessById(String id) => '/business/$id';
+  static String inviteMember(String id) => '/business/$id/invite';
+  static String removeMember(String id, String memberId) =>
+      '/business/$id/members/$memberId';
+  static String respondInvitation(String id) => '/business/invitations/$id/respond';
+  static String businessDashboard(String id) => '/business/$id/dashboard';
+  static String businessStaff(String id) => '/business/$id/staff';
+  static String businessSatisfaction(String id) => '/business/$id/satisfaction';
+  static String businessQrCodes(String id) => '/business/$id/qrcodes';
+  static String businessExport(String id) => '/business/$id/export';
 }

@@ -22,8 +22,33 @@ import '../../features/gamification/presentation/screens/streak_screen.dart';
 import '../../features/tip_pools/presentation/screens/tip_pools_screen.dart';
 import '../../features/tip_pools/presentation/screens/pool_detail_screen.dart';
 import '../../features/tip_pools/presentation/screens/create_pool_screen.dart';
+import '../../features/recurring_tips/presentation/screens/setup_recurring_tip_screen.dart';
+import '../../features/recurring_tips/presentation/screens/my_recurring_tips_screen.dart';
+import '../../features/recurring_tips/presentation/screens/recurring_tip_detail_screen.dart';
+import '../../features/recurring_tips/presentation/screens/recurring_tip_success_screen.dart';
+import '../../features/recurring_tips/data/recurring_tips_repository.dart';
+import '../../features/business/presentation/screens/business_registration_screen.dart';
+import '../../features/business/presentation/screens/business_dashboard_screen.dart';
+import '../../features/business/presentation/screens/business_staff_screen.dart';
+import '../../features/business/presentation/screens/business_qr_screen.dart';
+import '../../features/business/presentation/screens/business_invitations_screen.dart';
+import '../../features/onboarding/presentation/screens/ekyc_onboarding_screen.dart';
+import '../../features/onboarding/presentation/screens/ekyc_otp_screen.dart';
+import '../../features/onboarding/presentation/screens/ekyc_success_screen.dart';
+import '../../features/tip_jars/presentation/screens/tip_jars_screen.dart';
+import '../../features/tip_jars/presentation/screens/create_tip_jar_screen.dart';
+import '../../features/tip_jars/presentation/screens/tip_jar_detail_screen.dart';
+import '../../features/tip_jars/presentation/screens/tip_jar_tip_screen.dart';
+import '../../features/tip_later/presentation/screens/tip_later_confirm_screen.dart';
+import '../../features/tip_later/presentation/screens/my_promises_screen.dart';
+import '../../features/offline/presentation/screens/pending_tips_screen.dart';
 import '../navigation/customer_shell.dart';
 import '../navigation/provider_shell.dart';
+import '../../features/onboarding/presentation/screens/provider_registration_screen.dart';
+import '../../features/onboarding/presentation/screens/bank_details_screen.dart';
+import '../../features/onboarding/presentation/screens/kyc_status_screen.dart';
+import '../../features/onboarding/presentation/screens/qr_generation_screen.dart';
+import '../../features/onboarding/presentation/screens/onboarding_success_screen.dart';
 
 // Root navigator key for full-screen routes that sit above the shell
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -122,6 +147,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return PaymentSuccessScreen(
             amount: data['amount'] as int? ?? 0,
             providerName: data['providerName'] as String? ?? '',
+            providerId: data['providerId'] as String?,
             rating: data['rating'] as int? ?? 0,
             message: data['message'] as String? ?? '',
             fee: data['fee'] as int? ?? 0,
@@ -164,6 +190,193 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final poolId = state.pathParameters['id'] ?? '';
           return PoolDetailScreen(poolId: poolId);
         },
+      ),
+
+      // ── Provider onboarding (full-screen, above customer shell) ─────────
+      GoRoute(
+        path: '/onboarding/registration',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ProviderRegistrationScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/bank-details',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const BankDetailsScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/kyc',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const KycStatusScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/qr',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const QrGenerationScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/success',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const OnboardingSuccessScreen(),
+      ),
+
+      // ── Aadhaar eKYC onboarding flow ─────────────────────────────────
+      GoRoute(
+        path: '/onboarding/ekyc',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const EkycOnboardingScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/ekyc/otp',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final data = state.extra as Map<String, dynamic>? ?? {};
+          return EkycOtpScreen(
+            sessionToken: data['sessionToken'] as String? ?? '',
+            maskedPhone: data['maskedPhone'] as String? ?? '',
+          );
+        },
+      ),
+      GoRoute(
+        path: '/onboarding/ekyc/success',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final data = state.extra as Map<String, dynamic>? ?? {};
+          return EkycSuccessScreen(
+            name: data['name'] as String? ?? '',
+            dob: data['dob'] as String? ?? '',
+            gender: data['gender'] as String? ?? '',
+            address: data['address'] as String? ?? '',
+          );
+        },
+      ),
+
+      // ── Recurring Tips routes ─────────────────────────────────────────
+      GoRoute(
+        path: '/recurring-tips',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const MyRecurringTipsScreen(),
+      ),
+      GoRoute(
+        path: '/recurring-tips/setup',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final data = state.extra as Map<String, dynamic>? ?? {};
+          return SetupRecurringTipScreen(
+            providerId: data['providerId'] as String? ?? '',
+            providerName: data['providerName'] as String? ?? '',
+            initialAmountPaise: data['initialAmountPaise'] as int? ?? 10000,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/recurring-tips/success',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final data = state.extra as Map<String, dynamic>? ?? {};
+          return RecurringTipSuccessScreen(
+            providerName: data['providerName'] as String? ?? '',
+            amountPaise: data['amountPaise'] as int? ?? 0,
+            frequency: data['frequency'] as String? ?? 'Monthly',
+          );
+        },
+      ),
+      GoRoute(
+        path: '/recurring-tips/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final tip = state.extra as RecurringTip?;
+          if (tip == null) return const MyRecurringTipsScreen();
+          return RecurringTipDetailScreen(tip: tip);
+        },
+      ),
+
+      // ── Business (B2B) routes ─────────────────────────────────────────
+      GoRoute(
+        path: '/business/register',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const BusinessRegistrationScreen(),
+      ),
+      GoRoute(
+        path: '/business/dashboard',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const BusinessDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/business/invitations',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const BusinessInvitationsScreen(),
+      ),
+      GoRoute(
+        path: '/business/staff',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final businessId = state.extra as String? ?? '';
+          return BusinessStaffScreen(businessId: businessId);
+        },
+      ),
+      GoRoute(
+        path: '/business/qrcodes',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final businessId = state.extra as String? ?? '';
+          return BusinessQrScreen(businessId: businessId);
+        },
+      ),
+
+      // ── Tip Jar routes ────────────────────────────────────────────────
+      GoRoute(
+        path: '/tip-jars',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const TipJarsScreen(),
+      ),
+      GoRoute(
+        path: '/tip-jars/create',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const CreateTipJarScreen(),
+      ),
+      GoRoute(
+        path: '/tip-jars/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final jarId = state.pathParameters['id'] ?? '';
+          return TipJarDetailScreen(jarId: jarId);
+        },
+      ),
+      GoRoute(
+        path: '/jar/:shortCode',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final shortCode = state.pathParameters['shortCode'] ?? '';
+          return TipJarTipScreen(shortCode: shortCode);
+        },
+      ),
+
+      // ── Tip Later routes ──────────────────────────────────────────────
+      GoRoute(
+        path: '/tip-later/confirm',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final data = state.extra as Map<String, dynamic>? ?? {};
+          return TipLaterConfirmScreen(
+            providerId: data['providerId'] as String? ?? '',
+            providerName: data['providerName'] as String? ?? '',
+            amountPaise: data['amountPaise'] as int? ?? 0,
+            message: data['message'] as String?,
+            rating: data['rating'] as int?,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/my-promises',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const MyPromisesScreen(),
+      ),
+
+      // ── Offline / Pending tips ────────────────────────────────────────
+      GoRoute(
+        path: '/pending-tips',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const PendingTipsScreen(),
       ),
 
       // ── Provider shell (bottom nav) ───────────────────────────────────

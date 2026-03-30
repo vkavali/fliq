@@ -1,8 +1,11 @@
-import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Logger, Inject, Optional, forwardRef } from '@nestjs/common';
 import { PrismaService, PaymentMethod } from '@fliq/database';
 import { RAZORPAY_EVENTS, WalletType } from '@fliq/shared';
 import { WalletsService } from '../wallets/wallets.service';
 import { GamificationService } from '../gamification/gamification.service';
+import { RecurringChargeScheduler } from '../recurring-tips/recurring-charge.scheduler';
+import { TipJarsService } from '../tip-jars/tip-jars.service';
+import { TipLaterService } from '../tip-later/tip-later.service';
 
 @Injectable()
 export class PaymentsService {
@@ -13,6 +16,12 @@ export class PaymentsService {
     private readonly wallets: WalletsService,
     @Inject(forwardRef(() => GamificationService))
     private readonly gamification: GamificationService,
+    @Optional() @Inject(forwardRef(() => RecurringChargeScheduler))
+    private readonly recurringChargeScheduler: RecurringChargeScheduler | null,
+    @Inject(forwardRef(() => TipJarsService))
+    private readonly tipJars: TipJarsService,
+    @Inject(forwardRef(() => TipLaterService))
+    private readonly tipLater: TipLaterService,
   ) {}
 
   /**
@@ -33,6 +42,18 @@ export class PaymentsService {
       case RAZORPAY_EVENTS.PAYOUT_FAILED:
         await this.handlePayoutFailed(payload);
         break;
+      case RAZORPAY_EVENTS.SUBSCRIPTION_AUTHENTICATED:
+        await this.handleSubscriptionAuthenticated(payload);
+        break;
+      case RAZORPAY_EVENTS.SUBSCRIPTION_CHARGED:
+        await this.handleSubscriptionCharged(payload);
+        break;
+      case RAZORPAY_EVENTS.SUBSCRIPTION_CANCELLED:
+        await this.handleSubscriptionCancelled(payload);
+        break;
+      case RAZORPAY_EVENTS.SUBSCRIPTION_HALTED:
+        await this.handleSubscriptionHalted(payload);
+        break;
       default:
         this.logger.log(`Unhandled webhook event: ${eventType}`);
     }
@@ -44,6 +65,11 @@ export class PaymentsService {
 
     const tip = await this.prisma.tip.findFirst({
       where: { gatewayOrderId: payment.order_id },
+      select: {
+        id: true, status: true, providerId: true, customerId: true,
+        amountPaise: true, netAmountPaise: true, commissionPaise: true,
+        rating: true, message: true, tipJarId: true,
+      },
     });
     if (!tip || tip.status !== 'INITIATED') return;
 
@@ -71,18 +97,20 @@ export class PaymentsService {
         },
       });
 
-      // Credit provider wallet
-      const providerWallet = await this.wallets.getOrCreateWallet(
-        tip.providerId,
-        WalletType.PROVIDER_EARNINGS,
-      );
-      await this.wallets.creditWallet(
-        providerWallet.id,
-        tip.netAmountPaise,
-        transaction.id,
-        `Tip received: ${tip.amountPaise} paise`,
-        tx,
-      );
+      // Credit provider wallet — skip for jar tips (distributeContribution handles splits)
+      if (!tip.tipJarId) {
+        const providerWallet = await this.wallets.getOrCreateWallet(
+          tip.providerId,
+          WalletType.PROVIDER_EARNINGS,
+        );
+        await this.wallets.creditWallet(
+          providerWallet.id,
+          tip.netAmountPaise,
+          transaction.id,
+          `Tip received: ${tip.amountPaise} paise`,
+          tx,
+        );
+      }
 
       // Credit platform commission wallet (if commission > 0)
       if (tip.commissionPaise > 0n) {
@@ -134,9 +162,50 @@ export class PaymentsService {
           },
         },
       });
+
+      // Queue WhatsApp notification for provider (if opted in)
+      const providerUser = await tx.user.findUnique({
+        where: { id: tip.providerId },
+        select: { phone: true, name: true, whatsappOptIn: true },
+      });
+      if (providerUser?.whatsappOptIn && providerUser.phone) {
+        const rupees = (Number(tip.amountPaise) / 100).toFixed(2);
+        const stars = tip.rating ? ` ${'⭐'.repeat(tip.rating)}` : '';
+        const msg = tip.message ? `\n"${tip.message}"` : '';
+        await tx.outboxEvent.create({
+          data: {
+            aggregateType: 'whatsapp',
+            aggregateId: tip.id,
+            eventType: 'tip.notify.provider',
+            payload: {
+              to: providerUser.phone,
+              text:
+                `💰 *New Tip Received!*\n\n` +
+                `Amount: ₹${rupees}${stars}${msg}\n\n` +
+                `Reply *balance* to check your wallet.`,
+            },
+          },
+        });
+      }
     });
 
     this.logger.log(`Tip ${tip.id} settled successfully`);
+
+    // ── Tip Jar: distribute contribution to all members ─────────────
+    if (tip.tipJarId) {
+      try {
+        await this.tipJars.distributeContribution(tip.id);
+      } catch (err) {
+        this.logger.error(`Tip jar distribution failed for tip ${tip.id}: ${err}`);
+      }
+    }
+
+    // ── Deferred Tip: mark as collected ─────────────────────────────
+    try {
+      await this.tipLater.markAsCollected(tip.id);
+    } catch (err) {
+      this.logger.error(`Deferred tip mark-collected failed for tip ${tip.id}: ${err}`);
+    }
 
     // ── Gamification: award badges & update streak ──────────────────
     try {
@@ -225,6 +294,66 @@ export class PaymentsService {
 
     // Weighted average including the new rating
     return Number(((currentAvg * ratedCount + newRating) / (ratedCount + 1)).toFixed(2));
+  }
+
+  private async handleSubscriptionAuthenticated(payload: any): Promise<void> {
+    const subscription = payload?.subscription?.entity;
+    if (!subscription) return;
+
+    await this.prisma.recurringTip.updateMany({
+      where: {
+        razorpaySubscriptionId: subscription.id,
+        status: 'PENDING_AUTHORIZATION',
+      },
+      data: {
+        status: 'ACTIVE',
+        // First charge happens at subscription start_at; set nextChargeDate to now+period
+        nextChargeDate: new Date(),
+      },
+    });
+
+    this.logger.log(`Recurring tip mandate authenticated for subscription ${subscription.id}`);
+  }
+
+  private async handleSubscriptionCharged(payload: any): Promise<void> {
+    const subscription = payload?.subscription?.entity;
+    const payment = payload?.payment?.entity;
+    if (!subscription) return;
+
+    const recurringTip = await this.prisma.recurringTip.findUnique({
+      where: { razorpaySubscriptionId: subscription.id },
+    });
+    if (!recurringTip) return;
+
+    // Settle the charge via the scheduler (reuse settlement logic)
+    if (this.recurringChargeScheduler) {
+      await this.recurringChargeScheduler.settleRecurringCharge(
+        recurringTip.id,
+        payment?.id,
+      );
+    }
+  }
+
+  private async handleSubscriptionCancelled(payload: any): Promise<void> {
+    const subscription = payload?.subscription?.entity;
+    if (!subscription) return;
+
+    await this.prisma.recurringTip.updateMany({
+      where: { razorpaySubscriptionId: subscription.id },
+      data: { status: 'CANCELLED' },
+    });
+    this.logger.log(`Recurring tip cancelled for subscription ${subscription.id}`);
+  }
+
+  private async handleSubscriptionHalted(payload: any): Promise<void> {
+    const subscription = payload?.subscription?.entity;
+    if (!subscription) return;
+
+    await this.prisma.recurringTip.updateMany({
+      where: { razorpaySubscriptionId: subscription.id },
+      data: { status: 'HALTED' },
+    });
+    this.logger.log(`Recurring tip halted for subscription ${subscription.id}`);
   }
 
   private mapPaymentMethod(method: string): PaymentMethod {

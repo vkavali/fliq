@@ -13,6 +13,30 @@ enum UserType {
   CUSTOMER
   PROVIDER
   ADMIN
+  BUSINESS_ADMIN
+}
+
+enum BusinessType {
+  HOTEL
+  SALON
+  RESTAURANT
+  SPA
+  CAFE
+  RETAIL
+  OTHER
+}
+
+enum BusinessMemberRole {
+  ADMIN
+  MANAGER
+  STAFF
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
 }
 
 enum UserStatus {
@@ -112,6 +136,40 @@ enum QrCodeType {
   DYNAMIC
 }
 
+enum RecurringTipFrequency {
+  WEEKLY
+  MONTHLY
+}
+
+enum RecurringTipStatus {
+  PENDING_AUTHORIZATION
+  ACTIVE
+  PAUSED
+  CANCELLED
+  HALTED
+  COMPLETED
+}
+
+enum KycMethod {
+  AADHAAR
+  MANUAL
+}
+
+enum TipJarEventType {
+  WEDDING
+  RESTAURANT
+  SALON
+  EVENT
+  CUSTOM
+}
+
+enum DeferredTipStatus {
+  PROMISED
+  COLLECTED
+  EXPIRED
+  CANCELLED
+}
+
 // ─── Models ─────────────────────────────────────────────────────────────────
 
 model User {
@@ -123,20 +181,33 @@ model User {
   languagePreference String     @default("en") @db.VarChar(5)
   kycStatus          KycStatus  @default(PENDING)
   status             UserStatus @default(ACTIVE)
+  whatsappOptIn      Boolean    @default(false)
   createdAt          DateTime   @default(now()) @db.Timestamptz()
   updatedAt          DateTime   @updatedAt @db.Timestamptz()
 
-  providerProfile    Provider?
-  wallets            Wallet[]
-  tipsGiven          Tip[]              @relation("CustomerTips")
-  tipsReceived       Tip[]              @relation("ProviderTips")
-  payouts            Payout[]
-  otpCodes           OtpCode[]
-  consentRecords     ConsentRecord[]
-  badges             UserBadge[]
-  tipStreak          TipStreak?
-  ownedTipPools      TipPool[]          @relation("TipPoolOwner")
-  tipPoolMemberships TipPoolMember[]
+  providerProfile        Provider?
+  wallets                Wallet[]
+  tipsGiven              Tip[]                  @relation("CustomerTips")
+  tipsReceived           Tip[]                  @relation("ProviderTips")
+  payouts                Payout[]
+  otpCodes               OtpCode[]
+  consentRecords         ConsentRecord[]
+  badges                 UserBadge[]
+  tipStreak              TipStreak?
+  ownedTipPools          TipPool[]              @relation("TipPoolOwner")
+  tipPoolMemberships     TipPoolMember[]
+  fcmToken               FcmToken?
+  recurringTipsGiven     RecurringTip[]         @relation("CustomerRecurringTips")
+  recurringTipsReceived  RecurringTip[]         @relation("ProviderRecurringTips")
+  ownedBusinesses        Business[]             @relation("BusinessOwner")
+  businessMemberships    BusinessMember[]
+  sentInvitations        BusinessInvitation[]   @relation("InvitationSender")
+  receivedInvitations    BusinessInvitation[]   @relation("InvitationRecipient")
+  ownedTipJars           TipJar[]               @relation("TipJarOwner")
+  tipJarMemberships      TipJarMember[]         @relation("TipJarMemberProvider")
+  tipJarContributions    TipJarContribution[]   @relation("TipJarContributor")
+  deferredTipsGiven      DeferredTip[]          @relation("DeferredTipCustomer")
+  deferredTipsReceived   DeferredTip[]          @relation("DeferredTipProvider")
 
   @@map("users")
 }
@@ -160,6 +231,9 @@ model Provider {
   razorpayLinkedAccountId    String?          @db.VarChar(50)
   razorpayFundAccountId      String?          @db.VarChar(50)
   qrCodeUrl                  String?
+  kycVerified                Boolean          @default(false)
+  kycMethod                  KycMethod?
+  kycCompletedAt             DateTime?        @db.Timestamptz()
   createdAt                  DateTime         @default(now()) @db.Timestamptz()
 
   qrCodes      QrCode[]
@@ -241,6 +315,10 @@ model Tip {
 
   tipPoolId            String?        @db.Uuid
   tipPool              TipPool?       @relation(fields: [tipPoolId], references: [id])
+  tipJarId             String?        @db.Uuid
+  tipJar               TipJar?        @relation(fields: [tipJarId], references: [id])
+  tipJarContribution   TipJarContribution?
+  deferredTipSettlement DeferredTip?  @relation("DeferredTipSettlement")
   transactions Transaction[]
 
   @@index([providerId, createdAt])
@@ -387,6 +465,89 @@ model TipPool {
   @@map("tip_pools")
 }
 
+// ─── Tip Jars ────────────────────────────────────────────────────────────────
+
+model TipJar {
+  id             String          @id @default(uuid()) @db.Uuid
+  name           String          @db.VarChar(100)
+  description    String?         @db.VarChar(500)
+  createdById    String          @db.Uuid
+  createdBy      User            @relation("TipJarOwner", fields: [createdById], references: [id])
+  eventType      TipJarEventType @default(CUSTOM)
+  shortCode      String          @unique @db.VarChar(8)
+  isActive       Boolean         @default(true)
+  expiresAt      DateTime?       @db.Timestamptz()
+  totalCollected BigInt          @default(0)
+  targetAmount   BigInt?
+  createdAt      DateTime        @default(now()) @db.Timestamptz()
+  updatedAt      DateTime        @updatedAt @db.Timestamptz()
+
+  members       TipJarMember[]
+  contributions TipJarContribution[]
+  tips          Tip[]
+
+  @@index([createdById])
+  @@map("tip_jars")
+}
+
+model TipJarMember {
+  id              String   @id @default(uuid()) @db.Uuid
+  tipJarId        String   @db.Uuid
+  tipJar          TipJar   @relation(fields: [tipJarId], references: [id])
+  providerId      String   @db.Uuid
+  provider        User     @relation("TipJarMemberProvider", fields: [providerId], references: [id])
+  splitPercentage Float    @default(0)
+  roleLabel       String?  @db.VarChar(100)
+  isActive        Boolean  @default(true)
+  joinedAt        DateTime @default(now()) @db.Timestamptz()
+
+  @@unique([tipJarId, providerId])
+  @@index([providerId])
+  @@map("tip_jar_members")
+}
+
+model TipJarContribution {
+  id          String   @id @default(uuid()) @db.Uuid
+  tipJarId    String   @db.Uuid
+  tipJar      TipJar   @relation(fields: [tipJarId], references: [id])
+  tipId       String   @unique @db.Uuid
+  tip         Tip      @relation(fields: [tipId], references: [id])
+  customerId  String?  @db.Uuid
+  customer    User?    @relation("TipJarContributor", fields: [customerId], references: [id])
+  amountPaise BigInt
+  message     String?  @db.VarChar(500)
+  createdAt   DateTime @default(now()) @db.Timestamptz()
+
+  @@index([tipJarId, createdAt])
+  @@map("tip_jar_contributions")
+}
+
+// ─── Deferred Tips ────────────────────────────────────────────────────────────
+
+model DeferredTip {
+  id          String            @id @default(uuid()) @db.Uuid
+  customerId  String            @db.Uuid
+  customer    User              @relation("DeferredTipCustomer", fields: [customerId], references: [id])
+  providerId  String            @db.Uuid
+  provider    User              @relation("DeferredTipProvider", fields: [providerId], references: [id])
+  amountPaise BigInt
+  message     String?           @db.VarChar(500)
+  rating      Int?              @db.SmallInt
+  promisedAt  DateTime          @default(now()) @db.Timestamptz()
+  dueAt       DateTime          @db.Timestamptz()
+  status      DeferredTipStatus @default(PROMISED)
+  mandateId   String?           @db.VarChar(100)
+  tipId       String?           @unique @db.Uuid
+  tip         Tip?              @relation("DeferredTipSettlement", fields: [tipId], references: [id])
+  createdAt   DateTime          @default(now()) @db.Timestamptz()
+  updatedAt   DateTime          @updatedAt @db.Timestamptz()
+
+  @@index([customerId, status])
+  @@index([providerId, status])
+  @@index([dueAt, status])
+  @@map("deferred_tips")
+}
+
 model TipPoolMember {
   id              String   @id @default(uuid()) @db.Uuid
   poolId          String   @db.Uuid
@@ -443,4 +604,103 @@ model TipStreak {
   updatedAt     DateTime  @updatedAt @db.Timestamptz()
 
   @@map("tip_streaks")
+}
+
+model FcmToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @db.VarChar(500)
+  platform  String   @db.VarChar(10)
+  updatedAt DateTime @updatedAt @db.Timestamptz()
+
+  @@map("fcm_tokens")
+}
+
+// ─── Recurring Tips (UPI Autopay Mandates) ───────────────────────────────────
+
+model RecurringTip {
+  id                     String                @id @default(uuid()) @db.Uuid
+  customerId             String                @db.Uuid
+  customer               User                  @relation("CustomerRecurringTips", fields: [customerId], references: [id])
+  providerId             String                @db.Uuid
+  provider               User                  @relation("ProviderRecurringTips", fields: [providerId], references: [id])
+  amountPaise            BigInt
+  frequency              RecurringTipFrequency
+  status                 RecurringTipStatus    @default(PENDING_AUTHORIZATION)
+  // Razorpay Subscription fields
+  razorpayPlanId         String?               @db.VarChar(50)
+  razorpaySubscriptionId String?               @unique @db.VarChar(50)
+  // Next scheduled charge
+  nextChargeDate         DateTime?             @db.Timestamptz()
+  // Stats
+  totalCharges           Int                   @default(0)
+  failedCharges          Int                   @default(0)
+  createdAt              DateTime              @default(now()) @db.Timestamptz()
+  updatedAt              DateTime              @updatedAt @db.Timestamptz()
+
+  @@index([customerId])
+  @@index([providerId])
+  @@index([status, nextChargeDate])
+  @@map("recurring_tips")
+}
+
+// ─── Business (B2B) ──────────────────────────────────────────────────────────
+
+model Business {
+  id           String       @id @default(uuid()) @db.Uuid
+  name         String       @db.VarChar(200)
+  type         BusinessType @default(OTHER)
+  address      String?      @db.VarChar(500)
+  contactPhone String?      @db.VarChar(15)
+  contactEmail String?      @db.VarChar(255)
+  gstin        String?      @db.VarChar(15)
+  logoUrl      String?      @db.Text
+  isActive     Boolean      @default(true)
+  ownerId      String       @db.Uuid
+  owner        User         @relation("BusinessOwner", fields: [ownerId], references: [id])
+  createdAt    DateTime     @default(now()) @db.Timestamptz()
+  updatedAt    DateTime     @updatedAt @db.Timestamptz()
+
+  members     BusinessMember[]
+  invitations BusinessInvitation[]
+
+  @@index([ownerId])
+  @@map("businesses")
+}
+
+model BusinessMember {
+  id         String             @id @default(uuid()) @db.Uuid
+  businessId String             @db.Uuid
+  business   Business           @relation(fields: [businessId], references: [id])
+  providerId String             @db.Uuid
+  provider   User               @relation(fields: [providerId], references: [id])
+  role       BusinessMemberRole @default(STAFF)
+  isActive   Boolean            @default(true)
+  joinedAt   DateTime           @default(now()) @db.Timestamptz()
+
+  @@unique([businessId, providerId])
+  @@index([providerId])
+  @@map("business_members")
+}
+
+model BusinessInvitation {
+  id         String           @id @default(uuid()) @db.Uuid
+  businessId String           @db.Uuid
+  business   Business         @relation(fields: [businessId], references: [id])
+  phone      String           @db.VarChar(15)
+  senderId   String           @db.Uuid
+  sender     User             @relation("InvitationSender", fields: [senderId], references: [id])
+  recipientId String?         @db.Uuid
+  recipient  User?            @relation("InvitationRecipient", fields: [recipientId], references: [id])
+  role       BusinessMemberRole @default(STAFF)
+  status     InvitationStatus @default(PENDING)
+  expiresAt  DateTime         @db.Timestamptz()
+  createdAt  DateTime         @default(now()) @db.Timestamptz()
+  updatedAt  DateTime         @updatedAt @db.Timestamptz()
+
+  @@index([businessId])
+  @@index([phone])
+  @@index([recipientId])
+  @@map("business_invitations")
 }

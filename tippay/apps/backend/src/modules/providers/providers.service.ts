@@ -1,12 +1,21 @@
 import { Injectable, ConflictException, NotFoundException, BadRequestException, PayloadTooLargeException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '@fliq/database';
 import { WalletType, UserType } from '@fliq/shared';
+import { encryptToBuffer } from '../../common/utils/encryption.util';
 import { CreateProviderProfileDto } from './dto/create-provider-profile.dto';
 import { UpdateProviderProfileDto } from './dto/update-provider-profile.dto';
 
 @Injectable()
 export class ProvidersService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly encryptionKey: string | undefined;
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
+  ) {
+    this.encryptionKey = this.config.get<string>('ENCRYPTION_KEY');
+  }
 
   async createProfile(userId: string, dto: CreateProviderProfileDto) {
     // Check if provider profile already exists
@@ -75,9 +84,25 @@ export class ProvidersService {
 
   async updateProfile(userId: string, dto: UpdateProviderProfileDto) {
     await this.getProfile(userId);
+
+    const { bankAccountNumber, ifscCode, pan, ...rest } = dto;
+    const updateData: Record<string, unknown> = { ...rest };
+
+    if (bankAccountNumber) {
+      if (!this.encryptionKey) throw new BadRequestException('Encryption not configured');
+      updateData.bankAccountNumberEncrypted = encryptToBuffer(bankAccountNumber, this.encryptionKey);
+    }
+    if (ifscCode) {
+      updateData.bankIfsc = ifscCode;
+    }
+    if (pan) {
+      if (!this.encryptionKey) throw new BadRequestException('Encryption not configured');
+      updateData.panEncrypted = encryptToBuffer(pan, this.encryptionKey);
+    }
+
     return this.prisma.provider.update({
       where: { id: userId },
-      data: dto,
+      data: updateData,
     });
   }
 

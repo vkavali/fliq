@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { envValidationSchema } from './config/env.validation';
 import { PrismaModule } from './modules/prisma/prisma.module';
@@ -18,6 +19,13 @@ import { OutboxModule } from './modules/outbox/outbox.module';
 import { PaymentLinksModule } from './modules/payment-links/payment-links.module';
 import { GamificationModule } from './modules/gamification/gamification.module';
 import { TipPoolsModule } from './modules/tip-pools/tip-pools.module';
+import { PushNotificationsModule } from './modules/push-notifications/push-notifications.module';
+import { RecurringTipsModule } from './modules/recurring-tips/recurring-tips.module';
+import { BusinessModule } from './modules/business/business.module';
+import { WhatsAppModule } from './modules/whatsapp/whatsapp.module';
+import { EkycModule } from './modules/ekyc/ekyc.module';
+import { TipJarsModule } from './modules/tip-jars/tip-jars.module';
+import { TipLaterModule } from './modules/tip-later/tip-later.module';
 
 @Module({
   imports: [
@@ -29,6 +37,7 @@ import { TipPoolsModule } from './modules/tip-pools/tip-pools.module';
       ],
       validationSchema: envValidationSchema,
     }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     RedisModule,
     AuthModule,
@@ -45,6 +54,13 @@ import { TipPoolsModule } from './modules/tip-pools/tip-pools.module';
     PaymentLinksModule,
     GamificationModule,
     TipPoolsModule,
+    PushNotificationsModule,
+    RecurringTipsModule,
+    BusinessModule,
+    WhatsAppModule,
+    EkycModule,
+    TipJarsModule,
+    TipLaterModule,
   ],
   controllers: [AppController],
 })

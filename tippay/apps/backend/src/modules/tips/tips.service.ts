@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  ServiceUnavailableException,
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -15,6 +16,7 @@ import {
   CURRENCY,
 } from '@fliq/shared';
 import { RazorpayService } from '../payments/razorpay.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateTipDto } from './dto/create-tip.dto';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
 
@@ -28,6 +30,7 @@ export class TipsService {
     private readonly prisma: PrismaService,
     private readonly razorpay: RazorpayService,
     private readonly config: ConfigService,
+    private readonly notifications: NotificationsService,
   ) {
     this.isDev = this.config.get<string>('APP_ENV', 'development') === 'development';
   }
@@ -37,6 +40,12 @@ export class TipsService {
    * Returns tipId + orderId for the mobile client to open Razorpay checkout.
    */
   async createTip(dto: CreateTipDto, customerId?: string) {
+    if (!this.razorpay.isConfigured()) {
+      throw new ServiceUnavailableException(
+        'Payment system not configured. Please contact support.',
+      );
+    }
+
     // Validate provider exists
     const provider = await this.prisma.provider.findUnique({
       where: { id: dto.providerId },
@@ -139,13 +148,28 @@ export class TipsService {
     }
 
     // Mark as paid (webhook will handle full settlement, but this gives immediate feedback)
-    await this.prisma.tip.update({
+    const paidTip = await this.prisma.tip.update({
       where: { id: tipId },
       data: {
         status: 'PAID',
         gatewayPaymentId: dto.razorpay_payment_id,
       },
+      include: {
+        provider: { select: { phone: true, name: true } },
+        customer: { select: { name: true } },
+      },
     });
+
+    // Fire push + SMS notification (non-blocking)
+    this.notifications
+      .notifyTipReceived(
+        paidTip.providerId,
+        paidTip.provider.phone,
+        Number(paidTip.amountPaise),
+        paidTip.customer?.name ?? undefined,
+        paidTip.message ?? undefined,
+      )
+      .catch((err) => this.logger.error('Failed to send tip notification', err));
 
     return { status: 'verified', tipId };
   }

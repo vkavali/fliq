@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../../../../core/services/offline_queue_service.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/tips_repository.dart';
@@ -58,8 +59,35 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen>
 
     try {
       final qrData = barcode.rawValue!;
-      final qrCodeId = _extractQrCodeId(qrData);
 
+      // ── Tip Jar QR? Navigate directly ───────────────────────────────
+      final jarShortCode = _extractJarShortCode(qrData);
+      if (jarShortCode != null) {
+        if (mounted) {
+          setState(() => _isProcessing = false);
+          context.push('/jar/$jarShortCode');
+        }
+        return;
+      }
+
+      // ── Check offline ────────────────────────────────────────────────
+      final isOfflineAsync = ref.read(isOfflineProvider);
+      final isOffline = isOfflineAsync.valueOrNull ?? false;
+      if (isOffline) {
+        if (mounted) {
+          setState(() => _isProcessing = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('You\'re offline. Tips will be queued.'),
+              action: SnackBarAction(label: 'View Queue', onPressed: () => context.push('/pending-tips')),
+            ),
+          );
+        }
+        return;
+      }
+
+      // ── Normal provider QR ───────────────────────────────────────────
+      final qrCodeId = _extractQrCodeId(qrData);
       final repo = ref.read(tipsRepositoryProvider);
       final providerInfo = await repo.resolveQrCode(qrCodeId);
 
@@ -86,6 +114,17 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen>
       return uri.pathSegments[1];
     }
     return rawValue;
+  }
+
+  /// Returns the tip-jar shortCode if the URL matches /jar/{shortCode}, else null.
+  String? _extractJarShortCode(String rawValue) {
+    final uri = Uri.tryParse(rawValue);
+    if (uri != null &&
+        uri.pathSegments.length >= 2 &&
+        uri.pathSegments[0] == 'jar') {
+      return uri.pathSegments[1];
+    }
+    return null;
   }
 
   void _navigateToTip() {

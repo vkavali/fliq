@@ -11,6 +11,12 @@ export const RAZORPAY_EVENTS = {
   PAYOUT_FAILED: 'payout.failed',
   PAYOUT_REVERSED: 'payout.reversed',
   QR_CODE_CREDITED: 'qr_code.credited',
+  // UPI Autopay / Subscription events
+  SUBSCRIPTION_AUTHENTICATED: 'subscription.authenticated',
+  SUBSCRIPTION_CHARGED: 'subscription.charged',
+  SUBSCRIPTION_CANCELLED: 'subscription.cancelled',
+  SUBSCRIPTION_HALTED: 'subscription.halted',
+  SUBSCRIPTION_PENDING: 'subscription.pending',
 } as const;
 
 /**

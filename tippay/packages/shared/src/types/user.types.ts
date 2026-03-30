@@ -2,6 +2,7 @@ export enum UserType {
   CUSTOMER = 'CUSTOMER',
   PROVIDER = 'PROVIDER',
   ADMIN = 'ADMIN',
+  BUSINESS_ADMIN = 'BUSINESS_ADMIN',
 }
 
 export enum UserStatus {

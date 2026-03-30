@@ -4,6 +4,18 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../providers/auth_provider.dart';
 
+const _countryCodes = [
+  _CountryCode(code: '+91', label: '🇮🇳 +91', hint: '9876543210'),
+  _CountryCode(code: '+1', label: '🇺🇸 +1', hint: '2125551234'),
+];
+
+class _CountryCode {
+  final String code;
+  final String label;
+  final String hint;
+  const _CountryCode({required this.code, required this.label, required this.hint});
+}
+
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -14,17 +26,28 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-
-  @override
-  void initState() {
-    super.initState();
-    _phoneController.text = '+91';
-  }
+  _CountryCode _selectedCountry = _countryCodes[0];
 
   @override
   void dispose() {
     _phoneController.dispose();
     super.dispose();
+  }
+
+  String get _fullPhone => '${_selectedCountry.code}${_phoneController.text}';
+
+  String? _validatePhone(String? value) {
+    final digits = value ?? '';
+    if (_selectedCountry.code == '+91') {
+      if (!RegExp(r'^[6-9]\d{9}$').hasMatch(digits)) {
+        return 'Enter a valid 10-digit Indian mobile number';
+      }
+    } else if (_selectedCountry.code == '+1') {
+      if (!RegExp(r'^[2-9]\d{9}$').hasMatch(digits)) {
+        return 'Enter a valid 10-digit US phone number';
+      }
+    }
+    return null;
   }
 
   @override
@@ -33,7 +56,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     ref.listen(authProvider, (prev, next) {
       if (next.status == AuthStatus.otpSent) {
-        context.push('/otp', extra: _phoneController.text);
+        context.push('/otp', extra: _fullPhone);
       } else if (next.status == AuthStatus.error && next.error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(next.error!)),
@@ -68,22 +91,44 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const Spacer(),
-                TextFormField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  maxLength: 13,
-                  decoration: const InputDecoration(
-                    labelText: 'Mobile Number',
-                    hintText: '+919876543210',
-                    prefixIcon: Icon(Icons.phone),
-                    counterText: '',
-                  ),
-                  validator: (value) {
-                    if (value == null || !RegExp(r'^\+91[6-9]\d{9}$').hasMatch(value)) {
-                      return 'Enter a valid Indian mobile number';
-                    }
-                    return null;
-                  },
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DropdownButtonHideUnderline(
+                      child: DropdownButton<_CountryCode>(
+                        value: _selectedCountry,
+                        items: _countryCodes
+                            .map((c) => DropdownMenuItem(
+                                  value: c,
+                                  child: Text(c.label),
+                                ))
+                            .toList(),
+                        onChanged: (c) {
+                          if (c != null) {
+                            setState(() {
+                              _selectedCountry = c;
+                              _phoneController.clear();
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
+                        maxLength: 10,
+                        decoration: InputDecoration(
+                          labelText: 'Mobile Number',
+                          hintText: _selectedCountry.hint,
+                          prefixIcon: const Icon(Icons.phone),
+                          counterText: '',
+                        ),
+                        validator: _validatePhone,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 ElevatedButton(
@@ -91,7 +136,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ? null
                       : () {
                           if (_formKey.currentState!.validate()) {
-                            ref.read(authProvider.notifier).sendOtp(_phoneController.text);
+                            ref.read(authProvider.notifier).sendOtp(_fullPhone);
                           }
                         },
                   child: authState.status == AuthStatus.loading
