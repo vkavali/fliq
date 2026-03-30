@@ -15,8 +15,13 @@ export const envValidationSchema = Joi.object({
     'any.required': 'DATABASE_URL is required — set it in Railway or .env',
   }),
 
-  JWT_SECRET: Joi.string().optional().min(16).messages({
-    'string.min': 'JWT_SECRET must be at least 16 characters',
+  JWT_SECRET: Joi.when('APP_ENV', {
+    is: 'production',
+    then: Joi.string().min(16).required().messages({
+      'any.required': 'JWT_SECRET is required in production — set a strong random secret in Railway',
+      'string.min': 'JWT_SECRET must be at least 16 characters',
+    }),
+    otherwise: Joi.string().min(16).default('fliq-dev-secret-not-for-production'),
   }),
 
   RAZORPAY_KEY_ID: Joi.string().optional(),
