@@ -4,6 +4,7 @@ import {
   GoneException,
   Logger,
   InternalServerErrorException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService, KycMethod, KycStatus } from '@fliq/database';
@@ -38,6 +39,7 @@ export class EkycService {
   private readonly logger = new Logger(EkycService.name);
   private readonly isDev: boolean;
   private readonly encryptionKeyHex: string;
+  private readonly encryptionConfigured: boolean;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -47,12 +49,18 @@ export class EkycService {
     this.isDev = config.get<string>('APP_ENV', 'development') !== 'production';
 
     const key = config.get<string>('ENCRYPTION_KEY', '');
-    if (!key && !this.isDev) {
-      throw new Error('ENCRYPTION_KEY env var is required in production');
+    const isValidKey = /^[0-9a-fA-F]{64}$/.test(key);
+    if (!isValidKey) {
+      this.logger.warn(
+        'ENCRYPTION_KEY is not set or is not a valid 64-hex-char string — ' +
+        'eKYC endpoints will return 503 until a valid key is configured in Railway.',
+      );
+      this.encryptionConfigured = false;
+      this.encryptionKeyHex = 'a'.repeat(64); // placeholder, never used
+    } else {
+      this.encryptionConfigured = true;
+      this.encryptionKeyHex = key;
     }
-    // In dev, fall back to a fixed 32-byte key so the app still boots
-    this.encryptionKeyHex =
-      key || 'a'.repeat(64); // 32 zero-bytes as hex — dev only
   }
 
   // ---------------------------------------------------------------------------
@@ -63,6 +71,11 @@ export class EkycService {
     userId: string,
     dto: InitiateEkycDto,
   ): Promise<{ sessionToken: string; maskedPhone: string }> {
+    if (!this.encryptionConfigured) {
+      throw new ServiceUnavailableException(
+        'eKYC is not available — ENCRYPTION_KEY is not configured on this server.',
+      );
+    }
     const id = dto.aadhaarOrVid.replace(/\s/g, '');
     const isVid = id.length === 16;
 
@@ -116,6 +129,11 @@ export class EkycService {
     success: true;
     profile: { name: string; dob: string; gender: string; address: string };
   }> {
+    if (!this.encryptionConfigured) {
+      throw new ServiceUnavailableException(
+        'eKYC is not available — ENCRYPTION_KEY is not configured on this server.',
+      );
+    }
     const sessionRaw = await this.redis.get(dto.sessionToken);
     if (!sessionRaw) {
       throw new GoneException('eKYC session expired or not found. Please start again.');
