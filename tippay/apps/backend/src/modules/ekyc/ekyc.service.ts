@@ -46,9 +46,9 @@ export class EkycService {
   ) {
     this.isDev = config.get<string>('APP_ENV', 'development') !== 'production';
 
-    const key = config.get<string>('FIELD_ENCRYPTION_KEY', '');
+    const key = config.get<string>('ENCRYPTION_KEY', '');
     if (!key && !this.isDev) {
-      throw new Error('FIELD_ENCRYPTION_KEY env var is required in production');
+      throw new Error('ENCRYPTION_KEY env var is required in production');
     }
     // In dev, fall back to a fixed 32-byte key so the app still boots
     this.encryptionKeyHex =
