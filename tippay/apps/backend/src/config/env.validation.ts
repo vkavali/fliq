@@ -32,9 +32,9 @@ export const envValidationSchema = Joi.object({
   FIREBASE_SERVICE_ACCOUNT_BASE64: Joi.string().optional(),
 
   // AES-256 encryption key for PAN/bank account (64 hex chars = 32 bytes)
-  ENCRYPTION_KEY: Joi.string().length(64).optional().messages({
-    'string.length': 'ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)',
-  }),
+  // Optional — app starts without it, but eKYC/PAN/bank-account encryption endpoints
+  // will return SERVICE_UNAVAILABLE until a valid key is configured.
+  ENCRYPTION_KEY: Joi.string().optional(),
 
   // WhatsApp Business API (Meta Cloud API)
   WHATSAPP_ACCESS_TOKEN: Joi.string().optional(),
