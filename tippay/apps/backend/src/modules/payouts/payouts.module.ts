@@ -6,7 +6,7 @@ import { WalletsModule } from '../wallets/wallets.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [forwardRef(() => PaymentsModule), WalletsModule, NotificationsModule],
+  imports: [forwardRef(() => PaymentsModule), WalletsModule, forwardRef(() => NotificationsModule)],
   controllers: [PayoutsController],
   providers: [PayoutsService],
   exports: [PayoutsService],

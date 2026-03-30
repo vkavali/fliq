@@ -2,6 +2,8 @@ import {
   Injectable,
   BadRequestException,
   Logger,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '@fliq/database';
 import { WalletType, LedgerEntryType } from '@fliq/shared';
@@ -18,7 +20,7 @@ export class PayoutsService {
     private readonly prisma: PrismaService,
     private readonly razorpay: RazorpayService,
     private readonly wallets: WalletsService,
-    private readonly notifications: NotificationsService,
+    @Inject(forwardRef(() => NotificationsService)) private readonly notifications: NotificationsService,
   ) {}
 
   async requestPayout(userId: string, dto: RequestPayoutDto) {

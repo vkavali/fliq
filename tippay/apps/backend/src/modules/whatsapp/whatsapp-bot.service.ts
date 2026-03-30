@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '@fliq/database';
 import { formatPaise, WalletType, PayoutMode } from '@fliq/shared';
 import { WhatsAppService } from './whatsapp.service';
@@ -32,7 +32,7 @@ export class WhatsAppBotService {
     private readonly prisma: PrismaService,
     private readonly whatsapp: WhatsAppService,
     private readonly wallets: WalletsService,
-    private readonly payouts: PayoutsService,
+    @Inject(forwardRef(() => PayoutsService)) private readonly payouts: PayoutsService,
     private readonly redis: RedisService,
   ) {}
 
