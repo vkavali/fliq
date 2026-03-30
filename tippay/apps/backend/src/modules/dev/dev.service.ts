@@ -77,31 +77,7 @@ export class DevService {
     this.guardBypass();
     this.logger.warn('[DEV] Seeding test accounts...');
 
-    // ── Platform system user (commission + tax wallets) ─────────────────
-    const platformUser = await this.prisma.user.upsert({
-      where: { phone: '+910000000000' },
-      update: {},
-      create: {
-        phone: '+910000000000',
-        name: 'Fliq Platform',
-        type: 'ADMIN' as any,
-        status: 'ACTIVE' as any,
-        kycStatus: 'FULL' as any,
-      },
-    });
-
-    await this.prisma.wallet.upsert({
-      where: { userId_type: { userId: platformUser.id, type: WalletType.PLATFORM_COMMISSION } },
-      update: {},
-      create: { userId: platformUser.id, type: WalletType.PLATFORM_COMMISSION, balancePaise: 0 },
-    });
-    await this.prisma.wallet.upsert({
-      where: { userId_type: { userId: platformUser.id, type: WalletType.TAX_RESERVE } },
-      update: {},
-      create: { userId: platformUser.id, type: WalletType.TAX_RESERVE, balancePaise: 0 },
-    });
-
-    // ── Test Tipper (+919999999999) — ADMIN so he can also hit /admin/* ──
+    // ── Test Tipper (+919999999999) — ADMIN ───────────────────────────
     const tipper = await this.prisma.user.upsert({
       where: { phone: TEST_TIPPER_PHONE },
       update: { name: 'Test Tipper', type: 'ADMIN' as any, status: 'ACTIVE' as any, kycStatus: 'FULL' as any },
@@ -129,13 +105,7 @@ export class DevService {
 
     await this.prisma.provider.upsert({
       where: { id: workerUser.id },
-      update: {
-        upiVpa: 'testworker@okicici',
-        displayName: 'Test Worker',
-        bio: 'Fliq test service worker account',
-        category: 'RESTAURANT' as any,
-        payoutPreference: 'DAILY_BATCH' as any,
-      },
+      update: { upiVpa: 'testworker@okicici', displayName: 'Test Worker' },
       create: {
         id: workerUser.id,
         upiVpa: 'testworker@okicici',
@@ -153,15 +123,13 @@ export class DevService {
       update: { balancePaise: TEST_BALANCE_PAISE },
       create: { userId: tipper.id, type: WalletType.PROVIDER_EARNINGS, balancePaise: TEST_BALANCE_PAISE },
     });
-
-    const workerWallet = await this.prisma.wallet.upsert({
+    await this.prisma.wallet.upsert({
       where: { userId_type: { userId: workerUser.id, type: WalletType.PROVIDER_EARNINGS } },
       update: { balancePaise: TEST_BALANCE_PAISE },
       create: { userId: workerUser.id, type: WalletType.PROVIDER_EARNINGS, balancePaise: TEST_BALANCE_PAISE },
     });
-    void workerWallet;
 
-    // ── Payment link for Test Worker (shortCode max 8 chars) ──────────
+    // ── Payment link for Test Worker ──────────────────────────────────
     const paymentLink = await this.prisma.paymentLink.upsert({
       where: { shortCode: 'testwrkr' },
       update: {},
@@ -176,129 +144,7 @@ export class DevService {
       },
     });
 
-    // ── QR code for Test Worker (find-or-create) ──────────────────────
-    const existingQr = await this.prisma.qrCode.findFirst({
-      where: { providerId: workerUser.id },
-    });
-    if (!existingQr) {
-      await this.prisma.qrCode.create({
-        data: {
-          providerId: workerUser.id,
-          type: 'STATIC' as any,
-          locationLabel: 'Table 1 — Test Cafe',
-          isActive: true,
-        },
-      });
-    }
-
-    // ── Test Business: Test Cafe (find-or-create by owner) ────────────
-    let business = await this.prisma.business.findFirst({
-      where: { ownerId: tipper.id, name: 'Test Cafe' },
-    });
-    if (!business) {
-      business = await this.prisma.business.create({
-        data: {
-          name: 'Test Cafe',
-          type: 'CAFE' as any,
-          isActive: true,
-          ownerId: tipper.id,
-        },
-      });
-    }
-
-    // Assign Test Worker as member of Test Cafe
-    const existingMember = await this.prisma.businessMember.findUnique({
-      where: { businessId_providerId: { businessId: business.id, providerId: workerUser.id } },
-    });
-    if (!existingMember) {
-      await this.prisma.businessMember.create({
-        data: {
-          businessId: business.id,
-          providerId: workerUser.id,
-          role: 'STAFF' as any,
-          isActive: true,
-        },
-      });
-    }
-
-    // ── Sample tips (past history) ────────────────────────────────────
-    const existingTipCount = await this.prisma.tip.count({
-      where: { providerId: workerUser.id, gateway: 'mock' },
-    });
-    if (existingTipCount === 0) {
-      const sampleTips = [
-        { amountPaise: BigInt(5000), message: 'Great service!', rating: 5 },
-        { amountPaise: BigInt(10000), message: 'Keep it up', rating: 4 },
-        { amountPaise: BigInt(2000), message: null, rating: null },
-      ];
-      for (const t of sampleTips) {
-        const commission =
-          t.amountPaise > BigInt(10000)
-            ? (t.amountPaise * BigInt(5)) / BigInt(100)
-            : BigInt(0);
-        const gst = commission > 0n ? (commission * BigInt(18)) / BigInt(100) : BigInt(0);
-        await this.prisma.tip.create({
-          data: {
-            customerId: tipper.id,
-            providerId: workerUser.id,
-            amountPaise: t.amountPaise,
-            commissionPaise: commission,
-            commissionRate: t.amountPaise > BigInt(10000) ? 5 : 0,
-            netAmountPaise: t.amountPaise - commission - gst,
-            gstOnCommissionPaise: gst,
-            source: 'PAYMENT_LINK' as any,
-            message: t.message,
-            rating: t.rating,
-            status: 'PAID' as any,
-            gateway: 'mock',
-            gatewayOrderId: `mock_seed_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
-            gatewayPaymentId: `mock_pay_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
-          },
-        });
-      }
-    }
-
-    // ── Tip Jar: Test Wedding Fund (shortCode max 8 chars) ────────────
-    await this.prisma.tipJar.upsert({
-      where: { shortCode: 'test-jar' },
-      update: {},
-      create: {
-        shortCode: 'test-jar',
-        name: 'Test Wedding Fund',
-        eventType: 'WEDDING' as any,
-        targetAmount: BigInt(500000),
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        createdById: tipper.id,
-        isActive: true,
-        members: {
-          create: [
-            { providerId: workerUser.id, splitPercentage: 50 },
-            { providerId: tipper.id, splitPercentage: 50 },
-          ],
-        },
-      },
-    });
-
-    // ── Tip Pool: Test Cafe Pool (find-or-create) ─────────────────────
-    const existingPool = await this.prisma.tipPool.findFirst({
-      where: { ownerId: tipper.id, name: 'Test Cafe Tip Pool' },
-    });
-    if (!existingPool) {
-      await this.prisma.tipPool.create({
-        data: {
-          name: 'Test Cafe Tip Pool',
-          ownerId: tipper.id,
-          splitMethod: 'EQUAL',
-          isActive: true,
-          members: {
-            create: [{ userId: workerUser.id, isActive: true }],
-          },
-        },
-      });
-    }
-
     const baseUrl = this.config.get('APP_BASE_URL', 'https://fliq.co.in');
-
     this.logger.warn('[DEV] Test data seeded successfully');
 
     return {
@@ -320,9 +166,8 @@ export class DevService {
         paymentLinkShortCode: paymentLink.shortCode,
         tipUrl: `${baseUrl}/app/tip.html?code=${paymentLink.shortCode}`,
       },
-      business: { id: business.id, name: business.name },
       walletBalance: '₹10,000 each account',
-      note: 'Both phones accept OTP 123456. Payments are mocked — full wallet lifecycle completes without Razorpay.',
+      note: 'Both phones accept OTP 123456.',
     };
   }
 }
