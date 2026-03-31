@@ -13,6 +13,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('otp/send')
+  @Post('send-otp')
   @HttpCode(HttpStatus.OK)
   @RateLimit({ limit: 5, windowSeconds: 3600 }) // 5 per hour per IP
   @ApiOperation({ summary: 'Send OTP to phone number' })
@@ -23,6 +24,7 @@ export class AuthController {
   }
 
   @Post('otp/verify')
+  @Post('verify-otp')
   @HttpCode(HttpStatus.OK)
   @RateLimit({ limit: 10, windowSeconds: 900 }) // 10 per 15 min per IP
   @ApiOperation({ summary: 'Verify OTP and get JWT tokens' })

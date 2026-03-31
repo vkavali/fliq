@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = 'https://fliq-dev.up.railway.app';
+  static const String baseUrl = 'https://www.fliq.co.in';
 
   // Auth
   static const String sendOtp = '/auth/otp/send';
