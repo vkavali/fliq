@@ -19,8 +19,9 @@ export class DevController {
     return this.dev.getStatus();
   }
 
+  @Get('seed')
   @Post('seed')
-  @ApiOperation({ summary: 'Create/refresh test accounts, wallets, tips, jar, pool, business' })
+  @ApiOperation({ summary: 'Create/refresh test accounts, wallets, and payment link' })
   seed() {
     this.logger.warn('[DEV] /dev/seed called');
     return this.dev.seedTestData();
