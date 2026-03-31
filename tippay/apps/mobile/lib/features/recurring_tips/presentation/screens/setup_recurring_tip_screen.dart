@@ -191,7 +191,7 @@ class _SetupRecurringTipScreenState
                         _rupees(amount),
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: selected ? Colors.white : AppColors.text,
+                          color: selected ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -355,7 +355,7 @@ class _FrequencyChip extends StatelessWidget {
               label,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: selected ? Colors.white : AppColors.text,
+                color: selected ? Colors.white : AppColors.textPrimary,
               ),
             ),
           ],

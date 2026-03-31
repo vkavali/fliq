@@ -33,6 +33,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
         final notifService = ref.read(notificationServiceProvider);
         await notifService.registerToken();
 
+        if (!context.mounted) return;
         final user = next.user;
         if (user != null && user.isProvider) {
           context.go('/dashboard');

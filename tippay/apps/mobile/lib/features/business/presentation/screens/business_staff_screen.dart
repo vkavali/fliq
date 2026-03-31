@@ -72,7 +72,7 @@ class _BusinessStaffScreenState extends ConsumerState<BusinessStaffScreen> {
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryPurple),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
               onPressed: () async {
                 Navigator.pop(ctx);
                 await _inviteMember(phoneCtrl.text.trim(), selectedRole);
@@ -140,12 +140,12 @@ class _BusinessStaffScreenState extends ConsumerState<BusinessStaffScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Staff Management'),
-        backgroundColor: AppTheme.primaryPurple,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showInviteDialog,
-        backgroundColor: AppTheme.primaryPurple,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.person_add),
         label: const Text('Invite'),
@@ -161,7 +161,7 @@ class _BusinessStaffScreenState extends ConsumerState<BusinessStaffScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.group_add, size: 64, color: AppTheme.primaryPurple),
+                              const Icon(Icons.group_add, size: 64, color: AppColors.primary),
                               const SizedBox(height: 16),
                               Text('No staff yet', style: theme.textTheme.titleMedium),
                               const SizedBox(height: 8),
@@ -173,7 +173,7 @@ class _BusinessStaffScreenState extends ConsumerState<BusinessStaffScreen> {
                           ),
                         )
                       : ListView.separated(
-                          padding: AppSpacing.pagePadding,
+                          padding: AppSpacing.paddingLg,
                           itemCount: _staff.length,
                           separatorBuilder: (_, __) => const SizedBox(height: 12),
                           itemBuilder: (context, i) {
@@ -200,11 +200,11 @@ class _BusinessStaffScreenState extends ConsumerState<BusinessStaffScreen> {
                                   children: [
                                     CircleAvatar(
                                       radius: 24,
-                                      backgroundColor: AppTheme.primaryPurple.withOpacity(0.1),
+                                      backgroundColor: AppColors.primary.withOpacity(0.1),
                                       child: Text(
                                         displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
                                         style: const TextStyle(
-                                          color: AppTheme.primaryPurple,
+                                          color: AppColors.primary,
                                           fontWeight: FontWeight.bold,
                                           fontSize: 18,
                                         ),

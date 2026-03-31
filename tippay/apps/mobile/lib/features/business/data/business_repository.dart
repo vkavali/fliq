@@ -1,9 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/network/api_service.dart';
+import '../../../core/network/api_client.dart';
 import '../../../core/constants/api_constants.dart';
 
 class BusinessRepository {
-  final ApiService _api;
+  final Dio _api;
   BusinessRepository(this._api);
 
   Future<Map<String, dynamic>> registerBusiness(Map<String, dynamic> data) async {
@@ -72,5 +73,5 @@ class BusinessRepository {
 }
 
 final businessRepositoryProvider = Provider<BusinessRepository>((ref) {
-  return BusinessRepository(ref.read(apiServiceProvider));
+  return BusinessRepository(ref.read(dioProvider));
 });

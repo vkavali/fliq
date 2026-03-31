@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../data/business_repository.dart';
@@ -36,10 +36,12 @@ class _BusinessQrScreenState extends ConsumerState<BusinessQrScreen> {
   }
 
   void _shareQrUrl(String url, String name) {
-    Share.share(
-      'Tip $name on Fliq: $url',
-      subject: 'Tip $name on Fliq',
-    );
+    Clipboard.setData(ClipboardData(text: 'Tip $name on Fliq: $url'));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Copied link for $name')),
+      );
+    }
   }
 
   @override
@@ -49,7 +51,7 @@ class _BusinessQrScreenState extends ConsumerState<BusinessQrScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Staff QR Codes'),
-        backgroundColor: AppTheme.primaryPurple,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
@@ -69,12 +71,12 @@ class _BusinessQrScreenState extends ConsumerState<BusinessQrScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.qr_code_2, size: 64, color: AppTheme.primaryPurple),
+                              const Icon(Icons.qr_code_2, size: 64, color: AppColors.primary),
                               const SizedBox(height: 16),
                               Text('No QR Codes', style: theme.textTheme.titleMedium),
                               const SizedBox(height: 8),
                               Padding(
-                                padding: AppSpacing.pagePadding,
+                                padding: AppSpacing.paddingLg,
                                 child: Text(
                                   'Staff members need to generate QR codes from their provider dashboard first.',
                                   textAlign: TextAlign.center,
@@ -85,7 +87,7 @@ class _BusinessQrScreenState extends ConsumerState<BusinessQrScreen> {
                           ),
                         )
                       : ListView.builder(
-                          padding: AppSpacing.pagePadding,
+                          padding: AppSpacing.paddingLg,
                           itemCount: _staffQr.length,
                           itemBuilder: (context, i) {
                             final member = _staffQr[i] as Map<String, dynamic>;
@@ -107,11 +109,11 @@ class _BusinessQrScreenState extends ConsumerState<BusinessQrScreen> {
                                         CircleAvatar(
                                           radius: 20,
                                           backgroundColor:
-                                              AppTheme.primaryPurple.withOpacity(0.1),
+                                              AppColors.primary.withOpacity(0.1),
                                           child: Text(
                                             name.isNotEmpty ? name[0].toUpperCase() : '?',
                                             style: const TextStyle(
-                                              color: AppTheme.primaryPurple,
+                                              color: AppColors.primary,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
@@ -153,7 +155,7 @@ class _BusinessQrScreenState extends ConsumerState<BusinessQrScreen> {
                                                   height: 80,
                                                   decoration: BoxDecoration(
                                                     border: Border.all(
-                                                        color: AppTheme.primaryPurple
+                                                        color: AppColors.primary
                                                             .withOpacity(0.3)),
                                                     borderRadius:
                                                         BorderRadius.circular(8),
@@ -170,7 +172,7 @@ class _BusinessQrScreenState extends ConsumerState<BusinessQrScreen> {
                                                           ),
                                                         )
                                                       : const Icon(Icons.qr_code,
-                                                          color: AppTheme.primaryPurple),
+                                                          color: AppColors.primary),
                                                 ),
                                                 if (label != null) ...[
                                                   const SizedBox(height: 4),
@@ -193,7 +195,7 @@ class _BusinessQrScreenState extends ConsumerState<BusinessQrScreen> {
                                                     child: const Icon(
                                                       Icons.share,
                                                       size: 14,
-                                                      color: AppTheme.primaryPurple,
+                                                      color: AppColors.primary,
                                                     ),
                                                   ),
                                                 ],

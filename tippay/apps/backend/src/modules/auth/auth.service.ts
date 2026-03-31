@@ -42,7 +42,7 @@ export class AuthService {
     // Dev bypass: test phones always accept OTP "123456" — no SMS/WhatsApp sent
     if (this.isBypassEnabled() && BYPASS_TEST_PHONES.includes(phone)) {
       this.logger.warn(`[DEV BYPASS] OTP for ${phone} is always: ${BYPASS_TEST_OTP}`);
-      return { message: `OTP sent (dev bypass active — use ${BYPASS_TEST_OTP})` };
+      return { message: `OTP sent (dev bypass active — use ${BYPASS_TEST_OTP})`, otp: BYPASS_TEST_OTP };
     }
 
     await this.checkOtpRateLimit(phone);

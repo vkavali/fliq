@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,7 +40,7 @@ class _TipAmountScreenState extends ConsumerState<TipAmountScreen>
   bool _isLoading = false;
   final _messageController = TextEditingController();
   int _rating = 0;
-  late Razorpay _razorpay;
+  Razorpay? _razorpay;
   String? _currentTipId;
   String? _providerUpiVpa;
   bool _loadingVpa = true;
@@ -55,9 +56,11 @@ class _TipAmountScreenState extends ConsumerState<TipAmountScreen>
   @override
   void initState() {
     super.initState();
-    _razorpay = Razorpay();
-    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
-    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    if (!kIsWeb) {
+      _razorpay = Razorpay();
+      _razorpay!.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+      _razorpay!.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    }
     _fetchProviderVpa();
     _initSpeech();
 
@@ -95,7 +98,7 @@ class _TipAmountScreenState extends ConsumerState<TipAmountScreen>
 
   @override
   void dispose() {
-    _razorpay.clear();
+    _razorpay?.clear();
     _customController.dispose();
     _messageController.dispose();
     _speech.stop();
@@ -234,7 +237,11 @@ class _TipAmountScreenState extends ConsumerState<TipAmountScreen>
         'theme': {'color': '#6C63FF'},
       };
 
-      _razorpay.open(options);
+      if (kIsWeb) {
+        _showSnack('Payments are not available on web. Please use the mobile app.');
+        return;
+      }
+      _razorpay!.open(options);
     } catch (e) {
       _showSnack('Failed to create tip: $e');
     } finally {

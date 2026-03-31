@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -31,20 +32,22 @@ class _TipJarTipScreenState extends ConsumerState<TipJarTipScreen> {
   final _messageController = TextEditingController();
   int _rating = 0;
   bool _isLoading = false;
-  late Razorpay _razorpay;
+  Razorpay? _razorpay;
   String? _currentTipId;
 
   @override
   void initState() {
     super.initState();
-    _razorpay = Razorpay();
-    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
-    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    if (!kIsWeb) {
+      _razorpay = Razorpay();
+      _razorpay!.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+      _razorpay!.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    }
   }
 
   @override
   void dispose() {
-    _razorpay.clear();
+    _razorpay?.clear();
     _customController.dispose();
     _messageController.dispose();
     super.dispose();
@@ -89,7 +92,11 @@ class _TipJarTipScreenState extends ConsumerState<TipJarTipScreen> {
         'theme': {'color': '#6C63FF'},
       };
 
-      _razorpay.open(options);
+      if (kIsWeb) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payments are not available on web. Please use the mobile app.')));
+        return;
+      }
+      _razorpay!.open(options);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to start payment: $e')));

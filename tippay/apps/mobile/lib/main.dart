@@ -26,7 +26,7 @@ class FliqApp extends ConsumerStatefulWidget {
   ConsumerState<FliqApp> createState() => _FliqAppState();
 }
 
-class _FliqAppState extends State<FliqApp> {
+class _FliqAppState extends ConsumerState<FliqApp> {
   @override
   void initState() {
     super.initState();

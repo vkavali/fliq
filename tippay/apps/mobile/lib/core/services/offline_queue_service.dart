@@ -29,7 +29,7 @@ final pendingTipCountProvider = StreamProvider<int>((ref) {
 final isOfflineProvider = StreamProvider<bool>((ref) {
   return Connectivity()
       .onConnectivityChanged
-      .map((results) => results.every((r) => r == ConnectivityResult.none));
+      .map((result) => result == ConnectivityResult.none);
 });
 
 // ── Service ────────────────────────────────────────────────────────────────
@@ -44,8 +44,8 @@ class OfflineQueueService {
   /// Start monitoring connectivity changes and auto-process queue when online.
   void startMonitoring(Function(PendingTipModel) onProcess) {
     _connectivitySub?.cancel();
-    _connectivitySub = Connectivity().onConnectivityChanged.listen((results) {
-      final isOnline = results.any((r) => r != ConnectivityResult.none);
+    _connectivitySub = Connectivity().onConnectivityChanged.listen((result) {
+      final isOnline = result != ConnectivityResult.none;
       if (isOnline) {
         _processQueue(onProcess);
       }

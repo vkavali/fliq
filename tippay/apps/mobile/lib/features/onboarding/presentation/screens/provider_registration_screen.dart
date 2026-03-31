@@ -89,7 +89,7 @@ class _ProviderRegistrationScreenState
             const SizedBox(height: AppSpacing.lg),
 
             // Progress indicator
-            _OnboardingProgress(step: 1, total: 4),
+            OnboardingProgress(step: 1, total: 4),
             const SizedBox(height: AppSpacing.xl),
 
             Text(
@@ -225,11 +225,11 @@ class _ProviderRegistrationScreenState
 
 // ── Shared progress indicator widget ────────────────────────────────────────
 
-class _OnboardingProgress extends StatelessWidget {
+class OnboardingProgress extends StatelessWidget {
   final int step;
   final int total;
 
-  const _OnboardingProgress({required this.step, required this.total});
+  const OnboardingProgress({required this.step, required this.total});
 
   @override
   Widget build(BuildContext context) {

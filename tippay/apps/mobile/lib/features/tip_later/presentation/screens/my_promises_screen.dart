@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,24 +21,30 @@ class MyPromisesScreen extends ConsumerStatefulWidget {
 }
 
 class _MyPromisesScreenState extends ConsumerState<MyPromisesScreen> {
-  late Razorpay _razorpay;
+  Razorpay? _razorpay;
   String? _pendingPaymentTipId;
 
   @override
   void initState() {
     super.initState();
-    _razorpay = Razorpay();
-    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
-    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    if (!kIsWeb) {
+      _razorpay = Razorpay();
+      _razorpay!.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+      _razorpay!.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    }
   }
 
   @override
   void dispose() {
-    _razorpay.clear();
+    _razorpay?.clear();
     super.dispose();
   }
 
   Future<void> _payNow(DeferredTipModel deferred) async {
+    if (kIsWeb) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payments are not available on web. Please use the mobile app.')));
+      return;
+    }
     try {
       final result = await ref.read(tipLaterRepositoryProvider).payDeferredTip(deferred.id);
 
@@ -54,7 +61,7 @@ class _MyPromisesScreenState extends ConsumerState<MyPromisesScreen> {
         'theme': {'color': '#6C63FF'},
       };
 
-      _razorpay.open(options);
+      _razorpay!.open(options);
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
