@@ -40,13 +40,17 @@ export class ProvidersService {
         where: { id: userId },
         data: { type: UserType.PROVIDER, name: dto.displayName },
       }),
-      // Create earnings wallet
-      this.prisma.wallet.create({
-        data: {
+      // Create or reuse earnings wallet
+      this.prisma.wallet.upsert({
+        where: {
+          userId_type: { userId, type: WalletType.PROVIDER_EARNINGS },
+        },
+        create: {
           userId,
           type: WalletType.PROVIDER_EARNINGS,
           balancePaise: 0,
         },
+        update: {}, // wallet already exists, no changes needed
       }),
     ]);
 
