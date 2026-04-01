@@ -27,6 +27,10 @@ import { EkycModule } from './modules/ekyc/ekyc.module';
 import { TipJarsModule } from './modules/tip-jars/tip-jars.module';
 import { TipLaterModule } from './modules/tip-later/tip-later.module';
 import { DevModule } from './modules/dev/dev.module';
+import { EventBusModule } from './modules/event-bus/event-bus.module';
+import { WorkersModule } from './modules/workers/workers.module';
+import { TipSessionsModule } from './modules/tip-sessions/tip-sessions.module';
+import { ReputationModule } from './modules/reputation/reputation.module';
 
 @Module({
   imports: [
@@ -63,6 +67,10 @@ import { DevModule } from './modules/dev/dev.module';
     TipJarsModule,
     TipLaterModule,
     DevModule,
+    EventBusModule,
+    WorkersModule,
+    TipSessionsModule,
+    ReputationModule,
   ],
   controllers: [AppController],
 })

@@ -704,3 +704,251 @@ model BusinessInvitation {
   @@index([recipientId])
   @@map("business_invitations")
 }
+
+// ─── V5 Pilot 0 ─────────────────────────────────────────────────────────────
+
+enum V5UserRole {
+  WORKER
+  BUSINESS_OWNER
+  PLATFORM_ADMIN
+  TIPPER
+}
+
+enum V5WorkerOnboardingStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum V5BusinessOnboardingStatus {
+  DRAFT
+  PENDING_REVIEW
+  ACTIVE
+  SUSPENDED
+}
+
+enum V5TipMode {
+  SOLO
+  POOL
+  JAR
+}
+
+enum V5TipRouteRecipient {
+  WORKER
+  BUSINESS
+  PLATFORM
+}
+
+enum V5TipIntentTag {
+  GRATITUDE
+  EXCEPTIONAL_SERVICE
+  BIRTHDAY
+  FAREWELL
+  CELEBRATION
+  OTHER
+}
+
+enum V5TipStatus {
+  PENDING
+  CAPTURED
+  SETTLED
+  FAILED
+  DISPUTED
+  REFUNDED
+}
+
+enum V5GoalStatus {
+  ACTIVE
+  ACHIEVED
+  CANCELLED
+}
+
+enum V5RiskSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum V5RiskState {
+  OPEN
+  REVIEWED
+  RESOLVED
+  ESCALATED
+}
+
+enum V5DisputeType {
+  AMOUNT_MISMATCH
+  NOT_RECEIVED
+  DUPLICATE
+  FRAUD
+  OTHER
+}
+
+enum V5DisputeState {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED_WORKER
+  RESOLVED_TIPPER
+  ESCALATED
+}
+
+model V5Worker {
+  workerId         String   @id @default(uuid()) @db.Uuid
+  userId           String   @db.Uuid
+  businessId       String?  @db.Uuid
+  publicName       String   @db.VarChar(100)
+  qrToken          String   @unique @db.VarChar(64)
+  region           String?  @db.VarChar(50)
+  soundPack        String   @default("classic") @db.VarChar(30)
+  meritVisibility  Boolean  @default(true)
+  onboardingStatus V5WorkerOnboardingStatus @default(PENDING)
+  createdAt        DateTime @default(now()) @db.Timestamptz()
+  updatedAt        DateTime @updatedAt @db.Timestamptz()
+
+  tipSessions  V5TipSession[]
+  goals        V5WorkerGoal[]
+  meritSnapshots V5MeritSnapshot[]
+  tipRoutes    V5TipRoute[]
+  riskFlags    V5RiskFlag[]
+
+  @@index([userId])
+  @@index([businessId])
+  @@map("v5_workers")
+}
+
+model V5Business {
+  businessId       String   @id @default(uuid()) @db.Uuid
+  legalName        String   @db.VarChar(200)
+  venueName        String   @db.VarChar(200)
+  modeFlags        Json     @default("{}")
+  payoutConfig     Json     @default("{}")
+  onboardingStatus V5BusinessOnboardingStatus @default(DRAFT)
+  createdAt        DateTime @default(now()) @db.Timestamptz()
+  updatedAt        DateTime @updatedAt @db.Timestamptz()
+
+  riskFlags V5RiskFlag[]
+
+  @@map("v5_businesses")
+}
+
+model V5TipSession {
+  sessionId          String       @id @default(uuid()) @db.Uuid
+  workerId           String       @db.Uuid
+  worker             V5Worker     @relation(fields: [workerId], references: [workerId])
+  mode               V5TipMode    @default(SOLO)
+  occasion           String?      @db.VarChar(100)
+  presetSet          Json         @default("[]")
+  anonymityRequested Boolean      @default(false)
+  createdAt          DateTime     @default(now()) @db.Timestamptz()
+  expiresAt          DateTime     @db.Timestamptz()
+
+  tips V5Tip[]
+
+  @@index([workerId, createdAt])
+  @@map("v5_tip_sessions")
+}
+
+model V5Tip {
+  tipId       String       @id @default(uuid()) @db.Uuid
+  sessionId   String       @db.Uuid
+  session     V5TipSession @relation(fields: [sessionId], references: [sessionId])
+  routeType   String       @db.VarChar(20)
+  grossAmount BigInt
+  netAmount   BigInt
+  intent      V5TipIntentTag @default(GRATITUDE)
+  status      V5TipStatus  @default(PENDING)
+  createdAt   DateTime     @default(now()) @db.Timestamptz()
+  settledAt   DateTime?    @db.Timestamptz()
+
+  routes    V5TipRoute[]
+  disputes  V5Dispute[]
+
+  @@index([sessionId, createdAt])
+  @@map("v5_tips")
+}
+
+model V5TipRoute {
+  id            String              @id @default(uuid()) @db.Uuid
+  tipId         String              @db.Uuid
+  tip           V5Tip               @relation(fields: [tipId], references: [tipId])
+  recipientType V5TipRouteRecipient
+  recipientId   String              @db.Uuid
+  percentage    Decimal?            @db.Decimal(5, 2)
+  fixedAmount   BigInt?
+  ruleVersion   String              @db.VarChar(20)
+  workerId      String?             @db.Uuid
+  worker        V5Worker?           @relation(fields: [workerId], references: [workerId])
+
+  @@index([tipId])
+  @@map("v5_tip_routes")
+}
+
+model V5WorkerGoal {
+  goalId         String       @id @default(uuid()) @db.Uuid
+  workerId       String       @db.Uuid
+  worker         V5Worker     @relation(fields: [workerId], references: [workerId])
+  title          String       @db.VarChar(200)
+  targetAmount   BigInt
+  publicFlag     Boolean      @default(true)
+  progressAmount BigInt       @default(0)
+  status         V5GoalStatus @default(ACTIVE)
+  createdAt      DateTime     @default(now()) @db.Timestamptz()
+  updatedAt      DateTime     @updatedAt @db.Timestamptz()
+
+  @@index([workerId, status])
+  @@map("v5_worker_goals")
+}
+
+model V5MeritSnapshot {
+  id               String   @id @default(uuid()) @db.Uuid
+  workerId         String   @db.Uuid
+  worker           V5Worker @relation(fields: [workerId], references: [workerId])
+  asOfDate         DateTime @db.Date
+  score            Decimal  @db.Decimal(5, 2)
+  consistency      Decimal  @db.Decimal(5, 2)
+  repeatGiverRate  Decimal  @db.Decimal(5, 2)
+  dominantIntent   V5TipIntentTag @default(GRATITUDE)
+  createdAt        DateTime @default(now()) @db.Timestamptz()
+
+  @@unique([workerId, asOfDate])
+  @@index([workerId, asOfDate])
+  @@map("v5_merit_snapshots")
+}
+
+model V5RiskFlag {
+  flagId     String         @id @default(uuid()) @db.Uuid
+  entityType String         @db.VarChar(30)
+  entityId   String         @db.Uuid
+  ruleCode   String         @db.VarChar(50)
+  severity   V5RiskSeverity @default(LOW)
+  state      V5RiskState    @default(OPEN)
+  createdAt  DateTime       @default(now()) @db.Timestamptz()
+  updatedAt  DateTime       @updatedAt @db.Timestamptz()
+
+  workerId   String?   @db.Uuid
+  worker     V5Worker? @relation(fields: [workerId], references: [workerId])
+  businessId String?   @db.Uuid
+  business   V5Business? @relation(fields: [businessId], references: [businessId])
+
+  @@index([entityType, entityId])
+  @@index([state, severity])
+  @@map("v5_risk_flags")
+}
+
+model V5Dispute {
+  disputeId String         @id @default(uuid()) @db.Uuid
+  raisedBy  String         @db.Uuid
+  tipId     String         @db.Uuid
+  tip       V5Tip          @relation(fields: [tipId], references: [tipId])
+  type      V5DisputeType  @default(OTHER)
+  narrative String         @db.VarChar(1000)
+  state     V5DisputeState @default(OPEN)
+  resolution String?       @db.VarChar(1000)
+  createdAt DateTime       @default(now()) @db.Timestamptz()
+  updatedAt DateTime       @updatedAt @db.Timestamptz()
+
+  @@index([tipId])
+  @@index([raisedBy])
+  @@map("v5_disputes")
+}

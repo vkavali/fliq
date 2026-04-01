@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="te-IN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Fliq V5 — సంతోషం ఇవ్వండి</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green: #00D06C;
+      --green-dim: #00D06C22;
+      --green-hover: #00b85e;
+      --bg: #0A0A0A;
+      --surface: #141414;
+      --surface2: #1E1E1E;
+      --border: #2A2A2A;
+      --text: #F5F5F5;
+      --text-dim: #888;
+      --text-muted: #555;
+      --red: #FF4444;
+      --gold: #FFD700;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    .page { display: none; min-height: 100vh; }
+    .page.active { display: flex; flex-direction: column; }
+
+    /* ── Shared Components ── */
+    .btn-primary {
+      background: var(--green);
+      color: #000;
+      border: none;
+      border-radius: 16px;
+      padding: 18px 24px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-primary:active { transform: scale(0.98); background: var(--green-hover); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--green);
+      border: 1.5px solid var(--green);
+      border-radius: 12px;
+      padding: 12px 20px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-ghost:hover { background: var(--green-dim); }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--surface2);
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+    .pill.green { background: var(--green-dim); color: var(--green); border-color: var(--green); }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+    .badge-green { background: var(--green-dim); color: var(--green); }
+
+    /* ── TIPPER FLOW ── */
+    #tipper-scan {
+      background: var(--bg);
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      text-align: center;
+    }
+    .scan-logo { font-size: 32px; font-weight: 900; color: var(--green); letter-spacing: -1px; margin-bottom: 40px; }
+    .scan-worker-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 32px 24px;
+      width: 100%;
+      max-width: 360px;
+      margin-bottom: 24px;
+    }
+    .worker-avatar {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: var(--green-dim);
+      border: 3px solid var(--green);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; font-weight: 800; color: var(--green);
+      margin: 0 auto 16px;
+    }
+    .worker-name { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+    .worker-role { color: var(--text-dim); font-size: 14px; margin-bottom: 16px; }
+    .merit-bar-wrap { margin-top: 12px; }
+    .merit-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+    .merit-bar { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+    .merit-fill { height: 100%; background: var(--green); border-radius: 3px; transition: width 0.6s ease; }
+
+    #tipper-intent {
+      background: var(--bg);
+      padding: 32px 24px;
+      flex-direction: column;
+      gap: 0;
+    }
+    .intent-header { margin-bottom: 28px; }
+    .intent-header h1 { font-size: 26px; font-weight: 800; line-height: 1.2; }
+    .intent-header p { color: var(--text-dim); font-size: 15px; margin-top: 8px; }
+    .intent-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .intent-chip {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .intent-chip .emoji { font-size: 24px; display: block; margin-bottom: 6px; }
+    .intent-chip:hover, .intent-chip.selected {
+      border-color: var(--green);
+      background: var(--green-dim);
+      color: var(--green);
+    }
+    .amount-section h2 { font-size: 17px; font-weight: 700; margin-bottom: 14px; }
+    .presets { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    .preset-btn {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.15s;
+      flex: 1;
+      min-width: 70px;
+    }
+    .preset-btn:hover, .preset-btn.selected {
+      border-color: var(--green);
+      background: var(--green-dim);
+      color: var(--green);
+    }
+    .custom-amount {
+      position: relative;
+      margin-bottom: 24px;
+    }
+    .custom-amount input {
+      width: 100%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 16px 16px 40px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      outline: none;
+    }
+    .custom-amount input:focus { border-color: var(--green); }
+    .custom-amount .rupee-prefix {
+      position: absolute; left: 14px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px; font-weight: 700; color: var(--text-dim);
+    }
+    .anon-toggle { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-dim); margin-bottom: 24px; cursor: pointer; }
+    .anon-toggle input[type="checkbox"] { accent-color: var(--green); width: 16px; height: 16px; }
+
+    #tipper-impact {
+      background: var(--bg);
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      text-align: center;
+    }
+    .impact-ring {
+      width: 140px; height: 140px;
+      border-radius: 50%;
+      border: 4px solid var(--green);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column;
+      margin: 0 auto 24px;
+      background: var(--green-dim);
+      animation: pulse 1.5s ease-in-out;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.8); opacity: 0; }
+      60% { transform: scale(1.05); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .impact-amount { font-size: 36px; font-weight: 900; color: var(--green); }
+    .impact-label { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+    .impact-message { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
+    .impact-sub { font-size: 15px; color: var(--text-dim); margin-bottom: 28px; line-height: 1.5; }
+    .goal-progress-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      width: 100%;
+      max-width: 360px;
+      text-align: left;
+    }
+    .goal-title { font-size: 14px; font-weight: 600; color: var(--text-dim); margin-bottom: 8px; }
+    .goal-progress-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .goal-progress-row span { font-size: 13px; color: var(--text-muted); }
+    .goal-bar { height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+    .goal-fill { height: 100%; background: var(--green); border-radius: 4px; }
+
+    /* ── WORKER APP ── */
+    #worker-app {
+      background: var(--bg);
+      flex-direction: column;
+    }
+    .worker-nav {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 16px;
+    }
+    .nav-tab {
+      flex: 1;
+      padding: 16px 8px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .nav-tab.active { color: var(--green); border-bottom-color: var(--green); }
+    .nav-tab .tab-icon { font-size: 20px; display: block; margin-bottom: 3px; }
+    .worker-content { flex: 1; overflow-y: auto; padding: 24px 20px; }
+
+    /* Dashboard Tab */
+    .dashboard-header { margin-bottom: 28px; }
+    .greeting { font-size: 16px; color: var(--text-dim); font-weight: 400; }
+    .worker-display-name { font-size: 24px; font-weight: 800; }
+    .big-green-number {
+      background: var(--surface);
+      border: 1px solid var(--green);
+      border-radius: 24px;
+      padding: 32px 24px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .bgn-label { font-size: 14px; color: var(--text-dim); margin-bottom: 8px; font-weight: 500; }
+    .bgn-amount { font-size: 56px; font-weight: 900; color: var(--green); line-height: 1; margin-bottom: 4px; }
+    .bgn-period { font-size: 13px; color: var(--text-muted); }
+    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .stat-value { font-size: 24px; font-weight: 800; color: var(--text); }
+    .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .recent-section h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+    .tip-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .tip-item:last-child { border-bottom: none; }
+    .tip-item-left { display: flex; align-items: center; gap: 12px; }
+    .tip-intent-icon { font-size: 20px; }
+    .tip-intent-label { font-size: 13px; font-weight: 600; }
+    .tip-time { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .tip-amount-badge { font-size: 16px; font-weight: 800; color: var(--green); }
+
+    /* Reputation Tab */
+    .merit-score-card {
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+      border: 1px solid var(--green);
+      border-radius: 24px;
+      padding: 28px 24px;
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .merit-score-card::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 120px; height: 120px;
+      background: var(--green-dim);
+      border-radius: 50%;
+    }
+    .merit-score-label { font-size: 13px; color: var(--text-dim); margin-bottom: 6px; }
+    .merit-score-value { font-size: 64px; font-weight: 900; color: var(--green); line-height: 1; }
+    .merit-score-max { font-size: 20px; color: var(--text-muted); font-weight: 400; }
+    .merit-intent { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; }
+    .merit-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .metric-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .metric-value { font-size: 22px; font-weight: 800; }
+    .metric-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    /* QR Tab */
+    .qr-section { text-align: center; padding: 20px 0; }
+    .qr-box {
+      background: #fff;
+      border-radius: 20px;
+      padding: 20px;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+    .qr-placeholder {
+      width: 200px; height: 200px;
+      background: repeating-linear-gradient(
+        45deg, #ddd 0px, #ddd 4px, #fff 4px, #fff 8px
+      );
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; color: #666;
+    }
+    .qr-url { font-size: 13px; color: var(--text-dim); margin-bottom: 20px; font-family: monospace; word-break: break-all; }
+    .qr-actions { display: flex; gap: 10px; }
+
+    /* Dreams Tab */
+    .dreams-header { margin-bottom: 20px; }
+    .dreams-header h2 { font-size: 22px; font-weight: 800; }
+    .dreams-header p { font-size: 14px; color: var(--text-dim); margin-top: 6px; }
+    .goal-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 12px;
+    }
+    .goal-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .goal-card-title { font-size: 16px; font-weight: 700; }
+    .goal-amounts { display: flex; gap: 4px; align-items: baseline; }
+    .goal-current { font-size: 18px; font-weight: 800; color: var(--green); }
+    .goal-target { font-size: 13px; color: var(--text-muted); }
+    .goal-bar-full { height: 10px; background: var(--surface2); border-radius: 5px; overflow: hidden; }
+    .goal-bar-progress { height: 100%; background: var(--green); border-radius: 5px; transition: width 0.8s ease; }
+    .goal-pct { font-size: 12px; color: var(--text-dim); text-align: right; margin-top: 6px; }
+    .add-goal-btn {
+      border: 1.5px dashed var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .add-goal-btn:hover { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.85); z-index: 100;
+      align-items: flex-end; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border-radius: 24px 24px 0 0;
+      padding: 24px;
+      width: 100%;
+      max-width: 480px;
+      animation: slideUp 0.25s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal h3 { font-size: 20px; font-weight: 800; margin-bottom: 16px; }
+    .modal input, .modal textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+      margin-bottom: 12px;
+      font-family: inherit;
+    }
+    .modal input:focus, .modal textarea:focus { border-color: var(--green); }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid var(--green);
+      border-radius: 12px;
+      padding: 12px 20px;
+      font-size: 14px; font-weight: 600;
+      z-index: 200; white-space: nowrap;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .toast.show { opacity: 1; }
+
+    /* Loading */
+    .loading { display: flex; align-items: center; justify-content: center; flex: 1; }
+    .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TIPPER FLOW — Page 1: Scan Landing (worker profile + intent)
+════════════════════════════════════════════════════════════════ -->
+<div id="tipper-scan" class="page active">
+  <div class="scan-logo">Fl₹q</div>
+
+  <div class="scan-worker-card" id="scan-worker-card">
+    <div class="worker-avatar" id="scan-avatar">?</div>
+    <div class="worker-name" id="scan-name">Loading...</div>
+    <div class="worker-role" id="scan-role">Fliq Worker</div>
+    <div id="scan-merit-wrap" class="merit-bar-wrap" style="display:none;">
+      <div class="merit-label">
+        <span>Merit Score</span>
+        <span id="scan-merit-val">—</span>
+      </div>
+      <div class="merit-bar">
+        <div class="merit-fill" id="scan-merit-fill" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="scan-goal-card" class="goal-progress-card" style="display:none; max-width:360px;">
+    <div class="goal-title">🌟 <span id="scan-goal-title">Dream</span></div>
+    <div class="goal-progress-row">
+      <span id="scan-goal-progress">₹0 / ₹0</span>
+      <span id="scan-goal-pct">0%</span>
+    </div>
+    <div class="goal-bar">
+      <div class="goal-fill" id="scan-goal-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div style="width:100%; max-width:360px;">
+    <button class="btn-primary" onclick="goToIntent()">సంతోషం ఇవ్వండి &rarr;</button>
+    <p style="text-align:center; color:var(--text-muted); font-size:12px; margin-top:12px;">Give happiness • Zero friction • 100% to worker</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TIPPER FLOW — Page 2: Intent & Amount
+════════════════════════════════════════════════════════════════ -->
+<div id="tipper-intent" class="page">
+  <div class="intent-header">
+    <h1>ఈ సంతోషం ఎందుకు? 🙏</h1>
+    <p>How are you feeling? (optional)</p>
+  </div>
+
+  <div class="intent-grid">
+    <div class="intent-chip" data-intent="GRATITUDE" onclick="selectIntent(this)">
+      <span class="emoji">🙏</span>
+      కృతజ్ఞత<br><small style="color:inherit;opacity:.7">Gratitude</small>
+    </div>
+    <div class="intent-chip" data-intent="EXCEPTIONAL_SERVICE" onclick="selectIntent(this)">
+      <span class="emoji">⭐</span>
+      అద్భుత సేవ<br><small style="color:inherit;opacity:.7">Exceptional</small>
+    </div>
+    <div class="intent-chip" data-intent="CELEBRATION" onclick="selectIntent(this)">
+      <span class="emoji">🎉</span>
+      పండుగ<br><small style="color:inherit;opacity:.7">Celebration</small>
+    </div>
+    <div class="intent-chip" data-intent="BIRTHDAY" onclick="selectIntent(this)">
+      <span class="emoji">🎂</span>
+      పుట్టినరోజు<br><small style="color:inherit;opacity:.7">Birthday</small>
+    </div>
+    <div class="intent-chip" data-intent="FAREWELL" onclick="selectIntent(this)">
+      <span class="emoji">👋</span>
+      వీడ్కోలు<br><small style="color:inherit;opacity:.7">Farewell</small>
+    </div>
+    <div class="intent-chip" data-intent="OTHER" onclick="selectIntent(this)">
+      <span class="emoji">💚</span>
+      ఇతర<br><small style="color:inherit;opacity:.7">Other</small>
+    </div>
+  </div>
+
+  <div class="amount-section">
+    <h2>ఎంత ఇవ్వాలి? / How much?</h2>
+    <div class="presets" id="preset-btns">
+      <button class="preset-btn" data-amount="2000" onclick="selectPreset(this)">₹20</button>
+      <button class="preset-btn" data-amount="5000" onclick="selectPreset(this)">₹50</button>
+      <button class="preset-btn" data-amount="10000" onclick="selectPreset(this)">₹100</button>
+      <button class="preset-btn" data-amount="20000" onclick="selectPreset(this)">₹200</button>
+    </div>
+    <div class="custom-amount">
+      <span class="rupee-prefix">₹</span>
+      <input type="number" id="custom-amount-input" placeholder="మొత్తం నమోదు చేయండి" min="1" max="10000" oninput="onCustomAmount(this)">
+    </div>
+    <label class="anon-toggle">
+      <input type="checkbox" id="anon-check"> వ్యక్తిగత వివరాలు దాచు (Remain anonymous)
+    </label>
+    <button class="btn-primary" id="pay-btn" onclick="proceedToPay()" disabled>
+      సంతోషం పంపండి 💚
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TIPPER FLOW — Page 3: Impact Screen
+════════════════════════════════════════════════════════════════ -->
+<div id="tipper-impact" class="page">
+  <div class="impact-ring">
+    <div class="impact-amount" id="impact-amount">₹0</div>
+    <div class="impact-label">sent!</div>
+  </div>
+
+  <div class="impact-message">సంతోషం పంపారు! 🎉</div>
+  <div class="impact-sub" id="impact-sub">
+    మీ సంతోషం <strong id="impact-name">—</strong> కి చేరింది.<br>
+    100% directly to them. No deductions.
+  </div>
+
+  <div id="impact-goal-card" class="goal-progress-card" style="display:none;">
+    <div class="goal-title">🌟 <span id="impact-goal-title">Dream</span></div>
+    <div class="goal-progress-row">
+      <span id="impact-goal-progress">₹0 / ₹0</span>
+      <span id="impact-goal-pct">0%</span>
+    </div>
+    <div class="goal-bar">
+      <div class="goal-fill" id="impact-goal-fill" style="width:0%"></div>
+    </div>
+    <p style="font-size:12px; color:var(--text-muted); margin-top:8px;">మీ సహాయంతో ఈ కల వైపు మరొక అడుగు! / One step closer to their dream!</p>
+  </div>
+
+  <button class="btn-primary" onclick="resetTipper()">మరొకటి ఇవ్వండి / Give Again</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     WORKER APP
+════════════════════════════════════════════════════════════════ -->
+<div id="worker-app" class="page">
+  <!-- Nav Tabs -->
+  <div class="worker-nav">
+    <div class="nav-tab active" data-tab="dashboard" onclick="switchTab('dashboard')">
+      <span class="tab-icon">💰</span>
+      Dashboard
+    </div>
+    <div class="nav-tab" data-tab="reputation" onclick="switchTab('reputation')">
+      <span class="tab-icon">⭐</span>
+      Merit
+    </div>
+    <div class="nav-tab" data-tab="qr" onclick="switchTab('qr')">
+      <span class="tab-icon">📱</span>
+      QR Code
+    </div>
+    <div class="nav-tab" data-tab="dreams" onclick="switchTab('dreams')">
+      <span class="tab-icon">🌟</span>
+      Dreams
+    </div>
+  </div>
+
+  <div class="worker-content">
+    <!-- ── DASHBOARD TAB ── -->
+    <div id="tab-dashboard">
+      <div class="dashboard-header">
+        <div class="greeting" id="worker-greeting">నమస్తే,</div>
+        <div class="worker-display-name" id="worker-display-name">Worker</div>
+      </div>
+
+      <div class="big-green-number">
+        <div class="bgn-label">ఈ నెల సంపాదన / Earnings This Month</div>
+        <div class="bgn-amount" id="bgn-amount">₹0</div>
+        <div class="bgn-period" id="bgn-period">loading...</div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-count">—</div>
+          <div class="stat-label">సంతోషాలు / Santhoshams</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-pending">—</div>
+          <div class="stat-label">Pending</div>
+        </div>
+      </div>
+
+      <div class="recent-section">
+        <h3>Recent Santhoshams</h3>
+        <div id="recent-tips-list">
+          <p style="color:var(--text-muted); font-size:14px; padding:20px 0; text-align:center;">Loading...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REPUTATION TAB ── -->
+    <div id="tab-reputation" style="display:none;">
+      <div class="merit-score-card">
+        <div class="merit-score-label">Merit Score</div>
+        <div>
+          <span class="merit-score-value" id="merit-score">—</span>
+          <span class="merit-score-max">/100</span>
+        </div>
+        <div class="merit-intent">
+          <span id="merit-dominant-emoji">🙏</span>
+          <span style="font-size:13px; color:var(--text-dim);">Dominant: <span id="merit-dominant">Gratitude</span></span>
+        </div>
+      </div>
+
+      <div class="merit-metrics">
+        <div class="metric-card">
+          <div class="metric-value" id="metric-consistency">—%</div>
+          <div class="metric-label">Consistency</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value" id="metric-repeat">—%</div>
+          <div class="metric-label">Repeat Givers</div>
+        </div>
+      </div>
+
+      <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; font-size:13px; color:var(--text-dim); line-height:1.6;">
+        <strong style="color:var(--text);">Merit Score ఎలా పని చేస్తుంది?</strong><br><br>
+        మీ merit score మీరు పొంది సంతోషాలు, వాటి సాతత్యత, మరియు పదే పదే వచ్చే givers ఆధారంగా లెక్కించబడుతుంది.<br><br>
+        <em>Score updates daily at midnight.</em>
+      </div>
+    </div>
+
+    <!-- ── QR TAB ── -->
+    <div id="tab-qr" style="display:none;">
+      <div class="qr-section">
+        <h2 style="font-size:22px; font-weight:800; margin-bottom:20px;">మీ QR Code</h2>
+        <div class="qr-box">
+          <div class="qr-placeholder" id="qr-canvas">QR Code</div>
+        </div>
+        <div class="qr-url" id="qr-url">https://fliq.co.in/v5/tip/...</div>
+        <div class="qr-actions">
+          <button class="btn-ghost" onclick="downloadQr()">Download</button>
+          <button class="btn-primary" onclick="rotateQr()" style="flex:1;">Rotate QR Token</button>
+        </div>
+        <p style="font-size:12px; color:var(--text-muted); margin-top:16px;">Rotating the QR token invalidates the old QR code. Print a new one after rotating.</p>
+      </div>
+    </div>
+
+    <!-- ── DREAMS TAB ── -->
+    <div id="tab-dreams" style="display:none;">
+      <div class="dreams-header">
+        <h2>మీ కలలు 🌟</h2>
+        <p>Set public goals. Givers see your dreams and feel more connected.</p>
+      </div>
+
+      <div id="goals-list"></div>
+
+      <div class="add-goal-btn" onclick="openGoalModal()">
+        + కొత్త కల / Add New Dream
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Goal Creation Modal -->
+<div class="modal-overlay" id="goal-modal">
+  <div class="modal">
+    <h3>కొత్త కల / New Dream</h3>
+    <input type="text" id="goal-title-input" placeholder="కల పేరు (e.g. నా కూతురి చదువు)">
+    <div style="position:relative; margin-bottom:12px;">
+      <span style="position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:16px; color:var(--text-dim);">₹</span>
+      <input type="number" id="goal-amount-input" placeholder="Target amount" style="padding-left:36px; margin-bottom:0;">
+    </div>
+    <label style="display:flex; align-items:center; gap:8px; font-size:14px; color:var(--text-dim); margin-bottom:16px; cursor:pointer;">
+      <input type="checkbox" id="goal-public" checked style="accent-color:var(--green);"> Givers కి చూపించు / Show to givers
+    </label>
+    <button class="btn-primary" onclick="saveGoal()">కల జోడించండి / Add Dream</button>
+    <button class="btn-ghost" onclick="closeGoalModal()" style="margin-top:8px;">Cancel</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── State ───────────────────────────────────────────────────────────────────
+const API = '/v5';
+let state = {
+  mode: 'tipper', // 'tipper' | 'worker'
+  qrToken: null,
+  sessionId: null,
+  selectedIntent: 'GRATITUDE',
+  selectedAmountPaise: 0,
+  workerData: null,
+  workerId: null,
+  earnings: null,
+  merit: null,
+  goals: [],
+};
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const path = window.location.pathname;
+  const params = new URLSearchParams(window.location.search);
+
+  if (path.startsWith('/v5/tip/')) {
+    const token = path.split('/v5/tip/')[1]?.split('/')[0];
+    if (token) {
+      state.qrToken = token;
+      state.mode = 'tipper';
+      loadTipperFlow(token);
+    }
+  } else if (path.startsWith('/v5/worker') || params.get('worker')) {
+    state.mode = 'worker';
+    const wid = params.get('worker') || localStorage.getItem('v5_workerId');
+    if (wid) {
+      state.workerId = wid;
+      showPage('worker-app');
+      loadWorkerApp(wid);
+    } else {
+      showPage('tipper-scan');
+    }
+  } else {
+    // Dev mode: show tipper with demo data
+    showPage('tipper-scan');
+    loadDemoTipper();
+  }
+});
+
+// ─── Page Navigation ─────────────────────────────────────────────────────────
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById(pageId);
+  if (el) el.classList.add('active');
+}
+
+// ─── Tipper Flow ─────────────────────────────────────────────────────────────
+async function loadTipperFlow(qrToken) {
+  showPage('tipper-scan');
+  try {
+    const res = await fetch(`${API}/workers/by-token/${qrToken}`);
+    if (!res.ok) throw new Error('Worker not found');
+    const worker = await res.json();
+    state.workerData = worker;
+
+    document.getElementById('scan-avatar').textContent = worker.publicName?.[0]?.toUpperCase() ?? '?';
+    document.getElementById('scan-name').textContent = worker.publicName;
+
+    // Merit
+    const merit = worker.meritSnapshots?.[0];
+    if (merit && worker.meritVisibility) {
+      const score = Number(merit.score);
+      document.getElementById('scan-merit-wrap').style.display = 'block';
+      document.getElementById('scan-merit-val').textContent = score.toFixed(1) + '/100';
+      document.getElementById('scan-merit-fill').style.width = score + '%';
+    }
+
+    // Public Goal
+    const goal = worker.goals?.[0];
+    if (goal) {
+      const pct = Math.min(100, Math.round((Number(goal.progressAmount) / Number(goal.targetAmount)) * 100));
+      document.getElementById('scan-goal-card').style.display = 'block';
+      document.getElementById('scan-goal-title').textContent = goal.title;
+      document.getElementById('scan-goal-progress').textContent =
+        `₹${paise2rs(Number(goal.progressAmount))} / ₹${paise2rs(Number(goal.targetAmount))}`;
+      document.getElementById('scan-goal-pct').textContent = pct + '%';
+      document.getElementById('scan-goal-fill').style.width = pct + '%';
+    }
+
+    // Create session
+    const sessionRes = await fetch(`${API}/sessions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workerId: worker.workerId }),
+    });
+    if (sessionRes.ok) {
+      const session = await sessionRes.json();
+      state.sessionId = session.sessionId;
+    }
+  } catch (e) {
+    loadDemoTipper();
+  }
+}
+
+function loadDemoTipper() {
+  document.getElementById('scan-avatar').textContent = 'R';
+  document.getElementById('scan-name').textContent = 'Raju Kumar';
+  document.getElementById('scan-role').textContent = 'Hotel Staff · Hyderabad';
+  document.getElementById('scan-merit-wrap').style.display = 'block';
+  document.getElementById('scan-merit-val').textContent = '74.5/100';
+  document.getElementById('scan-merit-fill').style.width = '74.5%';
+  document.getElementById('scan-goal-card').style.display = 'block';
+  document.getElementById('scan-goal-title').textContent = 'నా కూతురి పుస్తకాలు';
+  document.getElementById('scan-goal-progress').textContent = '₹2,400 / ₹5,000';
+  document.getElementById('scan-goal-pct').textContent = '48%';
+  document.getElementById('scan-goal-fill').style.width = '48%';
+  state.workerData = { publicName: 'Raju Kumar', workerId: 'demo' };
+}
+
+function goToIntent() {
+  showPage('tipper-intent');
+}
+
+function selectIntent(el) {
+  document.querySelectorAll('.intent-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.selectedIntent = el.dataset.intent;
+}
+
+function selectPreset(el) {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  state.selectedAmountPaise = parseInt(el.dataset.amount);
+  document.getElementById('custom-amount-input').value = '';
+  updatePayBtn();
+}
+
+function onCustomAmount(input) {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('selected'));
+  const val = parseFloat(input.value) || 0;
+  state.selectedAmountPaise = Math.round(val * 100);
+  updatePayBtn();
+}
+
+function updatePayBtn() {
+  const btn = document.getElementById('pay-btn');
+  btn.disabled = state.selectedAmountPaise < 100;
+}
+
+async function proceedToPay() {
+  if (state.selectedAmountPaise < 100) return;
+
+  const name = state.workerData?.publicName ?? 'the worker';
+  const amtRs = paise2rs(state.selectedAmountPaise);
+  const anonymous = document.getElementById('anon-check').checked;
+
+  // In production: open Razorpay checkout here
+  // For V5 Pilot 0: simulate payment success and call settle webhook
+  showToast('Processing payment...');
+
+  try {
+    if (state.sessionId && state.sessionId !== 'demo') {
+      await fetch(`${API}/sessions/webhook/settle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: state.sessionId,
+          grossAmountPaise: state.selectedAmountPaise,
+          intent: state.selectedIntent,
+          gatewayRef: 'sim_' + Date.now(),
+        }),
+      });
+    }
+  } catch (e) {
+    // proceed to impact screen anyway (demo mode)
+  }
+
+  // Impact screen
+  document.getElementById('impact-amount').textContent = '₹' + amtRs;
+  document.getElementById('impact-name').textContent = name;
+
+  const worker = state.workerData;
+  const goal = worker?.goals?.[0];
+  if (goal) {
+    const newProgress = Number(goal.progressAmount) + state.selectedAmountPaise;
+    const pct = Math.min(100, Math.round((newProgress / Number(goal.targetAmount)) * 100));
+    document.getElementById('impact-goal-card').style.display = 'block';
+    document.getElementById('impact-goal-title').textContent = goal.title;
+    document.getElementById('impact-goal-progress').textContent =
+      `₹${paise2rs(newProgress)} / ₹${paise2rs(Number(goal.targetAmount))}`;
+    document.getElementById('impact-goal-pct').textContent = pct + '%';
+    document.getElementById('impact-goal-fill').style.width = pct + '%';
+  }
+
+  showPage('tipper-impact');
+}
+
+function resetTipper() {
+  state.selectedAmountPaise = 0;
+  state.selectedIntent = 'GRATITUDE';
+  document.querySelectorAll('.intent-chip').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('custom-amount-input').value = '';
+  document.getElementById('anon-check').checked = false;
+  updatePayBtn();
+  showPage('tipper-scan');
+}
+
+// ─── Worker App ───────────────────────────────────────────────────────────────
+async function loadWorkerApp(workerId) {
+  const now = new Date();
+  const greeting = now.getHours() < 12 ? 'శుభోదయం' : now.getHours() < 17 ? 'శుభ మధ్యాహ్నం' : 'శుభ సాయంత్రం';
+  document.getElementById('worker-greeting').textContent = greeting + ',';
+
+  try {
+    const [profileRes, earningsRes, meritRes, goalsRes] = await Promise.all([
+      fetch(`${API}/workers/${workerId}`),
+      fetch(`${API}/workers/${workerId}/earnings`),
+      fetch(`${API}/workers/${workerId}/merit`),
+      fetch(`${API}/workers/${workerId}/goals`),
+    ]);
+
+    if (profileRes.ok) {
+      const profile = await profileRes.json();
+      state.workerData = profile;
+      document.getElementById('worker-display-name').textContent = profile.publicName;
+      document.getElementById('qr-url').textContent = `https://fliq.co.in/v5/tip/${profile.qrToken}`;
+    }
+
+    if (earningsRes.ok) {
+      const earnings = await earningsRes.json();
+      state.earnings = earnings;
+      document.getElementById('bgn-amount').textContent = '₹' + paise2rs(earnings.totalEarned);
+      document.getElementById('bgn-period').textContent = `${earnings.settledCount} santhoshams settled`;
+      document.getElementById('stat-count').textContent = earnings.settledCount;
+      document.getElementById('stat-pending').textContent = earnings.pendingCount;
+      renderRecentTips(earnings.recent);
+    }
+
+    if (meritRes.ok) {
+      const merit = await meritRes.json();
+      state.merit = merit;
+      const score = Number(merit.score || 0).toFixed(1);
+      document.getElementById('merit-score').textContent = score;
+      document.getElementById('metric-consistency').textContent = Math.round(Number(merit.consistency || 0) * 100) + '%';
+      document.getElementById('metric-repeat').textContent = Math.round(Number(merit.repeatGiverRate || 0) * 100) + '%';
+      const intentMap = { GRATITUDE: '🙏 Gratitude', EXCEPTIONAL_SERVICE: '⭐ Exceptional', BIRTHDAY: '🎂 Birthday', FAREWELL: '👋 Farewell', CELEBRATION: '🎉 Celebration', OTHER: '💚 Other' };
+      const dominant = merit.dominantIntent ?? 'GRATITUDE';
+      document.getElementById('merit-dominant').textContent = intentMap[dominant] ?? dominant;
+    }
+
+    if (goalsRes.ok) {
+      const goals = await goalsRes.json();
+      state.goals = goals;
+      renderGoals(goals);
+    }
+  } catch (e) {
+    loadDemoWorker();
+  }
+}
+
+function loadDemoWorker() {
+  document.getElementById('worker-display-name').textContent = 'Raju Kumar';
+  document.getElementById('bgn-amount').textContent = '₹4,720';
+  document.getElementById('bgn-period').textContent = '23 santhoshams this month';
+  document.getElementById('stat-count').textContent = '23';
+  document.getElementById('stat-pending').textContent = '2';
+  document.getElementById('merit-score').textContent = '74.5';
+  document.getElementById('metric-consistency').textContent = '68%';
+  document.getElementById('metric-repeat').textContent = '24%';
+  document.getElementById('merit-dominant').textContent = '🙏 Gratitude';
+  renderGoals([
+    { goalId: '1', title: 'నా కూతురి పుస్తకాలు', targetAmount: 500000, progressAmount: 240000, status: 'ACTIVE', publicFlag: true },
+    { goalId: '2', title: 'కొత్త సైకిల్', targetAmount: 1500000, progressAmount: 320000, status: 'ACTIVE', publicFlag: true },
+  ]);
+  renderRecentTips([
+    { tip: { grossAmount: 10000, createdAt: new Date().toISOString() }, intent: 'GRATITUDE' },
+    { tip: { grossAmount: 5000, createdAt: new Date(Date.now() - 3600000).toISOString() }, intent: 'EXCEPTIONAL_SERVICE' },
+    { tip: { grossAmount: 20000, createdAt: new Date(Date.now() - 7200000).toISOString() }, intent: 'CELEBRATION' },
+  ]);
+}
+
+function renderRecentTips(recent) {
+  const container = document.getElementById('recent-tips-list');
+  if (!recent || recent.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-muted); font-size:14px; padding:20px 0; text-align:center;">No recent santhoshams yet</p>';
+    return;
+  }
+  const intentEmoji = { GRATITUDE: '🙏', EXCEPTIONAL_SERVICE: '⭐', BIRTHDAY: '🎂', FAREWELL: '👋', CELEBRATION: '🎉', OTHER: '💚' };
+  container.innerHTML = recent.map(r => {
+    const amount = r.tip?.grossAmount ? Number(r.tip.grossAmount) : (r.grossAmount ?? 0);
+    const intent = r.intent ?? r.tip?.intent ?? 'GRATITUDE';
+    const time = r.tip?.createdAt ? new Date(r.tip.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—';
+    return `<div class="tip-item">
+      <div class="tip-item-left">
+        <div class="tip-intent-icon">${intentEmoji[intent] ?? '💚'}</div>
+        <div>
+          <div class="tip-intent-label">${intent.replace(/_/g,' ')}</div>
+          <div class="tip-time">${time}</div>
+        </div>
+      </div>
+      <div class="tip-amount-badge">₹${paise2rs(amount)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderGoals(goals) {
+  const container = document.getElementById('goals-list');
+  state.goals = goals;
+  if (!goals || goals.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-muted); font-size:14px; padding:16px 0;">మీరు ఇంకా కలలు జోడించలేదు. / No dreams yet.</p>';
+    return;
+  }
+  container.innerHTML = goals.filter(g => g.status === 'ACTIVE').map(g => {
+    const progress = Number(g.progressAmount ?? 0);
+    const target = Number(g.targetAmount ?? 1);
+    const pct = Math.min(100, Math.round((progress / target) * 100));
+    return `<div class="goal-card">
+      <div class="goal-card-top">
+        <div class="goal-card-title">${g.title}</div>
+        <div class="goal-amounts">
+          <span class="goal-current">₹${paise2rs(progress)}</span>
+          <span class="goal-target"> / ₹${paise2rs(target)}</span>
+        </div>
+      </div>
+      <div class="goal-bar-full"><div class="goal-bar-progress" style="width:${pct}%"></div></div>
+      <div class="goal-pct">${pct}% reached</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Worker Nav ───────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  ['dashboard', 'reputation', 'qr', 'dreams'].forEach(t => {
+    document.getElementById(`tab-${t}`).style.display = t === tab ? 'block' : 'none';
+  });
+}
+
+// ─── QR Actions ──────────────────────────────────────────────────────────────
+function downloadQr() {
+  showToast('QR download coming soon!');
+}
+
+async function rotateQr() {
+  if (!state.workerId) return;
+  try {
+    const res = await fetch(`${API}/workers/${state.workerId}/qr/rotate`, { method: 'POST' });
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById('qr-url').textContent = data.qrUrl;
+      showToast('QR token rotated! Print new QR.');
+    }
+  } catch {
+    showToast('Rotate failed. Try again.');
+  }
+}
+
+// ─── Goals ────────────────────────────────────────────────────────────────────
+function openGoalModal() {
+  document.getElementById('goal-modal').classList.add('open');
+}
+
+function closeGoalModal() {
+  document.getElementById('goal-modal').classList.remove('open');
+  document.getElementById('goal-title-input').value = '';
+  document.getElementById('goal-amount-input').value = '';
+}
+
+async function saveGoal() {
+  const title = document.getElementById('goal-title-input').value.trim();
+  const amount = parseFloat(document.getElementById('goal-amount-input').value);
+  const isPublic = document.getElementById('goal-public').checked;
+
+  if (!title || !amount || amount <= 0) {
+    showToast('Title and amount required');
+    return;
+  }
+
+  try {
+    if (state.workerId) {
+      const res = await fetch(`${API}/workers/${state.workerId}/goals`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, targetAmountPaise: Math.round(amount * 100), publicFlag: isPublic }),
+      });
+      if (res.ok) {
+        const goal = await res.json();
+        state.goals.push(goal);
+        renderGoals(state.goals);
+      }
+    } else {
+      // Demo mode
+      state.goals.push({ goalId: Date.now().toString(), title, targetAmount: amount * 100, progressAmount: 0, status: 'ACTIVE', publicFlag: isPublic });
+      renderGoals(state.goals);
+    }
+    closeGoalModal();
+    showToast('కల జోడించారు! / Dream added!');
+  } catch {
+    showToast('Failed to save goal. Try again.');
+  }
+}
+
+// ─── Utilities ────────────────────────────────────────────────────────────────
+function paise2rs(paise) {
+  const rs = Math.floor(paise / 100);
+  return rs.toLocaleString('en-IN');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
