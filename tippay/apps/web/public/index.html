@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -194,219 +195,374 @@
 </head>
 <body>
 
-  <!-- Nav -->
-  <nav class="nav">
-    <div class="nav-inner">
-      <div class="nav-brand">
-        <img src="logo-full.png" alt="Fliq" class="nav-logo">
-        <span class="nav-badge">V5</span>
+  <!-- ==================== CUSTOMER TIP PAGE (No Login — Zero Friction) ==================== -->
+  <div id="tip-page" class="page hidden">
+    <div class="tip-container">
+      <div class="tip-header">
+        <div class="tip-provider-avatar" id="tip-provider-avatar">?</div>
+        <h2 id="tip-provider-name">Loading...</h2>
+        <div id="tip-provider-subtitle" class="provider-subtitle hidden"></div>
+        <span class="category-badge" id="tip-provider-category">-</span>
+        <div class="tip-provider-rating" id="tip-provider-rating"></div>
+        <div class="trust-signal">100% goes directly to <span id="trust-name">them</span></div>
       </div>
-      <div class="nav-links">
-        <a href="#pillars">Features</a>
-        <a href="#how">How it Works</a>
-        <a href="#tip">Tip Now</a>
-        <a class="nav-cta" href="javascript:void(0)" onclick="goTo('login')">Provider Login</a>
+      <div id="tip-amount-section">
+        <p class="section-label">Show your appreciation</p>
+        <div class="amount-presets">
+          <button class="preset" onclick="pickAmount(2000)" data-amt="2000"><span class="preset-amount">&#8377;20</span><span class="preset-label">Quick thanks</span></button>
+          <button class="preset" onclick="pickAmount(5000)" data-amt="5000"><span class="preset-amount">&#8377;50</span><span class="preset-label">Buy them chai</span></button>
+          <button class="preset active" onclick="pickAmount(10000)" data-amt="10000"><span class="preset-amount">&#8377;100</span><span class="preset-label">Great service</span><span class="popular-tag">Most popular</span></button>
+          <button class="preset" onclick="pickAmount(20000)" data-amt="20000"><span class="preset-amount">&#8377;200</span><span class="preset-label">Above &amp; beyond</span></button>
+          <button class="preset" onclick="pickAmount(50000)" data-amt="50000"><span class="preset-amount">&#8377;500</span><span class="preset-label">Exceptional</span></button>
+        </div>
+        <div class="custom-amount-row">
+          <span class="rupee-sign">&#8377;</span>
+          <input type="number" id="custom-amount" placeholder="Custom amount" min="10" max="10000" oninput="customAmountChanged()">
+        </div>
+        <div class="breakdown" id="breakdown">
+          <div class="breakdown-line"><span>Tip amount</span><span id="bd-amount">&#8377;100</span></div>
+          <div class="breakdown-line commission hidden" id="bd-commission-row"><span>Platform fee (5%)</span><span id="bd-commission">&#8377;0</span></div>
+          <div class="breakdown-line net"><span><strong id="net-name">Provider</strong> receives</span><span id="bd-net">&#8377;100</span></div>
+        </div>
+        <p class="section-label">Rate your experience</p>
+        <div class="stars-row">
+          <button class="star" onclick="rate(1)" data-v="1">&#9733;</button>
+          <button class="star" onclick="rate(2)" data-v="2">&#9733;</button>
+          <button class="star" onclick="rate(3)" data-v="3">&#9733;</button>
+          <button class="star active" onclick="rate(4)" data-v="4">&#9733;</button>
+          <button class="star active" onclick="rate(5)" data-v="5">&#9733;</button>
+        </div>
+        <div class="quick-messages">
+          <button class="qmsg" onclick="setMsg('Great service!')">Great service!</button>
+          <button class="qmsg" onclick="setMsg('Thank you so much!')">Thank you!</button>
+          <button class="qmsg" onclick="setMsg('You made my day!')">Made my day!</button>
+        </div>
+        <textarea id="tip-message" placeholder="Or write your own message..." rows="2"></textarea>
+        <button class="pay-btn" id="pay-btn" onclick="payTip()">Tip &#8377;<span id="pay-label">100</span> via UPI</button>
+        <p class="pay-hint">Secure payment via Razorpay. No account needed.</p>
+      </div>
+      <div id="tip-success" class="hidden">
+        <div class="success-check">&#10003;</div>
+        <h2>You made <span id="success-name">their</span> day!</h2>
+        <p class="success-sub">Your tip of <strong id="success-amount">&#8377;100</strong> is on its way</p>
+        <div class="receipt">
+          <div class="receipt-line"><span>Amount</span><span id="r-amount">-</span></div>
+          <div class="receipt-line"><span>Tip ID</span><span id="r-tipid" class="mono">-</span></div>
+          <div class="receipt-line"><span>Status</span><span class="badge-initiated">INITIATED</span></div>
+        </div>
+        <button class="pay-btn outline" onclick="resetTip()">Tip Again</button>
+      </div>
+      <div id="tip-error" class="error-box hidden"></div>
+      <div class="tip-footer"><span>Powered by</span><img src="logo-full.png" alt="Fliq" class="tip-footer-logo"></div>
+    </div>
+  </div>
+
+  <!-- ==================== PROVIDER LOGIN ==================== -->
+  <div id="login-page" class="page hidden">
+    <div class="auth-box">
+      <div class="brand">
+        <img src="logo-full.png" alt="Fliq" class="brand-logo">
+        <p class="brand-sub">Provider Dashboard</p>
+      </div>
+      <div id="phone-step">
+        <h3>Login with Phone</h3>
+        <div class="phone-input-row">
+          <span class="prefix">+91</span>
+          <input type="tel" id="phone" placeholder="9876543210" maxlength="10">
+        </div>
+        <button class="auth-btn" onclick="sendOtp()">Send OTP</button>
+      </div>
+      <div id="otp-step" class="hidden">
+        <h3>Enter OTP</h3>
+        <p class="otp-sub" id="otp-sub"></p>
+        <div class="otp-row">
+          <input type="text" maxlength="1" class="otp-box" data-i="0">
+          <input type="text" maxlength="1" class="otp-box" data-i="1">
+          <input type="text" maxlength="1" class="otp-box" data-i="2">
+          <input type="text" maxlength="1" class="otp-box" data-i="3">
+          <input type="text" maxlength="1" class="otp-box" data-i="4">
+          <input type="text" maxlength="1" class="otp-box" data-i="5">
+        </div>
+        <div id="otp-dev-hint" class="dev-hint hidden"></div>
+        <button class="auth-btn" onclick="verifyOtp()">Verify</button>
+        <button class="link-btn" onclick="showPhoneStep()">Change number</button>
+      </div>
+      <div id="auth-error" class="error-box hidden"></div>
+    </div>
+  </div>
+
+  <!-- ==================== PROVIDER DASHBOARD ==================== -->
+  <div id="dashboard-page" class="page hidden">
+    <nav class="topbar"><div class="topbar-inner">
+      <div class="topbar-brand"><img src="logo-full.png" alt="Fliq" class="topbar-logo"></div>
+      <div class="topbar-right">
+        <span id="dash-phone" class="topbar-phone"></span>
+        <button class="topbar-btn" onclick="goToBusiness()">🏢 Business</button>
+        <button class="topbar-logout" onclick="logout()">Logout</button>
+      </div>
+    </div></nav>
+    <div id="onboarding" class="hidden"><div class="container"><div class="onboard-card">
+      <h2>Create Your Provider Profile</h2>
+      <p>Tell us about yourself to start receiving tips</p>
+      <div class="avatar-upload" onclick="document.getElementById('avatar-input').click()">
+        <img id="avatar-preview" class="avatar-preview hidden" alt="Avatar">
+        <div id="avatar-placeholder" class="avatar-placeholder"><span class="avatar-plus">+</span><span class="avatar-label">Add Photo</span></div>
+        <input type="file" id="avatar-input" accept="image/*" class="hidden" onchange="previewAvatar(this)">
+      </div>
+      <input type="text" id="name-input" class="input-full" placeholder="Your name (required)" maxlength="100">
+      <select id="cat-select" class="select-full">
+        <option value="">Select your category</option>
+        <option value="RESTAURANT">Restaurant / Cafe</option><option value="SALON">Salon / Spa</option>
+        <option value="DELIVERY">Delivery</option><option value="HOTEL">Hotel</option>
+        <option value="TRANSPORT">Transport / Auto / Cab</option><option value="HEALTHCARE">Healthcare</option>
+        <option value="EDUCATION">Education / Tutoring</option><option value="FITNESS">Fitness / Trainer</option>
+        <option value="OTHER">Other</option>
+      </select>
+      <textarea id="bio-input" class="input-full" placeholder="Tell customers about yourself (optional)" rows="2" maxlength="500"></textarea>
+      <button class="auth-btn" onclick="createProfile()">Create Profile</button>
+    </div></div></div>
+    <div id="dashboard" class="hidden"><div class="container">
+      <div class="earnings-banner">
+        <div><div class="eb-label">Total Tips</div><div class="eb-value" id="d-tips">0</div></div>
+        <div><div class="eb-label">Rating</div><div class="eb-value" id="d-rating">-</div></div>
+        <div><div class="eb-label">Category</div><div class="eb-value eb-cat" id="d-category">-</div></div>
+      </div>
+      <div class="section"><div class="section-header"><h3>Your QR Codes</h3><button class="small-btn" onclick="newQr()">+ New QR</button></div>
+        <div id="qr-grid" class="qr-grid"><p class="muted">Loading...</p></div>
+        <div class="share-hint"><p>Share your tip link: <code id="tip-link"></code></p></div>
+      </div>
+      <div class="section"><div class="section-header"><h3>Your Tip Links</h3></div>
+        <div class="tip-link-create">
+          <input type="text" id="link-role" class="input-sm" placeholder="Your role (e.g. Waiter)" maxlength="100">
+          <input type="text" id="link-workplace" class="input-sm" placeholder="Workplace (e.g. Cafe Mocha)" maxlength="200">
+          <button class="small-btn" onclick="createTipLink()">+ Create Tip Link</button>
+        </div>
+        <div id="tip-links-list" class="tip-links-list"><p class="muted">Loading...</p></div>
+      </div>
+      <div class="section"><h3>Recent Tips Received</h3><div id="d-tips-list" class="tips-list"><p class="muted">Loading...</p></div></div>
+      <div class="section"><h3>Payouts</h3>
+        <div class="payout-row"><div class="payout-input-row"><span class="rupee-sign">&#8377;</span><input type="number" id="payout-amt" placeholder="Amount" min="100"></div>
+          <button class="small-btn" onclick="requestPayout()">Request Payout</button></div>
+        <div id="d-payouts" class="payouts-list"><p class="muted">No payouts yet</p></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ==================== FLIQ FOR BUSINESS ==================== -->
+  <div id="business-page" class="page hidden">
+    <nav class="topbar"><div class="topbar-inner">
+      <div class="topbar-brand"><img src="logo-full.png" alt="Fliq" class="topbar-logo"><span class="biz-badge">for Business</span></div>
+      <div class="topbar-right">
+        <span id="biz-phone" class="topbar-phone"></span>
+        <button class="topbar-btn" onclick="goTo('dashboard')">Provider View</button>
+        <button class="topbar-logout" onclick="logout()">Logout</button>
+      </div>
+    </div></nav>
+    <div id="biz-register-section" class="hidden"><div class="biz-container"><div class="biz-register-card">
+      <div class="biz-register-hero"><div class="biz-register-icon">🏢</div><h2>Register Your Business on Fliq</h2><p>Manage tips for your entire team from one dashboard.</p></div>
+      <form onsubmit="registerBusiness(event)">
+        <div class="form-row"><div class="form-group"><label>Business Name *</label><input type="text" id="biz-name" placeholder="The Grand Hotel" maxlength="200" required></div>
+          <div class="form-group"><label>Business Type *</label><select id="biz-type" required><option value="">Select type</option><option value="HOTEL">🏨 Hotel</option><option value="SALON">💇 Salon</option><option value="RESTAURANT">🍽️ Restaurant</option><option value="SPA">🧖 Spa</option><option value="CAFE">☕ Café</option><option value="RETAIL">🛍️ Retail</option><option value="OTHER">🏢 Other</option></select></div></div>
+        <div class="form-group"><label>Address</label><input type="text" id="biz-address" placeholder="12 MG Road, Bengaluru" maxlength="500"></div>
+        <div class="form-row"><div class="form-group"><label>Contact Phone</label><input type="tel" id="biz-contact-phone" placeholder="+919876543210"></div>
+          <div class="form-group"><label>Contact Email</label><input type="email" id="biz-contact-email" placeholder="manager@business.com"></div></div>
+        <div class="form-group"><label>GSTIN (optional)</label><input type="text" id="biz-gstin" placeholder="29AABCU9603R1ZM" maxlength="15" style="text-transform:uppercase"></div>
+        <div id="biz-register-error" class="error-box hidden"></div>
+        <button type="submit" class="biz-primary-btn" id="biz-register-btn">Register Business</button>
+      </form>
+    </div></div></div>
+    <div id="biz-dashboard-section" class="hidden"><div class="biz-container">
+      <div class="biz-header-card" id="biz-header-card"><div class="biz-header-left"><div class="biz-type-emoji" id="biz-type-emoji">🏢</div><div><h2 id="biz-header-name">Business Name</h2><p id="biz-header-meta">Type • Address</p></div></div><div class="biz-header-right"><button class="biz-outline-btn" onclick="showInviteModal()">+ Invite Staff</button></div></div>
+      <div class="biz-stats-grid" id="biz-stats-grid">
+        <div class="biz-stat-card"><div class="biz-stat-icon" style="background:#e8f5e9">💰</div><div><div class="biz-stat-value" id="stat-total-tips">—</div><div class="biz-stat-label">Total Tips</div></div></div>
+        <div class="biz-stat-card"><div class="biz-stat-icon" style="background:#e3f2fd">🧾</div><div><div class="biz-stat-value" id="stat-tip-count">—</div><div class="biz-stat-label">Transactions</div></div></div>
+        <div class="biz-stat-card"><div class="biz-stat-icon" style="background:#fff3e0">⭐</div><div><div class="biz-stat-value" id="stat-avg-rating">—</div><div class="biz-stat-label">Avg Rating</div></div></div>
+        <div class="biz-stat-card"><div class="biz-stat-icon" style="background:#f3e5f5">👥</div><div><div class="biz-stat-value" id="stat-staff-count">—</div><div class="biz-stat-label">Staff Members</div></div></div>
+      </div>
+      <div class="biz-tabs"><button class="biz-tab active" onclick="bizTab('staff')">Staff &amp; Earnings</button><button class="biz-tab" onclick="bizTab('satisfaction')">Satisfaction</button><button class="biz-tab" onclick="bizTab('qrcodes')">QR Codes</button></div>
+      <div id="biz-tab-staff" class="biz-tab-content"><div class="biz-section-header"><h3>Staff Earnings Breakdown</h3><button class="biz-outline-btn" onclick="exportCsv()">⬇ Export CSV</button></div><div id="biz-staff-table-wrap"><div class="biz-loading">Loading staff data...</div></div></div>
+      <div id="biz-tab-satisfaction" class="biz-tab-content hidden"><h3>Customer Satisfaction</h3><div class="biz-rating-dist" id="biz-rating-dist"></div><div id="biz-reviews-list"></div></div>
+      <div id="biz-tab-qrcodes" class="biz-tab-content hidden"><div class="biz-section-header"><h3>Staff QR Codes</h3><button class="biz-outline-btn" onclick="printAllQr()">🖨 Print All</button></div><p class="biz-muted">Print these standee cards and place them on desks or counters.</p><div id="biz-qr-grid" class="biz-qr-grid"></div></div>
+    </div></div>
+  </div>
+
+  <!-- ==================== INVITE MODAL ==================== -->
+  <div id="invite-modal" class="modal-backdrop hidden">
+    <div class="modal-box"><div class="modal-header"><h3>Invite Staff Member</h3><button class="modal-close" onclick="closeInviteModal()">✕</button></div>
+      <div class="modal-body"><div class="form-group"><label>Phone Number</label><input type="tel" id="invite-phone" placeholder="+919876543210"></div>
+        <div class="form-group"><label>Role</label><select id="invite-role"><option value="STAFF">Staff</option><option value="MANAGER">Manager</option><option value="ADMIN">Admin</option></select></div>
+        <div id="invite-error" class="error-box hidden"></div></div>
+      <div class="modal-footer"><button class="biz-outline-btn" onclick="closeInviteModal()">Cancel</button><button class="biz-primary-btn" onclick="sendInvite()">Send Invite</button></div>
+    </div>
+  </div>
+
+  <div id="print-area" class="print-only"></div>
+
+  <!-- ==================== V5 LANDING PAGE ==================== -->
+  <div id="landing-page" class="page">
+
+  <!-- Nav -->
+  <nav class="nav" style="position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.92);backdrop-filter:blur(16px);border-bottom:1px solid rgba(0,0,0,0.06);">
+    <div class="nav-inner" style="max-width:1200px;margin:0 auto;padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;">
+      <div class="nav-brand" style="display:flex;align-items:center;gap:10px;">
+        <img src="logo-full.png" alt="Fliq" style="height:44px;">
+        <span style="background:var(--green);color:white;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;">V5</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:24px;">
+        <a href="#pillars" style="color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;">Features</a>
+        <a href="#how" style="color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;">How it Works</a>
+        <a href="#tip" style="color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;">Tip Now</a>
+        <a href="javascript:void(0)" onclick="goTo('login')" style="background:var(--pri);color:white;border:none;border-radius:8px;padding:8px 20px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;">Provider Login</a>
       </div>
     </div>
   </nav>
 
   <!-- Hero -->
-  <section class="hero">
-    <div class="hero-inner">
-      <div class="hero-content">
-        <div class="hero-eyebrow"><span class="dot"></span> Human Value Infrastructure</div>
-        <h1 class="hero-title">Every tip tells a <span class="gradient">story</span></h1>
-        <p class="hero-sub">Fliq transforms tipping from a transaction into meaningful appreciation. Workers define dreams, tippers see impact, trust is portable — all on UPI, zero friction.</p>
-        <div class="hero-actions">
-          <a class="hero-btn hero-btn-primary" href="#tip">Tip Someone Now →</a>
-          <a class="hero-btn hero-btn-outline" href="#pillars">See What's New</a>
+  <section class="hero" style="min-height:100vh;padding:100px 24px 60px;background:linear-gradient(160deg,#1a1145 0%,#2d1b69 30%,#6C5CE7 60%,#A29BFE 100%);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
+    <div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:80px;flex-wrap:wrap;justify-content:center;position:relative;z-index:2;">
+      <div style="max-width:560px;">
+        <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.15);padding:6px 16px;border-radius:24px;font-size:13px;color:rgba(255,255,255,0.9);font-weight:600;margin-bottom:24px;"><span style="width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;"></span> Human Value Infrastructure</div>
+        <h1 style="font-size:56px;font-weight:900;color:white;line-height:1.08;margin-bottom:20px;letter-spacing:-1px;">Every tip tells a <span style="background:linear-gradient(135deg,#FDCB6E,#00B894);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">story</span></h1>
+        <p style="font-size:19px;color:rgba(255,255,255,0.8);line-height:1.7;margin-bottom:36px;">Fliq transforms tipping from a transaction into meaningful appreciation. Workers define dreams, tippers see impact, trust is portable — all on UPI, zero friction.</p>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;">
+          <a href="#tip" style="padding:16px 32px;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;text-decoration:none;background:white;color:var(--pri);box-shadow:0 4px 24px rgba(0,0,0,0.15);display:inline-flex;align-items:center;gap:8px;">Tip Someone Now →</a>
+          <a href="#pillars" style="padding:16px 32px;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;text-decoration:none;background:transparent;color:white;border:2px solid rgba(255,255,255,0.3);display:inline-flex;align-items:center;gap:8px;">See What's New</a>
         </div>
       </div>
-      <div class="hero-visual">
-        <div class="phone-mockup">
-          <div class="phone-notch"></div>
-          <div class="phone-screen">
-            <div class="phone-avatar">R</div>
-            <div class="phone-name">Ravi Kumar</div>
-            <div class="phone-badge"><span>🏆 Trust: 82/100</span></div>
-            <div class="phone-dream">
-              <div class="phone-dream-label">Their Dream ✨</div>
-              <div class="phone-dream-title">Daughter's School Books</div>
-              <div class="phone-progress"><div class="phone-progress-fill"></div></div>
+      <div style="flex-shrink:0;position:relative;">
+        <div style="width:280px;height:560px;background:#1a1a2e;border-radius:40px;box-shadow:0 40px 80px rgba(0,0,0,0.4),inset 0 0 0 3px rgba(255,255,255,0.1);padding:16px;position:relative;overflow:hidden;">
+          <div style="width:100px;height:8px;background:#111;border-radius:4px;margin:8px auto 20px;"></div>
+          <div style="background:white;border-radius:24px;padding:20px 16px;height:calc(100% - 40px);overflow:hidden;">
+            <div style="width:56px;height:56px;background:linear-gradient(135deg,var(--pri),var(--pri-light));border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;color:white;font-size:22px;font-weight:800;">R</div>
+            <div style="font-weight:700;font-size:16px;text-align:center;margin-bottom:4px;">Ravi Kumar</div>
+            <div style="text-align:center;margin-bottom:12px;"><span style="background:var(--green-bg);color:var(--green);font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px;">🏆 Trust: 82/100</span></div>
+            <div style="background:linear-gradient(135deg,var(--pri-bg),var(--green-bg));border-radius:10px;padding:12px;margin-bottom:14px;">
+              <div style="font-size:8px;font-weight:700;text-transform:uppercase;color:var(--pri);letter-spacing:0.5px;margin-bottom:4px;">Their Dream ✨</div>
+              <div style="font-size:12px;font-weight:700;margin-bottom:6px;">Daughter's School Books</div>
+              <div style="height:5px;background:rgba(108,92,231,0.15);border-radius:3px;overflow:hidden;"><div style="height:100%;width:65%;background:linear-gradient(90deg,var(--pri),var(--green));border-radius:3px;"></div></div>
             </div>
-            <div class="phone-presets">
-              <span>₹50</span>
-              <span class="active">₹100</span>
-              <span>₹200</span>
+            <div style="display:flex;gap:6px;margin-bottom:14px;">
+              <span style="flex:1;padding:8px 4px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;background:var(--bg);color:var(--text2);border:2px solid var(--border);">₹50</span>
+              <span style="flex:1;padding:8px 4px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;background:var(--pri-bg);color:var(--pri);border:2px solid var(--pri);">₹100</span>
+              <span style="flex:1;padding:8px 4px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;background:var(--bg);color:var(--text2);border:2px solid var(--border);">₹200</span>
             </div>
-            <div class="phone-cta">Tip ₹100 with kindness 🤗</div>
+            <div style="background:var(--pri);color:white;text-align:center;padding:12px;border-radius:10px;font-weight:700;font-size:14px;">Tip ₹100 with kindness 🤗</div>
           </div>
         </div>
-        <div class="phone-float phone-float-1">🎯 Dream: 65% funded</div>
-        <div class="phone-float phone-float-2">✨ 12 tips today</div>
       </div>
     </div>
   </section>
 
   <!-- V5 Pillars -->
-  <section class="section" id="pillars">
-    <div class="container">
-      <h2 class="section-title">Four Pillars of V5</h2>
-      <p class="section-sub">Fliq isn't just tipping — it's a human value infrastructure that makes every interaction meaningful.</p>
-      <div class="pillars-grid">
-        <div class="pillar pillar-dream">
-          <div class="pillar-icon">🌟</div>
-          <span class="pillar-tag">Dreams</span>
-          <h3>Goal-Oriented Tipping</h3>
-          <p>Workers define real-life dreams — a daughter's school books, a new sewing machine, a training certification. Tippers see their contribution make progress toward something real.</p>
+  <section style="padding:100px 24px;" id="pillars">
+    <div style="max-width:1200px;margin:0 auto;">
+      <h2 style="font-size:40px;font-weight:900;text-align:center;margin-bottom:16px;">Four Pillars of V5</h2>
+      <p style="font-size:18px;color:var(--text2);text-align:center;margin-bottom:60px;max-width:640px;margin-left:auto;margin-right:auto;">Fliq isn't just tipping — it's a human value infrastructure that makes every interaction meaningful.</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:24px;">
+        <div style="background:white;border-radius:20px;padding:36px 28px;border:1px solid var(--border);transition:all 0.3s;">
+          <div style="font-size:40px;margin-bottom:16px;">🌟</div>
+          <span style="display:inline-block;padding:3px 12px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;background:#F0EDFF;color:var(--pri);margin-bottom:12px;">Dreams</span>
+          <h3 style="font-size:22px;font-weight:800;margin-bottom:8px;">Goal-Oriented Tipping</h3>
+          <p style="font-size:14px;color:var(--text2);line-height:1.7;">Workers define real-life dreams — a daughter's school books, a new sewing machine, a training certification. Tippers see their contribution make progress toward something real.</p>
         </div>
-        <div class="pillar pillar-intent">
-          <div class="pillar-icon">🤗</div>
-          <span class="pillar-tag">Intent</span>
-          <h3>Tips with Meaning</h3>
-          <p>Every tip can carry intent — kindness, speed, experience, or support. Workers understand what they did well. Tippers express why they appreciated the service.</p>
+        <div style="background:white;border-radius:20px;padding:36px 28px;border:1px solid var(--border);transition:all 0.3s;">
+          <div style="font-size:40px;margin-bottom:16px;">🤗</div>
+          <span style="display:inline-block;padding:3px 12px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;background:#FFF8E1;color:#FF8F00;margin-bottom:12px;">Intent</span>
+          <h3 style="font-size:22px;font-weight:800;margin-bottom:8px;">Tips with Meaning</h3>
+          <p style="font-size:14px;color:var(--text2);line-height:1.7;">Every tip can carry intent — kindness, speed, experience, or support. Workers understand what they did well. Tippers express why they appreciated the service.</p>
         </div>
-        <div class="pillar pillar-reputation">
-          <div class="pillar-icon">🏆</div>
-          <span class="pillar-tag">Reputation</span>
-          <h3>Portable Trust Score</h3>
-          <p>A reputation score built from consistency, frequency, and unique tippers. Workers carry their trust across jobs. Employers see verified appreciation history.</p>
+        <div style="background:white;border-radius:20px;padding:36px 28px;border:1px solid var(--border);transition:all 0.3s;">
+          <div style="font-size:40px;margin-bottom:16px;">🏆</div>
+          <span style="display:inline-block;padding:3px 12px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;background:#E8FFF8;color:var(--green);margin-bottom:12px;">Reputation</span>
+          <h3 style="font-size:22px;font-weight:800;margin-bottom:8px;">Portable Trust Score</h3>
+          <p style="font-size:14px;color:var(--text2);line-height:1.7;">A reputation score built from consistency, frequency, and unique tippers. Workers carry their trust across jobs.</p>
         </div>
-        <div class="pillar pillar-impact">
-          <div class="pillar-icon">💫</div>
-          <span class="pillar-tag">Impact</span>
-          <h3>See Your Impact</h3>
-          <p>After tipping, watch an animated progress bar fill toward the worker's dream. You didn't just tip — you helped someone reach 65% of their goal.</p>
+        <div style="background:white;border-radius:20px;padding:36px 28px;border:1px solid var(--border);transition:all 0.3s;">
+          <div style="font-size:40px;margin-bottom:16px;">💫</div>
+          <span style="display:inline-block;padding:3px 12px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;background:#FFEDE9;color:#E17055;margin-bottom:12px;">Impact</span>
+          <h3 style="font-size:22px;font-weight:800;margin-bottom:8px;">See Your Impact</h3>
+          <p style="font-size:14px;color:var(--text2);line-height:1.7;">After tipping, watch an animated progress bar fill toward the worker's dream. You helped someone reach 65% of their goal.</p>
         </div>
       </div>
     </div>
   </section>
 
   <!-- How It Works -->
-  <section class="section section-gray" id="how">
-    <div class="container">
-      <h2 class="section-title">How It Works</h2>
-      <p class="section-sub">Scan a QR code or open a link. No app, no login, no friction.</p>
-      <div class="steps-grid">
-        <div class="step">
-          <div class="step-num">1</div>
-          <div class="step-icon">📱</div>
-          <h3>Scan or Tap</h3>
-          <p>Scan a QR code on the worker's standee or tap a shared link — the tip page opens instantly in your browser.</p>
-        </div>
-        <div class="step">
-          <div class="step-num">2</div>
-          <div class="step-icon">✨</div>
-          <h3>Choose Intent & Amount</h3>
-          <p>See the worker's dream, pick why you're tipping, and choose an amount. Toggle shagun mode for auspicious amounts.</p>
-        </div>
-        <div class="step">
-          <div class="step-num">3</div>
-          <div class="step-icon">🎉</div>
-          <h3>Pay & See Impact</h3>
-          <p>Pay via UPI in seconds. Watch an animated impact screen showing how your tip contributed to the worker's dream.</p>
-        </div>
+  <section style="padding:100px 24px;background:var(--bg);" id="how">
+    <div style="max-width:1200px;margin:0 auto;">
+      <h2 style="font-size:40px;font-weight:900;text-align:center;margin-bottom:16px;">How It Works</h2>
+      <p style="font-size:18px;color:var(--text2);text-align:center;margin-bottom:60px;">Scan a QR code or open a link. No app, no login, no friction.</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:32px;text-align:center;">
+        <div><div style="width:48px;height:48px;background:linear-gradient(135deg,var(--pri),var(--pri-light));color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;margin:0 auto 16px;">1</div><div style="font-size:40px;margin-bottom:12px;">📱</div><h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">Scan or Tap</h3><p style="font-size:14px;color:var(--text2);">Scan a QR code or tap a shared link — the tip page opens instantly.</p></div>
+        <div><div style="width:48px;height:48px;background:linear-gradient(135deg,var(--pri),var(--pri-light));color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;margin:0 auto 16px;">2</div><div style="font-size:40px;margin-bottom:12px;">✨</div><h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">Choose Intent & Amount</h3><p style="font-size:14px;color:var(--text2);">See the worker's dream, pick why you're tipping, and choose an amount.</p></div>
+        <div><div style="width:48px;height:48px;background:linear-gradient(135deg,var(--pri),var(--pri-light));color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;margin:0 auto 16px;">3</div><div style="font-size:40px;margin-bottom:12px;">🎉</div><h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">Pay & See Impact</h3><p style="font-size:14px;color:var(--text2);">Pay via UPI in seconds. See how your tip contributed to the worker's dream.</p></div>
       </div>
     </div>
   </section>
 
   <!-- Stats -->
-  <section class="section">
-    <div class="container">
-      <div class="stats-banner">
-        <div class="stat-block"><div class="stat-number">0%</div><div class="stat-label">Platform fee under ₹100</div></div>
-        <div class="stat-block"><div class="stat-number">3s</div><div class="stat-label">Average tip time</div></div>
-        <div class="stat-block"><div class="stat-number">100%</div><div class="stat-label">UPI native</div></div>
-        <div class="stat-block"><div class="stat-number">0</div><div class="stat-label">App downloads needed</div></div>
+  <section style="padding:80px 24px;">
+    <div style="max-width:1200px;margin:0 auto;">
+      <div style="background:linear-gradient(135deg,var(--pri),var(--pri-dark));border-radius:20px;padding:48px 40px;display:flex;justify-content:space-around;flex-wrap:wrap;gap:24px;">
+        <div style="text-align:center;"><div style="font-size:42px;font-weight:900;color:white;">0%</div><div style="font-size:14px;color:rgba(255,255,255,0.7);">Platform fee under ₹100</div></div>
+        <div style="text-align:center;"><div style="font-size:42px;font-weight:900;color:white;">3s</div><div style="font-size:14px;color:rgba(255,255,255,0.7);">Average tip time</div></div>
+        <div style="text-align:center;"><div style="font-size:42px;font-weight:900;color:white;">100%</div><div style="font-size:14px;color:rgba(255,255,255,0.7);">UPI native</div></div>
+        <div style="text-align:center;"><div style="font-size:42px;font-weight:900;color:white;">0</div><div style="font-size:14px;color:rgba(255,255,255,0.7);">App downloads needed</div></div>
       </div>
     </div>
   </section>
 
   <!-- Tip Someone -->
-  <section class="section section-gray" id="tip">
-    <div class="container">
-      <h2 class="section-title">Tip Someone Right Now</h2>
-      <p class="section-sub">Enter a provider code or ID to start the tipping experience.</p>
-      <div class="tip-box">
-        <div class="tip-input-row">
-          <input type="text" id="tip-input" placeholder="Enter provider code or ID">
-          <button class="tip-btn" id="tip-go-btn" onclick="goTipPage()">Tip Now</button>
+  <section style="padding:80px 24px;background:var(--bg);" id="tip">
+    <div style="max-width:1200px;margin:0 auto;">
+      <h2 style="font-size:40px;font-weight:900;text-align:center;margin-bottom:16px;">Tip Someone Right Now</h2>
+      <p style="font-size:18px;color:var(--text2);text-align:center;margin-bottom:40px;">Enter a provider code or ID to start the tipping experience.</p>
+      <div style="max-width:500px;margin:0 auto;text-align:center;">
+        <div id="demo-tip-input" style="display:flex;gap:8px;background:white;border-radius:14px;padding:6px;box-shadow:0 8px 32px rgba(0,0,0,0.12);border:2px solid var(--border);">
+          <input type="text" id="demo-provider-id" placeholder="Enter provider code or ID" style="border:none;outline:none;padding:12px 18px;font-size:15px;font-family:inherit;flex:1;border-radius:10px;">
+          <button id="tip-now-btn" onclick="goTipPage()" style="background:var(--pri);color:white;border:none;border-radius:8px;padding:12px 28px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">Tip Now</button>
         </div>
-        <div class="tip-error hidden" id="tip-error"></div>
+        <div id="demo-tip-error" class="hidden" style="color:#E17055;font-size:13px;margin-top:8px;"></div>
       </div>
     </div>
   </section>
 
   <!-- CTA -->
-  <section class="cta-section" id="cta">
-    <div class="container">
-      <h2 class="cta-title">Ready to transform tipping?</h2>
-      <p class="cta-sub">Join Fliq as a service provider and start receiving meaningful tips with zero friction.</p>
-      <div class="cta-features">
-        <div class="cta-feat">Define your dream</div>
-        <div class="cta-feat">Build reputation</div>
-        <div class="cta-feat">Instant UPI payouts</div>
-        <div class="cta-feat">Zero commission under ₹100</div>
+  <section style="padding:100px 24px;text-align:center;background:linear-gradient(160deg,#1a1145,#2d1b69,#6C5CE7);">
+    <div style="max-width:1200px;margin:0 auto;">
+      <h2 style="font-size:40px;font-weight:900;color:white;margin-bottom:16px;">Ready to transform tipping?</h2>
+      <p style="font-size:18px;color:rgba(255,255,255,0.7);margin-bottom:36px;max-width:500px;margin-left:auto;margin-right:auto;">Join Fliq as a service provider and start receiving meaningful tips with zero friction.</p>
+      <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-bottom:40px;">
+        <div style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.9);font-size:15px;">✅ Define your dream</div>
+        <div style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.9);font-size:15px;">✅ Build reputation</div>
+        <div style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.9);font-size:15px;">✅ Instant UPI payouts</div>
+        <div style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.9);font-size:15px;">✅ Zero commission under ₹100</div>
       </div>
-      <a class="hero-btn hero-btn-primary" href="javascript:void(0)" onclick="goTo('login')" style="font-size:18px;padding:18px 40px;">Get Started as a Provider →</a>
+      <a href="javascript:void(0)" onclick="goTo('login')" style="display:inline-block;padding:18px 40px;border-radius:10px;font-size:18px;font-weight:700;cursor:pointer;text-decoration:none;background:white;color:var(--pri);box-shadow:0 4px 24px rgba(0,0,0,0.15);">Get Started as a Provider →</a>
     </div>
   </section>
 
   <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-inner">
-      <div class="footer-brand">
-        <img src="logo-full.png" alt="Fliq" class="footer-logo">
+  <footer style="background:#111;padding:48px 24px;text-align:center;">
+    <div style="max-width:1200px;margin:0 auto;">
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;">
+        <img src="logo-full.png" alt="Fliq" style="height:36px;filter:brightness(0) invert(1);">
         <span style="color:rgba(255,255,255,0.5);">— Human Value Infrastructure</span>
       </div>
-      <p class="footer-tagline">Built for India. UPI-native. Zero friction.</p>
-      <div class="footer-links">
-        <a href="javascript:void(0)" onclick="goTo('login')">Provider Login</a>
-        <a href="#pillars">Features</a>
-        <a href="#how">How it Works</a>
-        <a href="/api/docs">API Docs</a>
+      <p style="color:rgba(255,255,255,0.4);font-size:14px;margin-bottom:20px;">Built for India. UPI-native. Zero friction.</p>
+      <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;">
+        <a href="javascript:void(0)" onclick="goTo('login')" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">Provider Login</a>
+        <a href="#pillars" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">Features</a>
+        <a href="#how" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">How it Works</a>
+        <a href="/api/docs" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">API Docs</a>
       </div>
     </div>
   </footer>
 
+  </div><!-- end #landing-page -->
+
   <div id="toast" class="toast"><span id="toast-msg"></span></div>
 
   <script src="app.js"></script>
-  <script>
-    // Handle tip now from landing
-    async function goTipPage() {
-      const code = document.getElementById('tip-input').value.trim();
-      const err = document.getElementById('tip-error');
-      const btn = document.getElementById('tip-go-btn');
-      err.classList.add('hidden');
-      if (!code) { err.textContent = 'Enter a provider code or ID'; err.classList.remove('hidden'); return; }
-      btn.disabled = true; btn.textContent = 'Checking...';
-      try {
-        // Try resolve as payment link first, then as provider ID
-        try {
-          await fetch(API + `/payment-links/${code}/resolve`).then(r => { if (!r.ok) throw new Error(); return r.json(); });
-          window.location.href = `/tip/${code}`;
-        } catch {
-          await fetch(API + `/providers/${code}/public`).then(r => { if (!r.ok) throw new Error(); return r.json(); });
-          location.hash = `#tip/${code}`;
-          window.location.reload();
-        }
-      } catch {
-        err.textContent = 'Provider not found — check the code and try again.';
-        err.classList.remove('hidden');
-      } finally {
-        btn.disabled = false; btn.textContent = 'Tip Now';
-      }
-    }
-    document.getElementById('tip-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') goTipPage(); });
-
-    function goTo(page) {
-      if (typeof checkRoute === 'function') {
-        document.querySelectorAll('.page').forEach(p => { p.style.display = 'none'; p.classList.add('hidden'); });
-        const el = document.getElementById(`${page}-page`);
-        if (el) { el.style.display = page === 'login' ? 'flex' : 'block'; el.classList.remove('hidden'); }
-      }
-    }
-  </script>
 </body>
 </html>
