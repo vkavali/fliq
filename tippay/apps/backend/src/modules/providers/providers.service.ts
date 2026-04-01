@@ -68,6 +68,40 @@ export class ProvidersService {
       include: { user: { select: { name: true } } },
     });
     if (!provider) throw new NotFoundException('Provider not found');
+
+    // Get today's stats
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const [tipsToday, recentAppreciations] = await Promise.all([
+      this.prisma.tip.count({
+        where: {
+          providerId,
+          status: { in: ['PAID', 'SETTLED'] },
+          createdAt: { gte: todayStart },
+        },
+      }),
+      this.prisma.tip.count({
+        where: {
+          providerId,
+          status: { in: ['PAID', 'SETTLED'] },
+          createdAt: {
+            gte: new Date(Date.now() - 60 * 60 * 1000), // last hour
+          },
+        },
+      }),
+    ]);
+
+    // Get active dream
+    const dream = await this.prisma.dream.findFirst({
+      where: { workerId: providerId, isActive: true },
+    });
+
+    // Get reputation
+    const reputation = await this.prisma.reputation.findUnique({
+      where: { workerId: providerId },
+    });
+
     return {
       id: provider.id,
       name: provider.displayName || provider.user.name,
@@ -79,6 +113,38 @@ export class ProvidersService {
       totalTipsReceived: provider.totalTipsReceived,
       qrCodeUrl: provider.qrCodeUrl,
       upiVpa: provider.upiVpa,
+      stats: {
+        tipsToday,
+        recentAppreciations,
+      },
+      dream: dream
+        ? {
+            id: dream.id,
+            title: dream.title,
+            description: dream.description,
+            goalAmount: Number(dream.goalAmount),
+            currentAmount: Number(dream.currentAmount),
+            percentage:
+              Number(dream.goalAmount) > 0
+                ? Math.min(
+                    Math.round(
+                      (Number(dream.currentAmount) / Number(dream.goalAmount)) *
+                        100,
+                    ),
+                    100,
+                  )
+                : 0,
+            mediaUrl: dream.mediaUrl,
+            verified: dream.verified,
+          }
+        : null,
+      reputation: reputation
+        ? {
+            score: Number(reputation.score),
+            consistency: Number(reputation.consistency),
+            uniqueTippers: reputation.uniqueTippers,
+          }
+        : null,
     };
   }
 

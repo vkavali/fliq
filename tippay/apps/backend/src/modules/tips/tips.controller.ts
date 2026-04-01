@@ -90,4 +90,16 @@ export class TipsController {
   ) {
     return this.tipsService.getTipsByCustomer(userId, page, limit);
   }
+
+  @Get(':tipId/impact')
+  @ApiOperation({ summary: 'Get the impact of a tip — dream progress + emotional message' })
+  async getTipImpact(@Param('tipId') tipId: string) {
+    return this.tipsService.getTipImpact(tipId);
+  }
+
+  @Get(':tipId/status')
+  @ApiOperation({ summary: 'Poll tip payment status (for UPI handoff waiting)' })
+  async getTipStatus(@Param('tipId') tipId: string) {
+    return this.tipsService.getTipStatus(tipId);
+  }
 }

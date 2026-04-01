@@ -6,6 +6,8 @@ import { GamificationService } from '../gamification/gamification.service';
 import { RecurringChargeScheduler } from '../recurring-tips/recurring-charge.scheduler';
 import { TipJarsService } from '../tip-jars/tip-jars.service';
 import { TipLaterService } from '../tip-later/tip-later.service';
+import { DreamsService } from '../dreams/dreams.service';
+import { ReputationService } from '../reputation/reputation.service';
 
 @Injectable()
 export class PaymentsService {
@@ -22,6 +24,10 @@ export class PaymentsService {
     private readonly tipJars: TipJarsService,
     @Inject(forwardRef(() => TipLaterService))
     private readonly tipLater: TipLaterService,
+    @Inject(forwardRef(() => DreamsService))
+    private readonly dreams: DreamsService,
+    @Inject(forwardRef(() => ReputationService))
+    private readonly reputation: ReputationService,
   ) {}
 
   /**
@@ -241,6 +247,31 @@ export class PaymentsService {
       // Gamification errors should not break tip settlement
       this.logger.error(`Gamification processing failed for tip ${tip.id}: ${err}`);
     }
+
+    // ── Dream: update progress ──────────────────────────────────────
+    try {
+      const dreamResult = await this.dreams.contributeFromTip(
+        tip.id,
+        tip.providerId,
+        tip.netAmountPaise,
+      );
+      if (dreamResult) {
+        this.logger.log(
+          `Dream "${dreamResult.title}" updated for worker ${tip.providerId}: ` +
+          `${Number(dreamResult.previousAmount)}→${Number(dreamResult.newAmount)} paise` +
+          (dreamResult.completed ? ' [COMPLETED! 🎉]' : ''),
+        );
+      }
+    } catch (err) {
+      this.logger.error(`Dream update failed for tip ${tip.id}: ${err}`);
+    }
+
+    // ── Reputation: refresh worker score (non-blocking) ─────────────
+    this.reputation
+      .refreshReputation(tip.providerId)
+      .catch((err: any) =>
+        this.logger.error(`Reputation refresh failed for worker ${tip.providerId}: ${err}`),
+      );
   }
 
   private async handlePaymentFailed(payload: any): Promise<void> {

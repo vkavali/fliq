@@ -90,6 +90,7 @@ export class TipsService {
         netAmountPaise,
         gstOnCommissionPaise: gstOnCommission,
         source: dto.source,
+        intent: dto.intent || null,
         message: dto.message,
         rating: dto.rating,
         gateway: 'razorpay',
@@ -229,5 +230,89 @@ export class TipsService {
       this.prisma.tip.count({ where: { customerId } }),
     ]);
     return { tips, total, page, limit };
+  }
+
+  /**
+   * Get the impact of a specific tip — used for the V5 Impact Screen.
+   * Returns dream progress before/after + emotional message.
+   */
+  async getTipImpact(tipId: string) {
+    const tip = await this.prisma.tip.findUnique({
+      where: { id: tipId },
+      include: {
+        provider: { select: { name: true } },
+        dreamContributions: {
+          include: {
+            dream: {
+              select: {
+                id: true,
+                title: true,
+                goalAmount: true,
+                currentAmount: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!tip) throw new NotFoundException('Tip not found');
+
+    const workerName = tip.provider.name || 'the worker';
+    const amount = Number(tip.amountPaise);
+    const netAmount = Number(tip.netAmountPaise);
+
+    // Build dream impact if a contribution was made
+    let dream = null;
+    if (tip.dreamContributions.length > 0) {
+      const contrib = tip.dreamContributions[0];
+      const goalAmount = Number(contrib.dream.goalAmount);
+      const currentAmount = Number(contrib.dream.currentAmount);
+      const contributedAmount = Number(contrib.amountPaise);
+      const previousAmount = currentAmount - contributedAmount;
+
+      dream = {
+        title: contrib.dream.title,
+        previousProgress: goalAmount > 0 ? Math.round((previousAmount / goalAmount) * 100) : 0,
+        newProgress: goalAmount > 0 ? Math.min(Math.round((currentAmount / goalAmount) * 100), 100) : 0,
+        goalAmount,
+        currentAmount,
+      };
+    }
+
+    // Build emotional message
+    let message: string;
+    if (dream) {
+      message = `You helped ${workerName} reach ${dream.newProgress}% of their dream`;
+    } else {
+      message = `Your appreciation of ₹${Math.round(netAmount / 100)} made ${workerName}'s day!`;
+    }
+
+    return {
+      tipId: tip.id,
+      workerName,
+      amount,
+      intent: tip.intent || null,
+      dream,
+      message,
+    };
+  }
+
+  /**
+   * Get the current status of a tip — used for polling after UPI handoff.
+   */
+  async getTipStatus(tipId: string) {
+    const tip = await this.prisma.tip.findUnique({
+      where: { id: tipId },
+      select: { id: true, status: true, updatedAt: true },
+    });
+
+    if (!tip) throw new NotFoundException('Tip not found');
+
+    return {
+      tipId: tip.id,
+      status: tip.status,
+      updatedAt: tip.updatedAt,
+    };
   }
 }

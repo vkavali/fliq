@@ -170,6 +170,23 @@ enum DeferredTipStatus {
   CANCELLED
 }
 
+enum TipIntent {
+  KINDNESS
+  SPEED
+  EXPERIENCE
+  SUPPORT
+}
+
+enum DreamCategory {
+  EDUCATION
+  HEALTH
+  FAMILY
+  SKILL
+  EMERGENCY
+  TRAVEL
+  OTHER
+}
+
 // ─── Models ─────────────────────────────────────────────────────────────────
 
 model User {
@@ -208,6 +225,9 @@ model User {
   tipJarContributions    TipJarContribution[]   @relation("TipJarContributor")
   deferredTipsGiven      DeferredTip[]          @relation("DeferredTipCustomer")
   deferredTipsReceived   DeferredTip[]          @relation("DeferredTipProvider")
+  dreams                 Dream[]                @relation("WorkerDreams")
+  reputation             Reputation?
+  workerResponses        WorkerResponse[]       @relation("WorkerResponses")
 
   @@map("users")
 }
@@ -304,6 +324,7 @@ model Tip {
   tcsPaise             BigInt         @default(0)
   paymentMethod        PaymentMethod?
   source               TipSource
+  intent               TipIntent?
   status               TipStatus      @default(INITIATED)
   gateway              String?        @db.VarChar(20)
   gatewayOrderId       String?        @db.VarChar(100)
@@ -319,7 +340,9 @@ model Tip {
   tipJar               TipJar?        @relation(fields: [tipJarId], references: [id])
   tipJarContribution   TipJarContribution?
   deferredTipSettlement DeferredTip?  @relation("DeferredTipSettlement")
-  transactions Transaction[]
+  transactions          Transaction[]
+  dreamContributions    DreamContribution[]
+  workerResponse        WorkerResponse?
 
   @@index([providerId, createdAt])
   @@index([customerId, createdAt])
@@ -703,4 +726,74 @@ model BusinessInvitation {
   @@index([phone])
   @@index([recipientId])
   @@map("business_invitations")
+}
+
+// ─── Dreams (V5 — Donate to Dream) ──────────────────────────────────────────
+
+model Dream {
+  id            String        @id @default(uuid()) @db.Uuid
+  workerId      String        @db.Uuid
+  worker        User          @relation("WorkerDreams", fields: [workerId], references: [id])
+  title         String        @db.VarChar(200)
+  description   String        @db.VarChar(500)
+  category      DreamCategory @default(OTHER)
+  goalAmount    BigInt                             // target in paise
+  currentAmount BigInt        @default(0)          // progress in paise
+  mediaUrl      String?       @db.Text
+  verified      Boolean       @default(false)
+  isActive      Boolean       @default(true)
+  completedAt   DateTime?     @db.Timestamptz()
+  createdAt     DateTime      @default(now()) @db.Timestamptz()
+  updatedAt     DateTime      @updatedAt @db.Timestamptz()
+
+  contributions DreamContribution[]
+
+  @@index([workerId, isActive])
+  @@map("dreams")
+}
+
+model DreamContribution {
+  id          String   @id @default(uuid()) @db.Uuid
+  dreamId     String   @db.Uuid
+  dream       Dream    @relation(fields: [dreamId], references: [id])
+  tipId       String   @db.Uuid
+  tip         Tip      @relation(fields: [tipId], references: [id])
+  amountPaise BigInt
+  createdAt   DateTime @default(now()) @db.Timestamptz()
+
+  @@index([dreamId, createdAt])
+  @@map("dream_contributions")
+}
+
+// ─── Reputation (V5 — Worker Trust Graph) ────────────────────────────────────
+
+model Reputation {
+  id            String   @id @default(uuid()) @db.Uuid
+  workerId      String   @unique @db.Uuid
+  worker        User     @relation(fields: [workerId], references: [id])
+  score         Decimal  @default(0) @db.Decimal(5, 2)   // 0.00 – 100.00
+  consistency   Decimal  @default(0) @db.Decimal(5, 4)   // 0.0000 – 1.0000
+  frequency     Decimal  @default(0) @db.Decimal(5, 4)
+  uniqueTippers Int      @default(0)
+  lastComputed  DateTime @default(now()) @db.Timestamptz()
+  updatedAt     DateTime @updatedAt @db.Timestamptz()
+
+  @@map("reputations")
+}
+
+// ─── Worker Responses (V5 — Thank-you loop) ──────────────────────────────────
+
+model WorkerResponse {
+  id        String   @id @default(uuid()) @db.Uuid
+  tipId     String   @unique @db.Uuid
+  tip       Tip      @relation(fields: [tipId], references: [id])
+  workerId  String   @db.Uuid
+  worker    User     @relation("WorkerResponses", fields: [workerId], references: [id])
+  type      String   @db.VarChar(20)   // emoji, voice, video
+  mediaUrl  String?  @db.Text
+  emoji     String?  @db.VarChar(10)
+  createdAt DateTime @default(now()) @db.Timestamptz()
+
+  @@index([workerId, createdAt])
+  @@map("worker_responses")
 }

@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsEnum, IsOptional, IsInt, Min, Max, IsUUID, MaxLength } from 'class-validator';
-import { TipSource } from '@fliq/shared';
+import { TipSource, TipIntent } from '@fliq/shared';
 import {
   MIN_TIP_AMOUNT_PAISE,
   MAX_TIP_AMOUNT_PAISE,
@@ -21,6 +21,11 @@ export class CreateTipDto {
   @IsEnum(TipSource)
   source!: TipSource;
 
+  @ApiPropertyOptional({ enum: TipIntent, example: TipIntent.KINDNESS, description: 'Reason for appreciation' })
+  @IsOptional()
+  @IsEnum(TipIntent)
+  intent?: TipIntent;
+
   @ApiPropertyOptional({ example: 'Great service!' })
   @IsOptional()
   @IsString()
@@ -34,3 +39,4 @@ export class CreateTipDto {
   @Max(5)
   rating?: number;
 }
+

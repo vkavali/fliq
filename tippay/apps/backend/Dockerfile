@@ -57,5 +57,5 @@ EXPOSE 3000
 CMD echo "=== Prisma db push starting ===" && \
     pnpm --filter @fliq/database exec prisma db push --skip-generate --accept-data-loss 2>&1 && \
     echo "=== Prisma db push completed ===" || \
-    echo "=== Prisma db push FAILED (app will start anyway) ===" && \
-    node apps/backend/dist/main.js
+    echo "=== Prisma db push FAILED (app will start anyway) ===" ; \
+    exec node apps/backend/dist/main.js
