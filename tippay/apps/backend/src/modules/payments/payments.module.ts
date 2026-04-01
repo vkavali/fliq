@@ -7,6 +7,8 @@ import { GamificationModule } from '../gamification/gamification.module';
 import { RecurringTipsModule } from '../recurring-tips/recurring-tips.module';
 import { TipJarsModule } from '../tip-jars/tip-jars.module';
 import { TipLaterModule } from '../tip-later/tip-later.module';
+import { DreamsModule } from '../dreams/dreams.module';
+import { ReputationModule } from '../reputation/reputation.module';
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { TipLaterModule } from '../tip-later/tip-later.module';
     forwardRef(() => RecurringTipsModule),
     forwardRef(() => TipJarsModule),
     forwardRef(() => TipLaterModule),
+    forwardRef(() => DreamsModule),
+    forwardRef(() => ReputationModule),
   ],
   controllers: [WebhooksController],
   providers: [RazorpayService, PaymentsService],
