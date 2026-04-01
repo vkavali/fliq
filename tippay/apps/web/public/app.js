@@ -395,10 +395,106 @@ async function loadDashboard() {
     loadTipLinks();
     loadProviderTips();
     loadPayouts();
+
+    // V5: Load dream, reputation, intents
+    loadDream(p.id);
+    loadReputation(p.id);
+    loadIntents(p.id);
   } catch (e) {
     // No provider profile yet — show onboarding
     document.getElementById('onboarding').classList.remove('hidden');
     document.getElementById('dashboard').classList.add('hidden');
+  }
+}
+
+// ===== V5: DREAMS =====
+async function loadDream(providerId) {
+  try {
+    const dreams = await api('GET', '/dreams');
+    const active = dreams.find(d => d.status === 'ACTIVE') || dreams[0];
+    if (active) {
+      document.getElementById('dream-empty').classList.add('hidden');
+      document.getElementById('dream-active').classList.remove('hidden');
+      document.getElementById('dream-edit-btn').classList.remove('hidden');
+      document.getElementById('d-dream-title').textContent = active.title;
+      document.getElementById('d-dream-desc').textContent = active.description || '';
+      const pct = active.goalAmountPaise > 0 ? Math.round((active.currentAmountPaise / active.goalAmountPaise) * 100) : 0;
+      setTimeout(() => { document.getElementById('d-dream-fill').style.width = pct + '%'; }, 300);
+      document.getElementById('d-dream-pct').textContent = pct + '%';
+      document.getElementById('d-dream-amounts').textContent = `₹${Math.round(active.currentAmountPaise / 100)} / ₹${Math.round(active.goalAmountPaise / 100)}`;
+    } else {
+      document.getElementById('dream-empty').classList.remove('hidden');
+      document.getElementById('dream-active').classList.add('hidden');
+      document.getElementById('dream-edit-btn').classList.add('hidden');
+    }
+  } catch (e) {
+    // Dreams API may not exist yet, show empty state
+    document.getElementById('dream-empty').classList.remove('hidden');
+    document.getElementById('dream-edit-btn').classList.add('hidden');
+  }
+}
+
+function showDreamForm() {
+  document.getElementById('dream-form').classList.remove('hidden');
+  document.getElementById('dream-display').classList.add('hidden');
+  document.getElementById('dream-edit-btn').classList.add('hidden');
+}
+
+function hideDreamForm() {
+  document.getElementById('dream-form').classList.add('hidden');
+  document.getElementById('dream-display').classList.remove('hidden');
+  document.getElementById('dream-edit-btn').classList.remove('hidden');
+}
+
+async function saveDream() {
+  const title = document.getElementById('dream-title-input').value.trim();
+  const description = document.getElementById('dream-desc-input').value.trim();
+  const goalAmount = parseInt(document.getElementById('dream-goal-input').value) || 0;
+  if (!title || goalAmount < 100) { showToast('Enter a title and goal amount (min ₹100)'); return; }
+  try {
+    await api('POST', '/dreams', { title, description, goalAmountPaise: goalAmount * 100 });
+    hideDreamForm();
+    loadDream(providerProfile?.id);
+    showToast('Dream saved! Tippers will see this.');
+  } catch (e) {
+    showToast(e.message || 'Failed to save dream');
+  }
+}
+
+// ===== V5: REPUTATION =====
+async function loadReputation(providerId) {
+  try {
+    const rep = await api('GET', `/reputation/${providerId}`);
+    const score = Math.round(rep.score || 0);
+    document.getElementById('d-reputation').textContent = score + '/100';
+    document.getElementById('d-rep-circle').textContent = score;
+    if (score >= 80) {
+      document.getElementById('d-rep-detail').textContent = '⭐ Excellent — top-tier trust';
+    } else if (score >= 50) {
+      document.getElementById('d-rep-detail').textContent = '📈 Growing — keep it up!';
+    } else {
+      document.getElementById('d-rep-detail').textContent = 'Receive more tips to build trust';
+    }
+  } catch (e) {
+    document.getElementById('d-reputation').textContent = 'New';
+    document.getElementById('d-rep-circle').textContent = '—';
+  }
+}
+
+// ===== V5: INTENT BREAKDOWN =====
+async function loadIntents(providerId) {
+  try {
+    const tips = await api('GET', '/tips/received?limit=100');
+    const counts = { KINDNESS: 0, SPEED: 0, EXPERIENCE: 0, SUPPORT: 0 };
+    (tips.data || tips || []).forEach(t => {
+      if (t.intent && counts[t.intent] !== undefined) counts[t.intent]++;
+    });
+    document.getElementById('d-intent-kindness').textContent = counts.KINDNESS + ' kindness';
+    document.getElementById('d-intent-speed').textContent = counts.SPEED + ' speed';
+    document.getElementById('d-intent-experience').textContent = counts.EXPERIENCE + ' experience';
+    document.getElementById('d-intent-support').textContent = counts.SUPPORT + ' support';
+  } catch (e) {
+    // Intent data not available yet
   }
 }
 
