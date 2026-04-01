@@ -37,6 +37,7 @@ async function bootstrap() {
           directives: {
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrcAttr: ["'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:", "https:"],
@@ -52,11 +53,25 @@ async function bootstrap() {
     : ['http://localhost:3000', 'http://localhost:5173'];
   app.enableCors({ origin: allowedOrigins, credentials: true });
 
-  // Serve web app static files from /app (if present)
+  // Serve web app static files from /app and root (if present)
   const webAppPath = join(__dirname, '..', '..', 'web', 'public');
   if (existsSync(webAppPath)) {
     app.useStaticAssets(webAppPath, { prefix: '/app/' });
   }
+
+  // Redirect root to /app/
+  const httpAdapter = app.getHttpAdapter();
+  httpAdapter.get('/', (req, res: any) => res.redirect('/app/'));
+
+  // Serve tip.html for /tip/:code routes
+  httpAdapter.get('/tip/*', (req, res: any) => {
+    const tipHtml = join(webAppPath, 'tip.html');
+    if (existsSync(tipHtml)) {
+      res.sendFile(tipHtml);
+    } else {
+      res.redirect('/app/');
+    }
+  });
 
   // Global pipes
   app.useGlobalPipes(
