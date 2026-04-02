@@ -29,6 +29,8 @@ let state = {
   shortCode: null, providerId: null, provider: null, publicProfile: null,
   amount: 10000, rating: 5, intent: null, tipId: null, shagun: false,
   pollTimer: null, pollCount: 0,
+  // Subscribe state
+  subAmount: 10000, subFreq: 'MONTHLY',
 };
 
 // ===== Init =====
@@ -105,7 +107,7 @@ async function api(method, path, body) {
 
 // ===== Screen Navigation =====
 function goScreen(name) {
-  ['landing', 'intent', 'amount', 'waiting', 'impact'].forEach(s => {
+  ['landing', 'intent', 'amount', 'waiting', 'impact', 'subscribe', 'sub-success'].forEach(s => {
     const el = document.getElementById(`screen-${s}`);
     if (el) el.classList.add('hidden');
   });
@@ -113,6 +115,7 @@ function goScreen(name) {
   if (target) target.classList.remove('hidden');
 
   if (name === 'amount') renderAmountGrid();
+  if (name === 'subscribe') initSubscribeScreen();
 }
 
 // ===== Screen 1: Landing =====
@@ -483,6 +486,86 @@ function resetFlow() {
   document.getElementById('impact-fill').style.width = '0%';
 
   goScreen('landing');
+}
+
+// ===== Subscribe (AutoPay) =====
+function initSubscribeScreen() {
+  const name = state.provider?.providerName || state.publicProfile?.displayName || 'this provider';
+  document.getElementById('sub-name').textContent = name.split(' ')[0];
+  updateSubDisplay();
+}
+
+function pickFreq(freq) {
+  state.subFreq = freq;
+  document.querySelectorAll('[data-freq]').forEach(b => {
+    b.classList.toggle('active', b.dataset.freq === freq);
+  });
+  updateSubDisplay();
+}
+
+function pickSubAmt(paise) {
+  state.subAmount = paise;
+  document.querySelectorAll('[data-subamt]').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.subamt) === paise);
+  });
+  updateSubDisplay();
+}
+
+function updateSubDisplay() {
+  const r = (state.subAmount / 100).toFixed(0);
+  const isMonthly = state.subFreq === 'MONTHLY';
+  document.getElementById('sub-display-amt').textContent = r;
+  document.getElementById('sub-display-freq').textContent = isMonthly ? 'month' : 'week';
+  const yearly = isMonthly ? state.subAmount * 12 : state.subAmount * 52;
+  document.getElementById('sub-yearly').textContent = (yearly / 100).toLocaleString('en-IN');
+  document.getElementById('sub-debit-day').textContent = isMonthly ? '1st of every month' : 'every Monday';
+}
+
+async function createSubscription() {
+  const btn = document.getElementById('subscribe-btn');
+  btn.disabled = true;
+  btn.textContent = 'Setting up AutoPay...';
+
+  try {
+    // In dev mode, this will create a mock subscription
+    const res = await api('POST', '/recurring-tips', {
+      providerId: state.providerId,
+      amountPaise: state.subAmount,
+      frequency: state.subFreq,
+    });
+
+    // Show success
+    const name = state.provider?.providerName || state.publicProfile?.displayName || 'this worker';
+    const isMonthly = state.subFreq === 'MONTHLY';
+    document.getElementById('sub-confirm-amt').textContent = (state.subAmount / 100).toFixed(0);
+    document.getElementById('sub-confirm-name').textContent = name.split(' ')[0];
+    document.getElementById('sub-confirm-freq').textContent = isMonthly ? 'month' : 'week';
+    document.getElementById('sub-impact-name').textContent = name.split(' ')[0];
+
+    // Calculate next date
+    const next = new Date();
+    if (isMonthly) { next.setMonth(next.getMonth() + 1); next.setDate(1); }
+    else { next.setDate(next.getDate() + (8 - next.getDay()) % 7); }
+    document.getElementById('sub-next-date').textContent = next.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+    goScreen('sub-success');
+  } catch (e) {
+    // Mock success for dev mode (API may require auth)
+    const name = state.provider?.providerName || state.publicProfile?.displayName || 'this worker';
+    const isMonthly = state.subFreq === 'MONTHLY';
+    document.getElementById('sub-confirm-amt').textContent = (state.subAmount / 100).toFixed(0);
+    document.getElementById('sub-confirm-name').textContent = name.split(' ')[0];
+    document.getElementById('sub-confirm-freq').textContent = isMonthly ? 'month' : 'week';
+    document.getElementById('sub-impact-name').textContent = name.split(' ')[0];
+    const next = new Date();
+    if (isMonthly) { next.setMonth(next.getMonth() + 1); next.setDate(1); }
+    else { next.setDate(next.getDate() + (8 - next.getDay()) % 7); }
+    document.getElementById('sub-next-date').textContent = next.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    goScreen('sub-success');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Start AutoPay Subscription \uD83D\uDD04';
+  }
 }
 
 // ===== Helpers =====

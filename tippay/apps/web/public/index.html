@@ -297,7 +297,6 @@
       <div class="topbar-brand"><img src="logo-full.png" alt="Fliq" class="topbar-logo"></div>
       <div class="topbar-right">
         <span id="dash-phone" class="topbar-phone"></span>
-        <button class="topbar-btn" onclick="goToBusiness()">🏢 Business</button>
         <button class="topbar-logout" onclick="logout()">Logout</button>
       </div>
     </div></nav>
@@ -454,8 +453,61 @@
         <div class="biz-stat-card"><div class="biz-stat-icon" style="background:#fff3e0">⭐</div><div><div class="biz-stat-value" id="stat-avg-rating">—</div><div class="biz-stat-label">Avg Rating</div></div></div>
         <div class="biz-stat-card"><div class="biz-stat-icon" style="background:#f3e5f5">👥</div><div><div class="biz-stat-value" id="stat-staff-count">—</div><div class="biz-stat-label">Staff Members</div></div></div>
       </div>
-      <div class="biz-tabs"><button class="biz-tab active" onclick="bizTab('staff')">Staff &amp; Earnings</button><button class="biz-tab" onclick="bizTab('satisfaction')">Satisfaction</button><button class="biz-tab" onclick="bizTab('qrcodes')">QR Codes</button></div>
+      <div class="biz-tabs"><button class="biz-tab active" onclick="bizTab('staff')">Staff &amp; Earnings</button><button class="biz-tab" onclick="bizTab('pools')">Tip Pools</button><button class="biz-tab" onclick="bizTab('corporate')">Corporate Budget</button><button class="biz-tab" onclick="bizTab('satisfaction')">Satisfaction</button><button class="biz-tab" onclick="bizTab('qrcodes')">QR Codes</button></div>
       <div id="biz-tab-staff" class="biz-tab-content"><div class="biz-section-header"><h3>Staff Earnings Breakdown</h3><button class="biz-outline-btn" onclick="exportCsv()">⬇ Export CSV</button></div><div id="biz-staff-table-wrap"><div class="biz-loading">Loading staff data...</div></div></div>
+
+      <!-- Tip Pools Tab -->
+      <div id="biz-tab-pools" class="biz-tab-content hidden">
+        <div class="biz-section-header"><h3>Tip Pools (Party Pots)</h3><button class="biz-outline-btn" onclick="showPoolForm()">+ Create Pool</button></div>
+        <p style="font-size:13px;color:#636E72;margin-bottom:16px;">Create shared tip pools for teams. Tips received by the pool are split among members based on your chosen method.</p>
+        <div id="pool-form" class="hidden" style="background:#F8F9FA;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #E9ECEF;">
+          <h4 style="margin-bottom:12px;">New Tip Pool</h4>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+            <div style="flex:1;min-width:200px;"><label style="font-size:12px;font-weight:600;color:#636E72;">Pool Name</label><input type="text" id="pool-name" class="input-full" placeholder="Kitchen Team Pool" maxlength="100" style="margin-top:4px;"></div>
+            <div style="flex:1;min-width:200px;"><label style="font-size:12px;font-weight:600;color:#636E72;">Split Method</label><select id="pool-split" class="input-full" style="margin-top:4px;"><option value="EQUAL">Equal Split</option><option value="PERCENTAGE">By Percentage</option><option value="ROLE_BASED">Role-based</option></select></div>
+          </div>
+          <div style="margin-bottom:12px;"><label style="font-size:12px;font-weight:600;color:#636E72;">Description</label><textarea id="pool-desc" class="input-full" rows="2" placeholder="Shared tip pool for the kitchen crew" maxlength="500" style="margin-top:4px;"></textarea></div>
+          <div style="display:flex;gap:8px;"><button class="small-btn" onclick="createPool()" style="background:#6C5CE7;color:white;">Create Pool</button><button class="small-btn" onclick="hidePoolForm()" style="background:#E9ECEF;color:#636E72;">Cancel</button></div>
+        </div>
+        <div id="pools-list">
+          <div style="text-align:center;padding:40px;color:#B2BEC3;">
+            <div style="font-size:40px;margin-bottom:8px;">🫙</div>
+            <p style="font-weight:600;margin-bottom:4px;">No tip pools yet</p>
+            <p style="font-size:13px;">Create a pool to start splitting tips among team members.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Corporate Budget Tab (UPI Circle Concept) -->
+      <div id="biz-tab-corporate" class="biz-tab-content hidden">
+        <div class="biz-section-header"><h3>Corporate Tipping Budget</h3><span style="background:#FF8F00;color:white;font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px;">UPI Circle</span></div>
+        <p style="font-size:13px;color:#636E72;margin-bottom:20px;">Set monthly tipping allowances for employees. Tips are debited from the corporate account via UPI Circle delegation.</p>
+        <div style="background:linear-gradient(135deg,#E8FFF8,#F0EDFF);border-radius:16px;padding:24px;border:1px solid rgba(0,184,148,0.2);margin-bottom:20px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;text-align:center;">
+            <div><div style="font-size:24px;font-weight:800;color:#00B894;" id="corp-budget-total">₹0</div><div style="font-size:11px;color:#636E72;">Monthly Budget</div></div>
+            <div><div style="font-size:24px;font-weight:800;color:#6C5CE7;" id="corp-budget-used">₹0</div><div style="font-size:11px;color:#636E72;">Used This Month</div></div>
+            <div><div style="font-size:24px;font-weight:800;color:#FF8F00;" id="corp-budget-remaining">₹0</div><div style="font-size:11px;color:#636E72;">Remaining</div></div>
+          </div>
+        </div>
+        <div style="background:white;border-radius:12px;padding:20px;border:1px solid #E9ECEF;margin-bottom:16px;">
+          <h4 style="margin-bottom:12px;">Set Employee Allowances</h4>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+            <div style="flex:1;min-width:180px;"><label style="font-size:12px;font-weight:600;color:#636E72;">Employee Phone</label><input type="tel" id="corp-emp-phone" class="input-full" placeholder="+919876543210" style="margin-top:4px;"></div>
+            <div style="width:140px;"><label style="font-size:12px;font-weight:600;color:#636E72;">Monthly Limit</label><div style="display:flex;align-items:center;gap:4px;margin-top:4px;"><span style="font-weight:600;">₹</span><input type="number" id="corp-emp-limit" class="input-full" placeholder="3000" min="100"></div></div>
+            <div style="display:flex;align-items:flex-end;"><button class="small-btn" onclick="addCorpAllowance()" style="background:#00B894;color:white;padding:10px 16px;">+ Add</button></div>
+          </div>
+        </div>
+        <div id="corp-allowances-list" style="background:white;border-radius:12px;padding:20px;border:1px solid #E9ECEF;">
+          <h4 style="margin-bottom:12px;">Employee Tipping Allowances</h4>
+          <div style="text-align:center;padding:20px;color:#B2BEC3;">
+            <p style="font-size:13px;">No employees added yet. Set allowances above.</p>
+          </div>
+        </div>
+        <div style="background:#FFF3E0;border-radius:12px;padding:16px;margin-top:16px;">
+          <div style="font-size:12px;color:#E65100;">💡 <strong>How it works:</strong> When an employee scans a Fliq QR code, they select "Corporate UPI Circle" as their payment method. The tip is debited from your company's linked bank account — no personal expense for the employee.</div>
+        </div>
+      </div>
+
       <div id="biz-tab-satisfaction" class="biz-tab-content hidden"><h3>Customer Satisfaction</h3><div class="biz-rating-dist" id="biz-rating-dist"></div><div id="biz-reviews-list"></div></div>
       <div id="biz-tab-qrcodes" class="biz-tab-content hidden"><div class="biz-section-header"><h3>Staff QR Codes</h3><button class="biz-outline-btn" onclick="printAllQr()">🖨 Print All</button></div><p class="biz-muted">Print these standee cards and place them on desks or counters.</p><div id="biz-qr-grid" class="biz-qr-grid"></div></div>
     </div></div>
@@ -536,6 +588,7 @@
         <a href="#tip" style="color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;">Tip Now</a>
         <a href="javascript:void(0)" onclick="goTo('tipper-demo')" style="background:#FF6B6B;color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;">🧪 Tipper Demo</a>
         <a href="javascript:void(0)" onclick="goTo('login')" style="background:var(--pri);color:white;border:none;border-radius:8px;padding:8px 20px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;">Provider Login</a>
+        <a href="javascript:void(0)" onclick="goTo('business')" style="background:linear-gradient(135deg,#00B894,#00A381);color:white;border:none;border-radius:8px;padding:8px 20px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;">🏢 Business</a>
       </div>
     </div>
   </nav>

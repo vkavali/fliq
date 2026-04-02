@@ -27,6 +27,15 @@
       padding: 24px 16px 40px;
     }
     .hidden { display: none !important; }
+
+    /* Subscribe button */
+    .subscribe-row { text-align: center; margin-top: 12px; }
+    .subscribe-btn {
+      background: none; border: 2px dashed var(--green); color: var(--green);
+      border-radius: 12px; padding: 12px 24px; font-size: 14px; font-weight: 600;
+      cursor: pointer; width: 100%; transition: all 0.2s;
+    }
+    .subscribe-btn:hover { background: var(--green-bg); }
     .tip-card {
       background: white; border-radius: 24px; box-shadow: var(--shadow-lg);
       padding: 32px 24px; width: 100%; max-width: 420px; margin-top: 16px;
@@ -337,6 +346,9 @@
       </div>
     </div>
     <button class="cta-btn" id="start-tip-btn" onclick="goScreen('intent')">Tip Now ✨</button>
+    <div class="subscribe-row">
+      <button class="subscribe-btn" onclick="goScreen('subscribe')">🔄 Subscribe — Auto-tip monthly</button>
+    </div>
   </div>
 
   <!-- SCREEN 2: Intent Selection -->
@@ -454,6 +466,65 @@
   </div>
 
   <div id="tip-error" class="error-box hidden"></div>
+
+  <!-- SCREEN: Subscribe (AutoPay) -->
+  <div id="screen-subscribe" class="hidden">
+    <div class="back-row"><button class="back-btn" onclick="goScreen('landing')">← Back</button></div>
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:40px;margin-bottom:8px;">🔄</div>
+      <h3 style="font-size:18px;font-weight:800;margin-bottom:4px;">Subscribe via UPI AutoPay</h3>
+      <p style="font-size:13px;color:var(--text2);">Auto-send a tip to <strong id="sub-name">this provider</strong> every month</p>
+    </div>
+    <p class="section-label">Choose frequency</p>
+    <div style="display:flex;gap:10px;margin-bottom:20px;">
+      <button class="amt-btn active" onclick="pickFreq('MONTHLY')" data-freq="MONTHLY" style="flex:1;">
+        <span class="amount">Monthly</span>
+        <span class="label">1st of every month</span>
+      </button>
+      <button class="amt-btn" onclick="pickFreq('WEEKLY')" data-freq="WEEKLY" style="flex:1;">
+        <span class="amount">Weekly</span>
+        <span class="label">Every Monday</span>
+      </button>
+    </div>
+    <p class="section-label">Choose auto-tip amount</p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px;">
+      <button class="amt-btn" onclick="pickSubAmt(5000)" data-subamt="5000"><span class="amount">₹50</span></button>
+      <button class="amt-btn active" onclick="pickSubAmt(10000)" data-subamt="10000"><span class="amount">₹100</span><span class="popular-tag">Popular</span></button>
+      <button class="amt-btn" onclick="pickSubAmt(15000)" data-subamt="15000"><span class="amount">₹150</span></button>
+      <button class="amt-btn" onclick="pickSubAmt(20000)" data-subamt="20000"><span class="amount">₹200</span></button>
+      <button class="amt-btn" onclick="pickSubAmt(30000)" data-subamt="30000"><span class="amount">₹300</span></button>
+      <button class="amt-btn" onclick="pickSubAmt(50000)" data-subamt="50000"><span class="amount">₹500</span></button>
+    </div>
+    <div style="background:var(--pri-bg);border-radius:12px;padding:16px;margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span>Auto-tip amount</span><span style="font-weight:700;">₹<span id="sub-display-amt">100</span>/<span id="sub-display-freq">month</span></span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;"><span>Yearly total</span><span style="font-weight:700;color:var(--pri);">₹<span id="sub-yearly">1,200</span></span></div>
+      <div style="font-size:11px;color:var(--text2);margin-top:8px;">Cancel anytime. No lock-in. Powered by UPI AutoPay.</div>
+    </div>
+    <button class="cta-btn" id="subscribe-btn" onclick="createSubscription()" style="background:linear-gradient(135deg,var(--green),var(--green-dark));">Start AutoPay Subscription 🔄</button>
+    <div class="pay-hint">UPI AutoPay mandate. Debit on <span id="sub-debit-day">1st of every month</span>. Cancel anytime.</div>
+  </div>
+
+  <!-- SCREEN: Subscribe Success -->
+  <div id="screen-sub-success" class="hidden">
+    <div style="text-align:center;padding:20px 0;">
+      <div style="font-size:56px;margin-bottom:12px;">✅</div>
+      <h3 style="font-size:20px;font-weight:800;margin-bottom:8px;">Subscription Active!</h3>
+      <p style="font-size:14px;color:var(--text2);margin-bottom:20px;">You'll automatically send ₹<span id="sub-confirm-amt">100</span> to <strong id="sub-confirm-name">this worker</strong> every <span id="sub-confirm-freq">month</span>.</p>
+      <div style="background:var(--green-bg);border-radius:12px;padding:16px;margin-bottom:20px;">
+        <div style="font-size:13px;font-weight:600;color:var(--green);margin-bottom:8px;">What happens next</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.8;">
+          💰 First tip goes out immediately<br>
+          📅 Next auto-debit: <strong id="sub-next-date">-</strong><br>
+          🔔 You'll get a notification before each debit<br>
+          ❌ Cancel anytime from your UPI app
+        </div>
+      </div>
+      <div style="background:#FFF3E0;border-radius:12px;padding:14px;margin-bottom:20px;">
+        <div style="font-size:12px;color:#E65100;">💡 <strong>Impact:</strong> You just gave <span id="sub-impact-name">this worker</span> predictable monthly income. That's transformative.</div>
+      </div>
+      <button class="cta-btn outline" onclick="resetFlow()">Done</button>
+    </div>
+  </div>
 
   <div class="footer">
     <span>Powered by</span> <strong> Fliq</strong> <span> · Scan. Fliq. Done.</span>

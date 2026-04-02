@@ -748,11 +748,12 @@ function bizTab(tab) {
   document.querySelectorAll('.biz-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.biz-tab-content').forEach(t => t.classList.add('hidden'));
 
-  const idx = { staff: 0, satisfaction: 1, qrcodes: 2 }[tab] ?? 0;
+  const idx = { staff: 0, pools: 1, corporate: 2, satisfaction: 3, qrcodes: 4 }[tab] ?? 0;
   document.querySelectorAll('.biz-tab')[idx]?.classList.add('active');
   document.getElementById(`biz-tab-${tab}`)?.classList.remove('hidden');
 
   if (tab === 'staff') loadBizStaff();
+  else if (tab === 'pools') loadPools();
   else if (tab === 'satisfaction') loadBizSatisfaction();
   else if (tab === 'qrcodes') loadBizQrCodes();
 }
@@ -1104,4 +1105,89 @@ function openTipSPA(id) {
   if (!id) { showToast('Enter a provider ID'); return; }
   location.hash = `#tip/${id}`;
   checkRoute();
+}
+
+// ===== TIP POOLS =====
+function showPoolForm() { document.getElementById('pool-form').classList.remove('hidden'); }
+function hidePoolForm() { document.getElementById('pool-form').classList.add('hidden'); }
+
+async function createPool() {
+  const name = document.getElementById('pool-name').value.trim();
+  const splitMethod = document.getElementById('pool-split').value;
+  const description = document.getElementById('pool-desc').value.trim();
+  if (!name) { showToast('Enter a pool name'); return; }
+  try {
+    await api('POST', '/tip-pools', { name, splitMethod, description });
+    hidePoolForm();
+    loadPools();
+    showToast('Tip pool created!');
+  } catch (e) {
+    showToast(e.message || 'Failed to create pool');
+  }
+}
+
+async function loadPools() {
+  try {
+    const pools = await api('GET', '/tip-pools/my');
+    const list = document.getElementById('pools-list');
+    if (!pools || pools.length === 0) {
+      list.innerHTML = '<div style="text-align:center;padding:40px;color:#B2BEC3;"><div style="font-size:40px;margin-bottom:8px;">🫙</div><p style="font-weight:600;margin-bottom:4px;">No tip pools yet</p><p style="font-size:13px;">Create a pool to start splitting tips.</p></div>';
+      return;
+    }
+    list.innerHTML = pools.map(p => `
+      <div style="background:white;border-radius:12px;padding:16px;border:1px solid #E9ECEF;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:700;">${p.name}</div>
+            <div style="font-size:12px;color:#636E72;">${p.splitMethod} split · ${p.members?.length || 0} members</div>
+          </div>
+          <span style="font-size:11px;color:${p.isActive ? '#00B894' : '#E17055'};font-weight:600;">● ${p.isActive ? 'Active' : 'Inactive'}</span>
+        </div>
+        ${p.description ? `<p style="font-size:12px;color:#636E72;margin-top:8px;">${p.description}</p>` : ''}
+      </div>`).join('');
+  } catch (e) {
+    // Pools not available
+  }
+}
+
+// ===== CORPORATE BUDGET (UPI Circle Concept) =====
+let corpAllowances = [];
+
+function addCorpAllowance() {
+  const phone = document.getElementById('corp-emp-phone').value.trim();
+  const limit = parseInt(document.getElementById('corp-emp-limit').value) || 0;
+  if (!phone || limit < 100) { showToast('Enter phone and limit (min ₹100)'); return; }
+  corpAllowances.push({ phone, limit, used: 0 });
+  document.getElementById('corp-emp-phone').value = '';
+  document.getElementById('corp-emp-limit').value = '';
+  renderCorpAllowances();
+  showToast('Employee allowance set');
+}
+
+function renderCorpAllowances() {
+  const list = document.getElementById('corp-allowances-list');
+  const total = corpAllowances.reduce((s, a) => s + a.limit, 0);
+  const used = corpAllowances.reduce((s, a) => s + a.used, 0);
+  document.getElementById('corp-budget-total').textContent = '₹' + total.toLocaleString('en-IN');
+  document.getElementById('corp-budget-used').textContent = '₹' + used.toLocaleString('en-IN');
+  document.getElementById('corp-budget-remaining').textContent = '₹' + (total - used).toLocaleString('en-IN');
+
+  if (corpAllowances.length === 0) {
+    list.innerHTML = '<h4 style="margin-bottom:12px;">Employee Tipping Allowances</h4><div style="text-align:center;padding:20px;color:#B2BEC3;"><p style="font-size:13px;">No employees added yet.</p></div>';
+    return;
+  }
+  list.innerHTML = '<h4 style="margin-bottom:12px;">Employee Tipping Allowances</h4>' +
+    corpAllowances.map((a, i) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F0F0F0;">
+        <div>
+          <div style="font-weight:600;font-size:14px;">${a.phone}</div>
+          <div style="font-size:12px;color:#636E72;">₹${a.used} used of ₹${a.limit}/month</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div style="width:80px;height:6px;background:#E9ECEF;border-radius:3px;overflow:hidden;">
+            <div style="height:100%;background:${a.used/a.limit > 0.8 ? '#E17055' : '#00B894'};width:${Math.min(100, (a.used/a.limit)*100)}%;border-radius:3px;"></div>
+          </div>
+          <button onclick="corpAllowances.splice(${i},1);renderCorpAllowances();" style="background:none;border:none;cursor:pointer;color:#E17055;font-size:14px;">✕</button>
+        </div>
+      </div>`).join('');
 }
