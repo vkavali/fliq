@@ -15,7 +15,7 @@ function goTo(page) {
   document.querySelectorAll('.page').forEach(p => { p.style.display = 'none'; p.classList.add('hidden'); });
   const el = document.getElementById(`${page}-page`);
   if (el) {
-    const isFlex = page === 'landing' || page === 'login' || page === 'business-login' || page === 'tip' || page === 'tipper-portal';
+    const isFlex = page === 'landing' || page === 'login' || page === 'business-login' || page === 'tip';
     el.style.display = isFlex ? 'flex' : 'block';
     el.classList.remove('hidden');
   }
