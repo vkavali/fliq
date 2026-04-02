@@ -27,6 +27,7 @@ import { EkycModule } from './modules/ekyc/ekyc.module';
 import { TipJarsModule } from './modules/tip-jars/tip-jars.module';
 import { TipLaterModule } from './modules/tip-later/tip-later.module';
 import { DevModule } from './modules/dev/dev.module';
+import { EmailModule } from './modules/email/email.module';
 import { DreamsModule } from './modules/dreams/dreams.module';
 import { ReputationModule } from './modules/reputation/reputation.module';
 import { ResponsesModule } from './modules/responses/responses.module';
@@ -69,6 +70,7 @@ import { ResponsesModule } from './modules/responses/responses.module';
     ReputationModule,
     ResponsesModule,
     DevModule,
+    EmailModule,
   ],
   controllers: [AppController],
 })

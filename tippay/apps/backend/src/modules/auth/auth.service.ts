@@ -11,6 +11,7 @@ import { PrismaService } from '@fliq/database';
 import { UserType } from '@fliq/shared';
 import { RedisService } from '../redis/redis.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { EmailService } from '../email/email.service';
 import * as crypto from 'crypto';
 
 const OTP_EXPIRY_MINUTES = 5;
@@ -32,6 +33,7 @@ export class AuthService {
     private readonly config: ConfigService,
     private readonly redis: RedisService,
     private readonly notifications: NotificationsService,
+    private readonly email: EmailService,
   ) {}
 
   private isBypassEnabled(): boolean {
@@ -190,11 +192,16 @@ export class AuthService {
     await this.redis.incr(hourKey);
     await this.redis.setex(hourKey, 3600, (await this.redis.get(hourKey)) || '1');
 
-    // TODO: Replace with real email service (Resend, Sendgrid, etc.)
-    // For now, return OTP in response so frontend can auto-fill it
-    this.logger.log(`📧 Email OTP for ${email}: ${code} (no email service configured — returning in response)`);
+    // Send OTP via email (Hostinger SMTP)
+    const emailSent = await this.email.sendOtp(email, code);
 
-    return { message: 'OTP sent to email successfully', otp: code };
+    if (emailSent) {
+      return { message: 'Access code sent to your email' };
+    }
+
+    // Fallback: return OTP in response if SMTP not configured (dev/testing)
+    this.logger.warn(`SMTP not configured — returning OTP in response for ${email}`);
+    return { message: 'Access code generated (check below)', otp: code };
   }
 
   async verifyEmailOtp(
