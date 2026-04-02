@@ -39,13 +39,16 @@ let state = {
   const code = parts[parts.length - 1];
   if (!code) { showFatalError('Invalid tip link'); return; }
   state.shortCode = code;
+  console.log('[Fliq] Resolving code:', code);
 
   try {
     let resolved = false;
 
     // Try 1: Resolve as payment link short code
     try {
+      console.log('[Fliq] Try 1: /payment-links/' + code + '/resolve');
       const data = await api('GET', `/payment-links/${code}/resolve`);
+      console.log('[Fliq] Resolved as payment link:', data);
       state.providerId = data.providerId;
       state.provider = data;
       resolved = true;
@@ -58,16 +61,17 @@ let state = {
 
       renderLanding(state.provider, state.publicProfile);
     } catch (e) {
-      // Not a payment link — try as direct provider ID
+      console.log('[Fliq] Not a payment link:', e.message);
     }
 
     // Try 2: Resolve as provider ID
     if (!resolved) {
       try {
+        console.log('[Fliq] Try 2: /providers/' + code + '/public');
         const pub = await api('GET', `/providers/${code}/public`);
+        console.log('[Fliq] Resolved as provider:', pub);
         state.providerId = code;
         state.publicProfile = pub;
-        // Build a provider-like object for renderLanding
         state.provider = {
           providerId: code,
           providerName: pub.displayName || pub.name,
@@ -79,7 +83,7 @@ let state = {
         renderLanding(state.provider, pub);
         resolved = true;
       } catch (e2) {
-        // Not a valid provider either
+        console.log('[Fliq] Not a provider either:', e2.message);
       }
     }
 
@@ -91,18 +95,28 @@ let state = {
     document.getElementById('loading').classList.add('hidden');
     goScreen('landing');
   } catch (e) {
+    console.error('[Fliq] Fatal error:', e);
     showFatalError(e.message || 'This tip link may have expired.');
   }
 })();
 
 // ===== API =====
 async function api(method, path, body) {
-  const opts = { method, headers: { 'Content-Type': 'application/json' } };
-  if (body) opts.body = JSON.stringify(body);
-  const r = await fetch(API + path, opts);
-  const d = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(d.message || `Error ${r.status}`);
-  return d;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+  try {
+    const opts = { method, headers: { 'Content-Type': 'application/json' }, signal: controller.signal };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(API + path, opts);
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.message || `Error ${r.status}`);
+    return d;
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error('Request timed out — server may be restarting');
+    throw e;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 // ===== Screen Navigation =====
