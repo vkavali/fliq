@@ -33,25 +33,59 @@ let state = {
 
 // ===== Init =====
 (async function init() {
-  const parts = location.pathname.split('/');
-  const code = parts[parts.length - 1] || parts[parts.length - 2];
+  const parts = location.pathname.split('/').filter(Boolean);
+  const code = parts[parts.length - 1];
   if (!code) { showFatalError('Invalid tip link'); return; }
   state.shortCode = code;
 
   try {
-    // Resolve payment link
-    const data = await api('GET', `/payment-links/${code}/resolve`);
-    state.providerId = data.providerId;
-    state.provider = data;
+    let resolved = false;
 
-    // Fetch enhanced public profile (dream, stats, reputation)
-    let pub = null;
+    // Try 1: Resolve as payment link short code
     try {
-      pub = await api('GET', `/providers/${data.providerId}/public`);
-      state.publicProfile = pub;
-    } catch (e) { /* non-fatal */ }
+      const data = await api('GET', `/payment-links/${code}/resolve`);
+      state.providerId = data.providerId;
+      state.provider = data;
+      resolved = true;
 
-    renderLanding(data, pub);
+      // Fetch enhanced public profile
+      try {
+        const pub = await api('GET', `/providers/${data.providerId}/public`);
+        state.publicProfile = pub;
+      } catch (e) { /* non-fatal */ }
+
+      renderLanding(state.provider, state.publicProfile);
+    } catch (e) {
+      // Not a payment link — try as direct provider ID
+    }
+
+    // Try 2: Resolve as provider ID
+    if (!resolved) {
+      try {
+        const pub = await api('GET', `/providers/${code}/public`);
+        state.providerId = code;
+        state.publicProfile = pub;
+        // Build a provider-like object for renderLanding
+        state.provider = {
+          providerId: code,
+          providerName: pub.displayName || pub.name,
+          category: pub.category,
+          ratingAverage: pub.ratingAverage,
+          totalTipsReceived: pub.totalTipsReceived,
+          avatarUrl: pub.avatarUrl,
+        };
+        renderLanding(state.provider, pub);
+        resolved = true;
+      } catch (e2) {
+        // Not a valid provider either
+      }
+    }
+
+    if (!resolved) {
+      showFatalError('This tip link could not be found. It may have expired or been deactivated.');
+      return;
+    }
+
     document.getElementById('loading').classList.add('hidden');
     goScreen('landing');
   } catch (e) {

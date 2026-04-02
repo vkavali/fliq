@@ -993,22 +993,36 @@ async function loadTipperDemo() {
   grid.innerHTML = '<div style="text-align:center;padding:20px;color:#B2BEC3;">Loading providers...</div>';
 
   try {
-    // Try dev status endpoint for provider data
-    const status = await fetch(API + '/dev/status').then(r => r.json()).catch(() => null);
+    // Try dev status endpoint for test accounts
+    const status = await fetch(API + '/dev/status').then(r => {
+      if (!r.ok) throw new Error('Dev bypass not enabled');
+      return r.json();
+    }).catch(() => null);
     let providers = [];
 
-    // Try to get providers from dev/status or parse from seed
-    if (status && status.providers) {
-      providers = status.providers;
-    } else {
-      // Fallback: try known test provider IDs from seed
-      const testIds = ['c090a3b5-d81b-49a6-8ab1-7089546c00d8'];
-      for (const id of testIds) {
-        try {
-          const pub = await fetch(API + `/providers/${id}/public`).then(r => r.ok ? r.json() : null);
-          if (pub) providers.push({ id, ...pub });
-        } catch (e) {}
-      }
+    if (status && status.testWorker) {
+      // /dev/status returns testWorker with id, name, paymentLinks
+      const w = status.testWorker;
+      let pub = null;
+      try { pub = await fetch(API + `/providers/${w.id}/public`).then(r => r.ok ? r.json() : null); } catch (e) {}
+      providers.push({
+        id: w.id,
+        displayName: pub?.displayName || w.name || 'Test Worker',
+        category: pub?.category || 'RESTAURANT',
+        ratingAverage: pub?.ratingAverage,
+        paymentLinkCodes: w.paymentLinks || [],
+      });
+    }
+
+    if (providers.length === 0) {
+      // Fallback: try common test short code from seed
+      try {
+        const pub = await fetch(API + '/payment-links/testwrkr/resolve').then(r => r.ok ? r.json() : null);
+        if (pub) providers.push({
+          id: pub.providerId, displayName: pub.providerName || 'Test Worker',
+          category: pub.category || 'RESTAURANT', paymentLinkCodes: ['testwrkr'],
+        });
+      } catch (e) {}
     }
 
     // Also fetch payment links if logged in
@@ -1036,8 +1050,10 @@ async function loadTipperDemo() {
       const cat = p.category || 'SERVICE';
       const initial = name[0]?.toUpperCase() || '?';
       const rating = p.ratingAverage ? Number(p.ratingAverage).toFixed(1) : 'New';
+      const linkCodes = p.paymentLinkCodes || [];
+      const v5Code = linkCodes[0] || p.id; // prefer short code, fallback to ID
       html += `
-        <div style="background:white;border-radius:16px;padding:20px;border:1px solid #E9ECEF;transition:all 0.2s;">
+        <div style="background:white;border-radius:16px;padding:20px;border:1px solid #E9ECEF;">
           <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
             <div style="width:48px;height:48px;background:linear-gradient(135deg,#6C5CE7,#A29BFE);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:20px;font-weight:800;">${initial}</div>
             <div style="flex:1;">
@@ -1045,9 +1061,10 @@ async function loadTipperDemo() {
               <div style="font-size:12px;color:#636E72;">${cat} · ⭐ ${rating}</div>
             </div>
           </div>
-          <div style="font-size:11px;color:#B2BEC3;margin-bottom:12px;word-break:break-all;">ID: ${p.id}</div>
+          <div style="font-size:11px;color:#B2BEC3;margin-bottom:4px;word-break:break-all;">ID: ${p.id}</div>
+          ${linkCodes.length ? `<div style="font-size:11px;color:#6C5CE7;margin-bottom:12px;">Tip link: <code>${linkCodes.join(', ')}</code></div>` : '<div style="margin-bottom:12px;"></div>'}
           <div style="display:flex;gap:8px;">
-            <button class="small-btn" onclick="openTipV5('${p.id}')" style="background:#6C5CE7;color:white;flex:1;">V5 Tip Flow →</button>
+            <button class="small-btn" onclick="openTipV5('${v5Code}')" style="background:#6C5CE7;color:white;flex:1;">V5 Tip Flow →</button>
             <button class="small-btn" onclick="openTipSPA('${p.id}')" style="flex:1;">SPA Tip</button>
           </div>
         </div>`;
