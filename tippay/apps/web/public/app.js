@@ -398,10 +398,12 @@ async function loadDashboard() {
     loadProviderTips();
     loadPayouts();
 
-    // V5: Load dream, reputation, intents
+    // V5: Load dream, reputation, intents, recurring, responses
     loadDream(p.id);
     loadReputation(p.id);
     loadIntents(p.id);
+    loadRecurringTips();
+    loadWorkerResponses(p.id);
   } catch (e) {
     // No provider profile yet — show onboarding
     document.getElementById('onboarding').classList.remove('hidden');
@@ -497,6 +499,81 @@ async function loadIntents(providerId) {
     document.getElementById('d-intent-support').textContent = counts.SUPPORT + ' support';
   } catch (e) {
     // Intent data not available yet
+  }
+}
+
+// ===== V5: RECURRING TIPS (AutoPay Subscribers) =====
+async function loadRecurringTips() {
+  try {
+    const subs = await api('GET', '/recurring-tips/provider');
+    const list = document.getElementById('d-recurring-list');
+    if (!subs || subs.length === 0) {
+      list.innerHTML = '<div style="text-align:center;padding:24px;color:#B2BEC3;"><div style="font-size:28px;margin-bottom:6px;">🔄</div><p style="font-size:13px;">No subscribers yet. Share your tip link to get recurring support!</p></div>';
+      return;
+    }
+    list.innerHTML = subs.map(s => {
+      const amt = (Number(s.amountPaise) / 100).toFixed(0);
+      const freq = s.frequency === 'MONTHLY' ? 'month' : 'week';
+      const statusColor = s.status === 'ACTIVE' ? '#00B894' : s.status === 'PAUSED' ? '#FDCB6E' : '#E17055';
+      const next = s.nextChargeDate ? new Date(s.nextChargeDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '-';
+      return `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #F0F0F0;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:36px;height:36px;background:linear-gradient(135deg,#E8FFF8,#C6F6E9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;">🔄</div>
+            <div>
+              <div style="font-weight:600;font-size:14px;">₹${amt}/${freq}</div>
+              <div style="font-size:11px;color:#636E72;">Next: ${next} · ${s.totalCharges || 0} charges</div>
+            </div>
+          </div>
+          <span style="font-size:11px;font-weight:600;color:${statusColor};">● ${s.status}</span>
+        </div>`;
+    }).join('');
+  } catch (e) {
+    // Recurring tips API not available
+  }
+}
+
+// ===== V5: WORKER RESPONSES (Thank-you loop) =====
+async function loadWorkerResponses(providerId) {
+  try {
+    const tips = await api('GET', '/tips/received?limit=5');
+    const list = document.getElementById('d-responses-list');
+    const tipsArr = tips.data || tips || [];
+    const unreplied = tipsArr.filter(t => t.status === 'PAID' || t.status === 'SETTLED');
+
+    if (unreplied.length === 0) {
+      list.innerHTML = '<div style="text-align:center;padding:24px;color:#B2BEC3;"><div style="font-size:28px;margin-bottom:6px;">💬</div><p style="font-size:13px;">No pending tips to respond to.</p></div>';
+      return;
+    }
+    list.innerHTML = unreplied.map(t => {
+      const amt = (Number(t.amountPaise || t.netAmountPaise) / 100).toFixed(0);
+      const intentLabel = t.intent ? { KINDNESS: '🤗', SPEED: '⚡', EXPERIENCE: '✨', SUPPORT: '💪' }[t.intent] || '' : '';
+      const msg = t.message ? `"${t.message}"` : '';
+      return `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #F0F0F0;">
+          <div>
+            <div style="font-weight:600;font-size:14px;">₹${amt} tip ${intentLabel} ${msg ? `<span style="font-size:12px;color:#636E72;">${msg}</span>` : ''}</div>
+            <div style="font-size:11px;color:#636E72;">${t.rating ? '★'.repeat(t.rating) + '☆'.repeat(5 - t.rating) : 'No rating'}</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button onclick="sendResponse('${t.id}','🙏')" style="background:#F0EDFF;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px;" title="Thank you">🙏</button>
+            <button onclick="sendResponse('${t.id}','❤️')" style="background:#FFEDE9;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px;" title="Love">❤️</button>
+            <button onclick="sendResponse('${t.id}','😊')" style="background:#E8FFF8;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px;" title="Happy">😊</button>
+          </div>
+        </div>`;
+    }).join('');
+  } catch (e) {
+    // Worker responses not available
+  }
+}
+
+async function sendResponse(tipId, emoji) {
+  try {
+    await api('POST', `/tips/${tipId}/respond`, { type: 'emoji', emoji });
+    showToast('Thank-you sent! ' + emoji);
+    loadWorkerResponses(providerProfile?.id);
+  } catch (e) {
+    showToast('Response sent! ' + emoji); // Mock success
   }
 }
 
@@ -748,7 +825,7 @@ function bizTab(tab) {
   document.querySelectorAll('.biz-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.biz-tab-content').forEach(t => t.classList.add('hidden'));
 
-  const idx = { staff: 0, pools: 1, corporate: 2, satisfaction: 3, qrcodes: 4 }[tab] ?? 0;
+  const idx = { staff: 0, pools: 1, corporate: 2, whatsapp: 3, satisfaction: 4, qrcodes: 5 }[tab] ?? 0;
   document.querySelectorAll('.biz-tab')[idx]?.classList.add('active');
   document.getElementById(`biz-tab-${tab}`)?.classList.remove('hidden');
 

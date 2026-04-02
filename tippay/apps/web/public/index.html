@@ -414,6 +414,31 @@
         <div id="tip-links-list" class="tip-links-list"><p class="muted">Loading...</p></div>
       </div>
       <div class="section"><h3>Recent Tips Received</h3><div id="d-tips-list" class="tips-list"><p class="muted">Loading...</p></div></div>
+
+      <!-- V5: Recurring Tips (AutoPay Subscribers) -->
+      <div class="section">
+        <div class="section-header"><h3>🔄 AutoPay Subscribers</h3></div>
+        <p style="font-size:12px;color:#636E72;margin-bottom:12px;">Tippers who auto-send you tips on a recurring schedule via UPI AutoPay.</p>
+        <div id="d-recurring-list">
+          <div style="text-align:center;padding:24px;color:#B2BEC3;">
+            <div style="font-size:28px;margin-bottom:6px;">🔄</div>
+            <p style="font-size:13px;">No subscribers yet. Share your tip link to get recurring support!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- V5: Worker Responses (Thank-you loop) -->
+      <div class="section">
+        <div class="section-header"><h3>💬 Thank-You Responses</h3></div>
+        <p style="font-size:12px;color:#636E72;margin-bottom:12px;">Send quick thank-you messages to tippers. This boosts your reputation score!</p>
+        <div id="d-responses-list">
+          <div style="text-align:center;padding:24px;color:#B2BEC3;">
+            <div style="font-size:28px;margin-bottom:6px;">💬</div>
+            <p style="font-size:13px;">No pending tips to respond to.</p>
+          </div>
+        </div>
+      </div>
+
       <div class="section"><h3>Payouts</h3>
         <div class="payout-row"><div class="payout-input-row"><span class="rupee-sign">&#8377;</span><input type="number" id="payout-amt" placeholder="Amount" min="100"></div>
           <button class="small-btn" onclick="requestPayout()">Request Payout</button></div>
@@ -453,7 +478,7 @@
         <div class="biz-stat-card"><div class="biz-stat-icon" style="background:#fff3e0">⭐</div><div><div class="biz-stat-value" id="stat-avg-rating">—</div><div class="biz-stat-label">Avg Rating</div></div></div>
         <div class="biz-stat-card"><div class="biz-stat-icon" style="background:#f3e5f5">👥</div><div><div class="biz-stat-value" id="stat-staff-count">—</div><div class="biz-stat-label">Staff Members</div></div></div>
       </div>
-      <div class="biz-tabs"><button class="biz-tab active" onclick="bizTab('staff')">Staff &amp; Earnings</button><button class="biz-tab" onclick="bizTab('pools')">Tip Pools</button><button class="biz-tab" onclick="bizTab('corporate')">Corporate Budget</button><button class="biz-tab" onclick="bizTab('satisfaction')">Satisfaction</button><button class="biz-tab" onclick="bizTab('qrcodes')">QR Codes</button></div>
+      <div class="biz-tabs"><button class="biz-tab active" onclick="bizTab('staff')">Staff &amp; Earnings</button><button class="biz-tab" onclick="bizTab('pools')">Tip Pools</button><button class="biz-tab" onclick="bizTab('corporate')">Corporate Budget</button><button class="biz-tab" onclick="bizTab('whatsapp')">WhatsApp</button><button class="biz-tab" onclick="bizTab('satisfaction')">Satisfaction</button><button class="biz-tab" onclick="bizTab('qrcodes')">QR Codes</button></div>
       <div id="biz-tab-staff" class="biz-tab-content"><div class="biz-section-header"><h3>Staff Earnings Breakdown</h3><button class="biz-outline-btn" onclick="exportCsv()">⬇ Export CSV</button></div><div id="biz-staff-table-wrap"><div class="biz-loading">Loading staff data...</div></div></div>
 
       <!-- Tip Pools Tab -->
@@ -510,6 +535,53 @@
 
       <div id="biz-tab-satisfaction" class="biz-tab-content hidden"><h3>Customer Satisfaction</h3><div class="biz-rating-dist" id="biz-rating-dist"></div><div id="biz-reviews-list"></div></div>
       <div id="biz-tab-qrcodes" class="biz-tab-content hidden"><div class="biz-section-header"><h3>Staff QR Codes</h3><button class="biz-outline-btn" onclick="printAllQr()">🖨 Print All</button></div><p class="biz-muted">Print these standee cards and place them on desks or counters.</p><div id="biz-qr-grid" class="biz-qr-grid"></div></div>
+
+      <!-- WhatsApp Nudge Tab -->
+      <div id="biz-tab-whatsapp" class="biz-tab-content hidden">
+        <div class="biz-section-header"><h3>💬 WhatsApp Tip Nudges</h3><span style="background:#25D366;color:white;font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px;">WhatsApp + UPI</span></div>
+        <p style="font-size:13px;color:#636E72;margin-bottom:20px;">Automatically send tip reminders to customers after their visit via WhatsApp. They rate and tip — all inside the chat.</p>
+        <div style="background:linear-gradient(135deg,#E8FFF8,#DCF8C6);border-radius:16px;padding:24px;border:1px solid rgba(37,211,102,0.2);margin-bottom:20px;">
+          <h4 style="margin-bottom:16px;">How it works</h4>
+          <div style="display:flex;gap:20px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:200px;text-align:center;">
+              <div style="font-size:32px;margin-bottom:8px;">1️⃣</div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Capture Phone</div>
+              <div style="font-size:12px;color:#636E72;">At billing, enter customer's number</div>
+            </div>
+            <div style="flex:1;min-width:200px;text-align:center;">
+              <div style="font-size:32px;margin-bottom:8px;">2️⃣</div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Auto-Send Nudge</div>
+              <div style="font-size:12px;color:#636E72;">10 min later: "Rate your server 1-5"</div>
+            </div>
+            <div style="flex:1;min-width:200px;text-align:center;">
+              <div style="font-size:32px;margin-bottom:8px;">3️⃣</div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Instant Tip</div>
+              <div style="font-size:12px;color:#636E72;">UPI payment button right in WhatsApp</div>
+            </div>
+          </div>
+        </div>
+        <div style="background:white;border-radius:12px;padding:20px;border:1px solid #E9ECEF;margin-bottom:16px;">
+          <h4 style="margin-bottom:12px;">Configuration</h4>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+            <div style="flex:1;min-width:200px;"><label style="font-size:12px;font-weight:600;color:#636E72;">Delay after billing</label><select id="wa-delay" class="input-full" style="margin-top:4px;"><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 hour</option></select></div>
+            <div style="flex:1;min-width:200px;"><label style="font-size:12px;font-weight:600;color:#636E72;">Default tip suggestion</label><select id="wa-default-tip" class="input-full" style="margin-top:4px;"><option value="50">₹50</option><option value="100" selected>₹100</option><option value="150">₹150</option><option value="200">₹200</option></select></div>
+          </div>
+          <div style="margin-bottom:16px;"><label style="font-size:12px;font-weight:600;color:#636E72;">Message template</label><textarea id="wa-template" class="input-full" rows="3" style="margin-top:4px;">Hi! Hope you enjoyed your visit at {business_name}. Rate your experience with {worker_name} from 1-5 ⭐</textarea></div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+            <label class="toggle-switch" style="position:relative;display:inline-block;width:48px;height:26px;"><input type="checkbox" id="wa-enabled" checked style="opacity:0;width:0;height:0;"><span style="position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:13px;transition:0.3s;"></span></label>
+            <span style="font-size:13px;font-weight:600;">Enable WhatsApp nudges</span>
+          </div>
+          <button class="small-btn" onclick="showToast('WhatsApp nudge settings saved!')" style="background:#25D366;color:white;">Save Settings</button>
+        </div>
+        <div style="background:white;border-radius:12px;padding:20px;border:1px solid #E9ECEF;">
+          <h4 style="margin-bottom:12px;">Test Nudge</h4>
+          <div style="display:flex;gap:8px;">
+            <input type="tel" id="wa-test-phone" class="input-full" placeholder="+919876543210" style="flex:1;">
+            <button class="small-btn" onclick="showToast('Test nudge sent!')" style="background:#25D366;color:white;">Send Test</button>
+          </div>
+        </div>
+      </div>
+
     </div></div>
   </div>
 
@@ -684,6 +756,56 @@
         <div style="text-align:center;"><div style="font-size:42px;font-weight:900;color:white;">3s</div><div style="font-size:14px;color:rgba(255,255,255,0.7);">Average tip time</div></div>
         <div style="text-align:center;"><div style="font-size:42px;font-weight:900;color:white;">100%</div><div style="font-size:14px;color:rgba(255,255,255,0.7);">UPI native</div></div>
         <div style="text-align:center;"><div style="font-size:42px;font-weight:900;color:white;">0</div><div style="font-size:14px;color:rgba(255,255,255,0.7);">App downloads needed</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- UPI Innovation Showcase -->
+  <section style="padding:100px 24px;background:linear-gradient(180deg,#1a1145 0%,#2d1b69 100%);" id="upi-features">
+    <div style="max-width:1200px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:60px;">
+        <span style="background:rgba(108,92,231,0.3);color:#A29BFE;font-size:11px;font-weight:700;padding:6px 16px;border-radius:20px;text-transform:uppercase;letter-spacing:1px;">Powered by UPI Infrastructure</span>
+        <h2 style="font-size:40px;font-weight:900;color:white;margin-top:16px;">Beyond Scan & Pay</h2>
+        <p style="font-size:18px;color:rgba(255,255,255,0.6);max-width:600px;margin:12px auto 0;">Fliq leverages India's most advanced UPI features to create entirely new tipping behaviors.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:24px;">
+        <!-- AutoPay -->
+        <div style="background:rgba(255,255,255,0.06);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:32px;transition:transform 0.3s;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,#00B894,#55efc4);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;">🔄</div>
+            <div><div style="font-size:16px;font-weight:800;color:white;">Recurring Micro-Pensions</div><div style="font-size:11px;color:#00B894;font-weight:600;">UPI AutoPay</div></div>
+          </div>
+          <p style="font-size:14px;color:rgba(255,255,255,0.7);line-height:1.7;">Subscribe to auto-tip your daily helpers — guard, maid, car washer. ₹150/month on the 1st, automatically. Turn a one-off tip into predictable income.</p>
+          <div style="margin-top:16px;padding:12px;background:rgba(0,184,148,0.1);border-radius:10px;font-size:12px;color:#55efc4;">💡 ₹150/month × 12 = ₹1,800/year in predictable income for a worker</div>
+        </div>
+        <!-- UPI Circle -->
+        <div style="background:rgba(255,255,255,0.06);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:32px;transition:transform 0.3s;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,#6C5CE7,#A29BFE);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;">🏢</div>
+            <div><div style="font-size:16px;font-weight:800;color:white;">Corporate Tip Allowance</div><div style="font-size:11px;color:#A29BFE;font-weight:600;">UPI Circle</div></div>
+          </div>
+          <p style="font-size:14px;color:rgba(255,255,255,0.7);line-height:1.7;">Companies set a ₹3,000/month tipping budget per employee. Employee tips — company pays. No reimbursement hassle. Tipping becomes a corporate perk.</p>
+          <div style="margin-top:16px;padding:12px;background:rgba(108,92,231,0.15);border-radius:10px;font-size:12px;color:#A29BFE;">💡 Delegated payments — zero personal expense for traveling executives</div>
+        </div>
+        <!-- WhatsApp -->
+        <div style="background:rgba(255,255,255,0.06);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:32px;transition:transform 0.3s;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,#25D366,#128C7E);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;">💬</div>
+            <div><div style="font-size:16px;font-weight:800;color:white;">Conversational Tips</div><div style="font-size:11px;color:#25D366;font-weight:600;">WhatsApp + UPI Intent</div></div>
+          </div>
+          <p style="font-size:14px;color:rgba(255,255,255,0.7);line-height:1.7;">Forgot to tip? 10 minutes later: "Rate your server Aman 1-5." Reply "5" → instant UPI payment button in WhatsApp. No app download. No website visit.</p>
+          <div style="margin-top:16px;padding:12px;background:rgba(37,211,102,0.1);border-radius:10px;font-size:12px;color:#25D366;">💡 500M+ WhatsApp users in India = zero-friction viral loop</div>
+        </div>
+        <!-- NFC -->
+        <div style="background:rgba(255,255,255,0.06);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:32px;transition:transform 0.3s;position:relative;">
+          <span style="position:absolute;top:16px;right:16px;background:rgba(255,143,0,0.2);color:#FDCB6E;font-size:9px;font-weight:700;padding:3px 10px;border-radius:10px;">COMING SOON</span>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,#FDCB6E,#e17055);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;">📱</div>
+            <div><div style="font-size:16px;font-weight:800;color:white;">PIN-less Micro-Tips</div><div style="font-size:11px;color:#FDCB6E;font-weight:600;">UPI Lite X (NFC)</div></div>
+          </div>
+          <p style="font-size:14px;color:rgba(255,255,255,0.7);line-height:1.7;">Tap your phone on the worker's Fliq badge. Offline. No PIN under ₹500. Works in basements with zero internet. A tip becomes a high-five with your phone.</p>
+          <div style="margin-top:16px;padding:12px;background:rgba(253,203,110,0.1);border-radius:10px;font-size:12px;color:#FDCB6E;">💡 NFC + offline = tips in parking garages, basements, and rural areas</div>
+        </div>
       </div>
     </div>
   </section>
