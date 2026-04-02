@@ -513,7 +513,7 @@
         <div class="biz-stat-card"><div class="biz-stat-icon" style="background:#fff3e0">⭐</div><div><div class="biz-stat-value" id="stat-avg-rating">—</div><div class="biz-stat-label">Avg Rating</div></div></div>
         <div class="biz-stat-card"><div class="biz-stat-icon" style="background:#f3e5f5">👥</div><div><div class="biz-stat-value" id="stat-staff-count">—</div><div class="biz-stat-label">Staff Members</div></div></div>
       </div>
-      <div class="biz-tabs"><button class="biz-tab active" onclick="bizTab('staff')">Staff &amp; Earnings</button><button class="biz-tab" onclick="bizTab('pools')">Tip Pools</button><button class="biz-tab" onclick="bizTab('corporate')">Corporate Budget</button><button class="biz-tab" onclick="bizTab('whatsapp')">WhatsApp</button><button class="biz-tab" onclick="bizTab('satisfaction')">Satisfaction</button><button class="biz-tab" onclick="bizTab('qrcodes')">QR Codes</button></div>
+      <div class="biz-tabs"><button class="biz-tab active" onclick="bizTab('staff')">Staff &amp; Earnings</button><button class="biz-tab" onclick="bizTab('pools')">Tip Pools</button><button class="biz-tab" onclick="bizTab('satisfaction')">Satisfaction</button><button class="biz-tab" onclick="bizTab('qrcodes')">QR Codes</button></div>
       <div id="biz-tab-staff" class="biz-tab-content"><div class="biz-section-header"><h3>Staff Earnings Breakdown</h3><button class="biz-outline-btn" onclick="exportCsv()">⬇ Export CSV</button></div><div id="biz-staff-table-wrap"><div class="biz-loading">Loading staff data...</div></div></div>
 
       <!-- Tip Pools Tab -->
@@ -694,6 +694,7 @@
       <div class="nav-links-desktop" style="display:flex;align-items:center;gap:24px;">
         <a href="#pillars" class="nav-text-link" style="color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;">Features</a>
         <a href="#how" class="nav-text-link" style="color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;">How it Works</a>
+        <a href="javascript:void(0)" onclick="goTo('tipper-demo')" class="nav-text-link" style="background:#FF6B6B;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;">🧪 Demo</a>
         <a href="javascript:void(0)" onclick="goTo('login')" style="background:var(--pri);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;">Login</a>
         <a href="javascript:void(0)" onclick="goToBusiness()" style="background:linear-gradient(135deg,#00B894,#00A381);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;">🏢 Business</a>
       </div>
