@@ -13,10 +13,11 @@ export class EmailService {
     const pass = this.config.get<string>('SMTP_PASS');
 
     if (host && user && pass) {
+      const port = parseInt(this.config.get<string>('SMTP_PORT', '465'), 10);
       this.transporter = nodemailer.createTransport({
         host,
-        port: this.config.get<number>('SMTP_PORT', 465),
-        secure: this.config.get<number>('SMTP_PORT', 465) === 465,
+        port,
+        secure: port === 465,
         auth: { user, pass },
       });
       this.logger.log(`Email service configured: ${user} via ${host}`);

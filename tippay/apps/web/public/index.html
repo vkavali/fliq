@@ -187,9 +187,11 @@
       .phone-mockup { width: 240px; height: 480px; }
       .phone-float { display: none; }
       .section-title { font-size: 28px; }
-      .nav-links a:not(.nav-cta) { display: none; }
       .stats-banner { padding: 32px 20px; }
       .stat-number { font-size: 32px; }
+      .nav-text-link { display: none !important; }
+      .nav-links-desktop { gap: 8px !important; }
+      .nav-inner { padding: 0 12px !important; }
     }
   </style>
 </head>
@@ -684,16 +686,16 @@
   <nav class="nav" style="position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.92);backdrop-filter:blur(16px);border-bottom:1px solid rgba(0,0,0,0.06);">
     <div class="nav-inner" style="max-width:1200px;margin:0 auto;padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;">
       <div class="nav-brand" style="display:flex;align-items:center;gap:10px;">
-        <img src="logo-full.png" alt="Fliq" style="height:44px;">
-        <span style="background:var(--green);color:white;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;">V5</span>
+        <a href="javascript:void(0)" onclick="goTo('landing')" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+          <img src="logo-full.png" alt="Fliq" style="height:44px;">
+          <span style="background:var(--green);color:white;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;">V5</span>
+        </a>
       </div>
-      <div style="display:flex;align-items:center;gap:24px;">
-        <a href="#pillars" style="color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;">Features</a>
-        <a href="#how" style="color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;">How it Works</a>
-        <a href="#tip" style="color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;">Tip Now</a>
-        <a href="javascript:void(0)" onclick="goTo('tipper-demo')" style="background:#FF6B6B;color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;">🧪 Tipper Demo</a>
-        <a href="javascript:void(0)" onclick="goTo('login')" style="background:var(--pri);color:white;border:none;border-radius:8px;padding:8px 20px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;">Provider Login</a>
-        <a href="javascript:void(0)" onclick="goToBusiness()" style="background:linear-gradient(135deg,#00B894,#00A381);color:white;border:none;border-radius:8px;padding:8px 20px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;">🏢 Business</a>
+      <div class="nav-links-desktop" style="display:flex;align-items:center;gap:24px;">
+        <a href="#pillars" class="nav-text-link" style="color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;">Features</a>
+        <a href="#how" class="nav-text-link" style="color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;">How it Works</a>
+        <a href="javascript:void(0)" onclick="goTo('login')" style="background:var(--pri);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;">Login</a>
+        <a href="javascript:void(0)" onclick="goToBusiness()" style="background:linear-gradient(135deg,#00B894,#00A381);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;">🏢 Business</a>
       </div>
     </div>
   </nav>
@@ -895,7 +897,7 @@
       </div>
       <p style="color:rgba(255,255,255,0.4);font-size:14px;margin-bottom:20px;">Built for India. UPI-native. Zero friction.</p>
       <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;">
-        <a href="javascript:void(0)" onclick="goTo('login')" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">Provider Login</a>
+        <a href="javascript:void(0)" onclick="goTo('login')" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">Login</a>
         <a href="#pillars" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">Features</a>
         <a href="#how" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">How it Works</a>
         <a href="/api/docs" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">API Docs</a>

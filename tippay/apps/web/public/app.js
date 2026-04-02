@@ -23,6 +23,10 @@ function goTo(page) {
   document.getElementById('invite-modal')?.classList.add('hidden');
   // Load tipper demo data when navigating to it
   if (page === 'tipper-demo') loadTipperDemo();
+  // Reset business login form when navigating to it
+  if (page === 'business-login') resetBizLoginForm();
+  // Reset provider login form when navigating to it
+  if (page === 'login') { showPhoneStep(); hideAuthErr(); }
 }
 
 function demoCust() {
@@ -371,15 +375,17 @@ function hideAuthErr() { document.getElementById('auth-error').classList.add('hi
 
 function logout() {
   token = null; user = null; providerProfile = null;
+  pendingRedirect = null;
   localStorage.removeItem('tp_token');
   localStorage.removeItem('tp_refresh');
   localStorage.removeItem('tp_user');
-  goTo('landing');
   // Reset auth forms
   document.getElementById('phone-step').classList.remove('hidden');
   document.getElementById('otp-step').classList.add('hidden');
   document.getElementById('phone').value = '';
-  document.querySelectorAll('.otp-box').forEach(b => b.value = '');
+  document.querySelectorAll('#login-page .otp-box').forEach(b => b.value = '');
+  resetBizLoginForm();
+  goTo('landing');
 }
 
 // ===== DASHBOARD =====
@@ -832,6 +838,15 @@ function showBizEmailStep() {
   document.getElementById('biz-otp-step').classList.add('hidden');
   document.getElementById('biz-email-step').classList.remove('hidden');
   hideAuthErr();
+}
+
+function resetBizLoginForm() {
+  document.getElementById('biz-email-step')?.classList.remove('hidden');
+  document.getElementById('biz-otp-step')?.classList.add('hidden');
+  const emailInput = document.getElementById('biz-email');
+  if (emailInput) emailInput.value = '';
+  document.querySelectorAll('#biz-otp-row .otp-box').forEach(b => b.value = '');
+  document.getElementById('biz-auth-error')?.classList.add('hidden');
 }
 
 async function registerBusiness(e) {
