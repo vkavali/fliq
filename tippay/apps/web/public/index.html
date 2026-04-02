@@ -271,12 +271,14 @@
   <!-- ==================== PROVIDER LOGIN ==================== -->
   <div id="login-page" class="page hidden">
     <div class="auth-box">
+      <a onclick="goTo('landing')" style="display:inline-flex;align-items:center;gap:6px;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;margin-bottom:16px;text-decoration:none;">← Back to Home</a>
       <div class="brand">
         <img src="logo-full.png" alt="Fliq" class="brand-logo">
-        <p class="brand-sub">Provider Dashboard</p>
+        <p class="brand-sub" style="font-size:14px;color:var(--text2);margin-top:8px;">For Service Providers & Tippers</p>
       </div>
       <div id="phone-step">
-        <h3>Login with Phone</h3>
+        <h3 style="margin-bottom:4px;">Login with Phone</h3>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:16px;">Verify your phone → Set your dream → Share QR → Receive tips</p>
         <div class="phone-input-row">
           <span class="prefix">+91</span>
           <input type="tel" id="phone" placeholder="9876543210" maxlength="10">
@@ -299,18 +301,23 @@
         <button class="link-btn" onclick="showPhoneStep()">Change number</button>
       </div>
       <div id="auth-error" class="error-box hidden"></div>
+      <div style="border-top:1px solid var(--border);margin-top:20px;padding-top:16px;text-align:center;">
+        <p style="font-size:12px;color:var(--text2);">Are you a business owner? <a onclick="goTo('business-login')" style="color:var(--purple);font-weight:700;cursor:pointer;">Business Login →</a></p>
+      </div>
     </div>
   </div>
 
   <!-- ==================== BUSINESS LOGIN ==================== -->
   <div id="business-login-page" class="page hidden">
     <div class="auth-box">
+      <a onclick="goTo('landing')" style="display:inline-flex;align-items:center;gap:6px;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;margin-bottom:16px;text-decoration:none;">← Back to Home</a>
       <div class="brand">
         <img src="logo-full.png" alt="Fliq" class="brand-logo">
-        <p class="brand-sub">Business Access</p>
+        <p class="brand-sub" style="font-size:14px;color:var(--text2);margin-top:8px;">Fliq for Business</p>
       </div>
       <div id="biz-email-step">
-        <h3>Login with Email</h3>
+        <h3 style="margin-bottom:4px;">Login with Email</h3>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:16px;">Manage your team's tips, view earnings, and generate QR codes</p>
         <div class="phone-input-row">
           <span class="prefix">✉</span>
           <input type="email" id="biz-email" placeholder="manager@hotel.com">
@@ -332,6 +339,9 @@
         <button class="link-btn" onclick="showBizEmailStep()">Change email</button>
       </div>
       <div id="biz-auth-error" class="error-box hidden"></div>
+      <div style="border-top:1px solid var(--border);margin-top:20px;padding-top:16px;text-align:center;">
+        <p style="font-size:12px;color:var(--text2);">Are you a service provider? <a onclick="goTo('login')" style="color:var(--purple);font-weight:700;cursor:pointer;">Provider Login →</a></p>
+      </div>
     </div>
   </div>
 
@@ -785,7 +795,7 @@
         <h1 style="font-size:56px;font-weight:900;color:white;line-height:1.08;margin-bottom:20px;letter-spacing:-1px;">Every tip tells a <span style="background:linear-gradient(135deg,#FDCB6E,#00B894);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">story</span></h1>
         <p style="font-size:19px;color:rgba(255,255,255,0.8);line-height:1.7;margin-bottom:36px;">Fliq transforms tipping from a transaction into meaningful appreciation. Workers define dreams, tippers see impact, trust is portable — all on UPI, zero friction.</p>
         <div style="display:flex;gap:14px;flex-wrap:wrap;">
-          <a href="#tip" style="padding:16px 32px;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;text-decoration:none;background:white;color:var(--pri);box-shadow:0 4px 24px rgba(0,0,0,0.15);display:inline-flex;align-items:center;gap:8px;">Tip Someone Now →</a>
+          <a href="javascript:void(0)" onclick="goTo('tipper-demo')" style="padding:16px 32px;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;text-decoration:none;background:white;color:var(--pri);box-shadow:0 4px 24px rgba(0,0,0,0.15);display:inline-flex;align-items:center;gap:8px;">Try Demo →</a>
           <a href="#pillars" style="padding:16px 32px;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;text-decoration:none;background:transparent;color:white;border:2px solid rgba(255,255,255,0.3);display:inline-flex;align-items:center;gap:8px;">See What's New</a>
         </div>
       </div>
