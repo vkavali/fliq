@@ -936,8 +936,8 @@ async function loadBizStaff() {
     const rows = staff.map(m => {
       const p = m.provider || {};
       const prof = p.providerProfile || {};
-      const name = prof.displayName || p.name || 'Unknown';
-      const phone = (p.phone || '').replace(/(\d{6})(\d{4})$/, '••••••$2');
+      const name = prof.displayName || p.name || (p.email ? p.email.split('@')[0] : 'Staff Member');
+      const contact = p.phone ? p.phone.replace(/(\d{6})(\d{4})$/, '••••••$2') : (p.email || '');
       const tips = m.tips || {};
       const rating = tips.averageRating ? Number(tips.averageRating).toFixed(1) : '—';
       const roleColor = { ADMIN: '#e53935', MANAGER: '#1565c0', STAFF: '#555' }[m.role] || '#555';
@@ -948,7 +948,7 @@ async function loadBizStaff() {
               <div class="staff-avatar">${name[0]?.toUpperCase() || '?'}</div>
               <div>
                 <strong>${name}</strong>
-                <div class="staff-phone">${phone}</div>
+                <div class="staff-phone">${contact}</div>
               </div>
             </div>
           </td>
@@ -1131,18 +1131,23 @@ function toast(msg) {
 
 // ===== OTP Box Navigation =====
 document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.otp-box').forEach((box, i, all) => {
-    box.addEventListener('input', () => { if (box.value && i < 5) all[i + 1].focus(); });
-    box.addEventListener('keydown', e => { if (e.key === 'Backspace' && !box.value && i > 0) all[i - 1].focus(); });
-    box.addEventListener('paste', e => {
-      e.preventDefault();
-      const txt = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-      txt.split('').forEach((c, j) => { if (all[j]) all[j].value = c; });
+  // Scope OTP auto-tab per row so provider and business OTP boxes don't interfere
+  document.querySelectorAll('.otp-row, #otp-step').forEach(row => {
+    const boxes = row.querySelectorAll('.otp-box');
+    boxes.forEach((box, i) => {
+      box.addEventListener('input', () => { if (box.value && i < boxes.length - 1) boxes[i + 1].focus(); });
+      box.addEventListener('keydown', e => { if (e.key === 'Backspace' && !box.value && i > 0) boxes[i - 1].focus(); });
+      box.addEventListener('paste', e => {
+        e.preventDefault();
+        const txt = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+        txt.split('').forEach((c, j) => { if (boxes[j]) boxes[j].value = c; });
+        if (txt.length >= boxes.length) boxes[boxes.length - 1].focus();
+      });
     });
   });
 
-  document.getElementById('phone').addEventListener('keydown', e => { if (e.key === 'Enter') sendOtp(); });
-  document.getElementById('demo-provider-id').addEventListener('keydown', e => { if (e.key === 'Enter') goTipPage(); });
+  document.getElementById('phone')?.addEventListener('keydown', e => { if (e.key === 'Enter') sendOtp(); });
+  document.getElementById('biz-email')?.addEventListener('keydown', e => { if (e.key === 'Enter') sendBizOtp(); });
 
   checkRoute();
 });

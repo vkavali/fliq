@@ -215,8 +215,9 @@ export class AuthService {
       this.logger.warn(`[DEV BYPASS] Accepting magic OTP for ${email}`);
       let user = await this.prisma.user.findUnique({ where: { email } });
       if (!user) {
+        const emailName = email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
         user = await this.prisma.user.create({
-          data: { email, type: 'BUSINESS_ADMIN' as any, status: 'ACTIVE' },
+          data: { email, name: emailName, type: 'BUSINESS_ADMIN' as any, status: 'ACTIVE' },
         });
       }
       const accessToken = this.generateAccessToken(user.id, user.type as UserType);
@@ -245,9 +246,12 @@ export class AuthService {
 
     let user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
+      // Derive a display name from the email prefix (e.g. "venkatesh" from "venkatesh@hotel.com")
+      const emailName = email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
       user = await this.prisma.user.create({
         data: {
           email,
+          name: emailName,
           type: UserType.BUSINESS_ADMIN,
           status: 'ACTIVE',
         },

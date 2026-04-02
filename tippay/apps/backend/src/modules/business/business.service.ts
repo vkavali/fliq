@@ -68,6 +68,7 @@ export class BusinessService {
                 id: true,
                 name: true,
                 phone: true,
+                email: true,
                 providerProfile: {
                   select: {
                     displayName: true,
@@ -302,6 +303,7 @@ export class BusinessService {
             id: true,
             name: true,
             phone: true,
+            email: true,
             providerProfile: {
               select: {
                 displayName: true,
