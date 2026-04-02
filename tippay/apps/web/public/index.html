@@ -106,17 +106,35 @@
     .pillars-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
     .pillar {
       background: white; border-radius: 20px; padding: 36px 28px; position: relative;
-      overflow: hidden; transition: all 0.3s; border: 1px solid var(--border);
+      overflow: hidden; transition: all 0.35s cubic-bezier(0.4,0,0.2,1); border: 1px solid var(--border);
+      border-left: 4px solid var(--border);
     }
-    .pillar:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--pri-light); }
+    .pillar:hover { transform: translateY(-6px); box-shadow: 0 20px 60px rgba(108,92,231,0.12); }
     .pillar-icon { font-size: 40px; margin-bottom: 16px; }
     .pillar-tag { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
     .pillar h3 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
     .pillar p { font-size: 14px; color: var(--text2); line-height: 1.7; }
+    .pillar-dream { border-left-color: var(--pri); }
     .pillar-dream .pillar-tag { background: #F0EDFF; color: var(--pri); }
+    .pillar-intent { border-left-color: #FF8F00; }
     .pillar-intent .pillar-tag { background: #FFF8E1; color: #FF8F00; }
+    .pillar-reputation { border-left-color: var(--green); }
     .pillar-reputation .pillar-tag { background: #E8FFF8; color: var(--green); }
+    .pillar-impact { border-left-color: #E17055; }
     .pillar-impact .pillar-tag { background: #FFEDE9; color: #E17055; }
+
+    /* Floating animation for phone mockup */
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+    .phone-float-anim { animation: float 4s ease-in-out infinite; }
+
+    /* Premium card hover for inline cards */
+    .premium-card {
+      transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+    }
+    .premium-card:hover {
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+    }
 
     /* How it works */
     .steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
@@ -721,19 +739,19 @@
   <!-- ==================== TIPPER DEMO (TESTING ONLY — REMOVE FOR PROD) ==================== -->
   <div id="tipper-demo-page" class="page hidden">
     <nav class="topbar"><div class="topbar-inner">
-      <div class="topbar-brand"><img src="logo-full.png" alt="Fliq" class="topbar-logo"><span style="background:#FF6B6B;color:white;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;margin-left:8px;">DEMO</span></div>
+      <div class="topbar-brand"><img src="logo-full.png" alt="Fliq" class="topbar-logo"><span style="background:var(--pri);color:white;font-size:9px;font-weight:800;padding:2px 10px;border-radius:10px;margin-left:8px;">LIVE DEMO</span></div>
       <div class="topbar-right">
-        <span style="font-size:13px;color:#636E72;">🧪 Tipper Testing Dashboard</span>
+        <span style="font-size:13px;color:#636E72;">✨ Experience the tip flow</span>
         <button class="topbar-btn" onclick="goTo('landing')">← Back</button>
       </div>
     </div></nav>
     <div class="container" style="padding-top:80px;">
-      <div style="background:linear-gradient(135deg,#FF6B6B22,#FDCB6E22);border:1px solid #FF6B6B44;border-radius:12px;padding:16px 20px;margin-bottom:24px;">
-        <p style="font-size:13px;color:#E17055;font-weight:600;">⚠️ Testing only — this page will be removed before production.</p>
+      <div style="background:linear-gradient(135deg,#F0EDFF,#E8FFF8);border:1px solid rgba(108,92,231,0.15);border-radius:14px;padding:20px 24px;margin-bottom:24px;">
+        <p style="font-size:14px;color:var(--pri);font-weight:600;">🎯 Try the full Fliq tipping experience — select a provider below to see how tippers interact with workers.</p>
       </div>
 
-      <h2 style="margin-bottom:8px;">Test the V5 Tipper Flow</h2>
-      <p style="color:#636E72;margin-bottom:24px;">Pick a provider below to open the full 6-screen tip experience.</p>
+      <h2 style="margin-bottom:8px;">Experience the Fliq V5 Flow</h2>
+      <p style="color:#636E72;margin-bottom:24px;">Pick a provider to open the full tip experience — choose amount, set intent, see dream progress, and confirm.</p>
 
       <!-- Provider Cards -->
       <div id="demo-providers" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:32px;">
@@ -780,7 +798,7 @@
       <div class="nav-links-desktop" style="display:flex;align-items:center;gap:24px;">
         <a href="#pillars" class="nav-text-link" style="color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;">Features</a>
         <a href="#how" class="nav-text-link" style="color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;">How it Works</a>
-        <a href="javascript:void(0)" onclick="goTo('tipper-demo')" class="nav-text-link" style="background:#FF6B6B;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;">🧪 Demo</a>
+        <a href="javascript:void(0)" onclick="goTo('tipper-demo')" class="nav-text-link" style="background:var(--pri-bg);color:var(--pri);border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;">✨ Demo</a>
         <a href="javascript:void(0)" onclick="goTo('login')" style="background:var(--pri);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;">Login</a>
         <a href="javascript:void(0)" onclick="goToBusiness()" style="background:linear-gradient(135deg,#00B894,#00A381);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;">🏢 Business</a>
       </div>
@@ -792,14 +810,14 @@
     <div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:80px;flex-wrap:wrap;justify-content:center;position:relative;z-index:2;">
       <div style="max-width:560px;">
         <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.15);padding:6px 16px;border-radius:24px;font-size:13px;color:rgba(255,255,255,0.9);font-weight:600;margin-bottom:24px;"><span style="width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;"></span> Human Value Infrastructure</div>
-        <h1 style="font-size:56px;font-weight:900;color:white;line-height:1.08;margin-bottom:20px;letter-spacing:-1px;">Every tip tells a <span style="background:linear-gradient(135deg,#FDCB6E,#00B894);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">story</span></h1>
+        <h1 style="font-size:56px;font-weight:900;color:white;line-height:1.08;margin-bottom:20px;letter-spacing:-1px;">Every tip tells a <span style="background:linear-gradient(135deg,#FDCB6E,#00B894);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">story</span></h1>
         <p style="font-size:19px;color:rgba(255,255,255,0.8);line-height:1.7;margin-bottom:36px;">Fliq transforms tipping from a transaction into meaningful appreciation. Workers define dreams, tippers see impact, trust is portable — all on UPI, zero friction.</p>
         <div style="display:flex;gap:14px;flex-wrap:wrap;">
           <a href="javascript:void(0)" onclick="goTo('tipper-demo')" style="padding:16px 32px;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;text-decoration:none;background:white;color:var(--pri);box-shadow:0 4px 24px rgba(0,0,0,0.15);display:inline-flex;align-items:center;gap:8px;">Try Demo →</a>
           <a href="#pillars" style="padding:16px 32px;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;text-decoration:none;background:transparent;color:white;border:2px solid rgba(255,255,255,0.3);display:inline-flex;align-items:center;gap:8px;">See What's New</a>
         </div>
       </div>
-      <div style="flex-shrink:0;position:relative;">
+      <div style="flex-shrink:0;position:relative;" class="phone-float-anim">
         <div style="width:280px;height:560px;background:#1a1a2e;border-radius:40px;box-shadow:0 40px 80px rgba(0,0,0,0.4),inset 0 0 0 3px rgba(255,255,255,0.1);padding:16px;position:relative;overflow:hidden;">
           <div style="width:100px;height:8px;background:#111;border-radius:4px;margin:8px auto 20px;"></div>
           <div style="background:white;border-radius:24px;padding:20px 16px;height:calc(100% - 40px);overflow:hidden;">
@@ -828,30 +846,30 @@
     <div style="max-width:1200px;margin:0 auto;">
       <h2 style="font-size:40px;font-weight:900;text-align:center;margin-bottom:16px;">Four Pillars of V5</h2>
       <p style="font-size:18px;color:var(--text2);text-align:center;margin-bottom:60px;max-width:640px;margin-left:auto;margin-right:auto;">Fliq isn't just tipping — it's a human value infrastructure that makes every interaction meaningful.</p>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:24px;">
-        <div style="background:white;border-radius:20px;padding:36px 28px;border:1px solid var(--border);transition:all 0.3s;">
-          <div style="font-size:40px;margin-bottom:16px;">🌟</div>
-          <span style="display:inline-block;padding:3px 12px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;background:#F0EDFF;color:var(--pri);margin-bottom:12px;">Dreams</span>
-          <h3 style="font-size:22px;font-weight:800;margin-bottom:8px;">Goal-Oriented Tipping</h3>
-          <p style="font-size:14px;color:var(--text2);line-height:1.7;">Workers define real-life dreams — a daughter's school books, a new sewing machine, a training certification. Tippers see their contribution make progress toward something real.</p>
+      <div class="pillars-grid">
+        <div class="pillar pillar-dream">
+          <div class="pillar-icon">🌟</div>
+          <span class="pillar-tag">Dreams</span>
+          <h3>Goal-Oriented Tipping</h3>
+          <p>Workers define real-life dreams — a daughter's school books, a new sewing machine, a training certification. Tippers see their contribution make progress toward something real.</p>
         </div>
-        <div style="background:white;border-radius:20px;padding:36px 28px;border:1px solid var(--border);transition:all 0.3s;">
-          <div style="font-size:40px;margin-bottom:16px;">🤗</div>
-          <span style="display:inline-block;padding:3px 12px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;background:#FFF8E1;color:#FF8F00;margin-bottom:12px;">Intent</span>
-          <h3 style="font-size:22px;font-weight:800;margin-bottom:8px;">Tips with Meaning</h3>
-          <p style="font-size:14px;color:var(--text2);line-height:1.7;">Every tip can carry intent — kindness, speed, experience, or support. Workers understand what they did well. Tippers express why they appreciated the service.</p>
+        <div class="pillar pillar-intent">
+          <div class="pillar-icon">🤗</div>
+          <span class="pillar-tag">Intent</span>
+          <h3>Tips with Meaning</h3>
+          <p>Every tip can carry intent — kindness, speed, experience, or support. Workers understand what they did well. Tippers express why they appreciated the service.</p>
         </div>
-        <div style="background:white;border-radius:20px;padding:36px 28px;border:1px solid var(--border);transition:all 0.3s;">
-          <div style="font-size:40px;margin-bottom:16px;">🏆</div>
-          <span style="display:inline-block;padding:3px 12px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;background:#E8FFF8;color:var(--green);margin-bottom:12px;">Reputation</span>
-          <h3 style="font-size:22px;font-weight:800;margin-bottom:8px;">Portable Trust Score</h3>
-          <p style="font-size:14px;color:var(--text2);line-height:1.7;">A reputation score built from consistency, frequency, and unique tippers. Workers carry their trust across jobs.</p>
+        <div class="pillar pillar-reputation">
+          <div class="pillar-icon">🏆</div>
+          <span class="pillar-tag">Reputation</span>
+          <h3>Portable Trust Score</h3>
+          <p>A reputation score built from consistency, frequency, and unique tippers. Workers carry their trust across jobs.</p>
         </div>
-        <div style="background:white;border-radius:20px;padding:36px 28px;border:1px solid var(--border);transition:all 0.3s;">
-          <div style="font-size:40px;margin-bottom:16px;">💫</div>
-          <span style="display:inline-block;padding:3px 12px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;background:#FFEDE9;color:#E17055;margin-bottom:12px;">Impact</span>
-          <h3 style="font-size:22px;font-weight:800;margin-bottom:8px;">See Your Impact</h3>
-          <p style="font-size:14px;color:var(--text2);line-height:1.7;">After tipping, watch an animated progress bar fill toward the worker's dream. You helped someone reach 65% of their goal.</p>
+        <div class="pillar pillar-impact">
+          <div class="pillar-icon">💫</div>
+          <span class="pillar-tag">Impact</span>
+          <h3>See Your Impact</h3>
+          <p>After tipping, watch an animated progress bar fill toward the worker's dream. You helped someone reach 65% of their goal.</p>
         </div>
       </div>
     </div>
