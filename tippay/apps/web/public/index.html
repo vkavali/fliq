@@ -373,6 +373,26 @@
         <div><div class="eb-label">Trust Score</div><div class="eb-value" id="d-reputation" style="color:#00B894;">-</div></div>
       </div>
 
+      <!-- Business Affiliation Badge -->
+      <div id="provider-biz-affiliation" class="hidden" style="background:linear-gradient(135deg,#E8FFF8,#F0EDFF);border-radius:14px;padding:16px 20px;border:1px solid rgba(0,184,148,0.2);margin:16px 0;display:flex;align-items:center;gap:12px;">
+        <div style="width:40px;height:40px;background:linear-gradient(135deg,#6C5CE7,#00B894);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;color:white;font-weight:800;" id="affiliation-emoji">🏢</div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#2D3436;" id="affiliation-text">Works at Business</div>
+          <div style="font-size:11px;color:#636E72;" id="affiliation-role">Staff Member</div>
+        </div>
+      </div>
+
+      <!-- Pending Business Invitations -->
+      <div id="provider-invitations" class="hidden" style="margin:16px 0;">
+        <div style="background:linear-gradient(135deg,#FFF3E0,#FFF8E1);border-radius:14px;padding:20px;border:1px solid rgba(255,143,0,0.2);">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+            <span style="font-size:18px;">📩</span>
+            <span style="font-size:14px;font-weight:700;color:#2D3436;">Business Invitations</span>
+          </div>
+          <div id="invitations-list"></div>
+        </div>
+      </div>
+
       <!-- V5 Feature Cards Row -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0;">
 

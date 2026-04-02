@@ -416,10 +416,70 @@ async function loadDashboard() {
     loadIntents(p.id);
     loadRecurringTips();
     loadWorkerResponses(p.id);
+
+    // Business affiliation + invitations
+    loadAffiliation();
+    loadInvitations();
   } catch (e) {
     // No provider profile yet — show onboarding
     document.getElementById('onboarding').classList.remove('hidden');
     document.getElementById('dashboard').classList.add('hidden');
+  }
+}
+
+// ===== Business Affiliation & Invitations =====
+async function loadAffiliation() {
+  try {
+    const biz = await api('GET', '/business/mine');
+    if (biz && biz.name) {
+      const el = document.getElementById('provider-biz-affiliation');
+      el.classList.remove('hidden');
+      const BIZ_EMOJIS = { RESTAURANT: '🍽️', HOTEL: '🏨', SALON: '💇', RETAIL: '🛒', HEALTHCARE: '🏥', OTHER: '🏢' };
+      document.getElementById('affiliation-emoji').textContent = BIZ_EMOJIS[biz.type] || '🏢';
+      document.getElementById('affiliation-text').textContent = `Works at ${biz.name}`;
+      // Find current user's role from members
+      const myMember = (biz.members || []).find(m => m.providerId === user?.id);
+      document.getElementById('affiliation-role').textContent = myMember ? myMember.role : 'Staff Member';
+    }
+  } catch (e) {
+    // Not affiliated with any business — that's fine
+  }
+}
+
+async function loadInvitations() {
+  try {
+    const invitations = await api('GET', '/business/invitations/mine');
+    if (!invitations || invitations.length === 0) return;
+
+    const container = document.getElementById('provider-invitations');
+    const list = document.getElementById('invitations-list');
+    container.classList.remove('hidden');
+
+    list.innerHTML = invitations.map(inv => `
+      <div style="background:white;border-radius:12px;padding:16px;margin-bottom:10px;border:1px solid #E9ECEF;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#2D3436;">${inv.business?.name || 'Business'}</div>
+          <div style="font-size:12px;color:#636E72;">Invited as <strong>${inv.role}</strong> · Expires ${new Date(inv.expiresAt).toLocaleDateString()}</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="respondInvitation('${inv.id}', 'ACCEPT')" style="background:#00B894;color:white;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">✓ Accept</button>
+          <button onclick="respondInvitation('${inv.id}', 'DECLINE')" style="background:#E9ECEF;color:#636E72;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">✗ Decline</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    // No invitations endpoint or error — ignore
+  }
+}
+
+async function respondInvitation(invitationId, response) {
+  try {
+    await api('POST', `/business/invitations/${invitationId}/respond`, { response });
+    toast(response === 'ACCEPT' ? '✅ Invitation accepted!' : 'Invitation declined');
+    loadInvitations();
+    if (response === 'ACCEPT') loadAffiliation();
+  } catch (e) {
+    toast('Failed: ' + (e.message || 'Error'));
   }
 }
 
