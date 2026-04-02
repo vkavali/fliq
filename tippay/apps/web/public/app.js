@@ -7,6 +7,7 @@ const API = location.port === '5173'
 let token = null;
 let user = null;
 let providerProfile = null;
+let pendingRedirect = null;
 let tipState = { providerId: null, provider: null, amount: 10000, rating: 5 };
 
 // ===== Routing =====
@@ -344,8 +345,13 @@ async function verifyOtp() {
     localStorage.setItem('tp_refresh', d.refreshToken);
     localStorage.setItem('tp_user', JSON.stringify(user));
 
-    goTo('dashboard');
-    loadDashboard();
+    if (pendingRedirect === 'business') {
+      pendingRedirect = null;
+      goToBusiness();
+    } else {
+      goTo('dashboard');
+      loadDashboard();
+    }
     toast('Welcome!');
   } catch (e) {
     showAuthErr(e.message);
@@ -747,6 +753,12 @@ const BIZ_TYPE_EMOJIS = {
 };
 
 async function goToBusiness() {
+  if (!token) {
+    pendingRedirect = 'business';
+    goTo('login');
+    showToast('Please login first to access Business dashboard');
+    return;
+  }
   document.getElementById('biz-phone').textContent = user?.phone || '';
   goTo('business');
   try {
