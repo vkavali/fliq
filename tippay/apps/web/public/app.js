@@ -20,6 +20,8 @@ function goTo(page) {
   }
   // Close modals on navigation
   document.getElementById('invite-modal')?.classList.add('hidden');
+  // Load tipper demo data when navigating to it
+  if (page === 'tipper-demo') loadTipperDemo();
 }
 
 function demoCust() {
@@ -980,3 +982,109 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.addEventListener('hashchange', checkRoute);
+
+// ===== TIPPER DEMO (TESTING ONLY — REMOVE FOR PROD) =====
+let tipperDemoLoaded = false;
+
+async function loadTipperDemo() {
+  if (tipperDemoLoaded) return;
+  tipperDemoLoaded = true;
+  const grid = document.getElementById('demo-providers');
+  grid.innerHTML = '<div style="text-align:center;padding:20px;color:#B2BEC3;">Loading providers...</div>';
+
+  try {
+    // Try dev status endpoint for provider data
+    const status = await fetch(API + '/dev/status').then(r => r.json()).catch(() => null);
+    let providers = [];
+
+    // Try to get providers from dev/status or parse from seed
+    if (status && status.providers) {
+      providers = status.providers;
+    } else {
+      // Fallback: try known test provider IDs from seed
+      const testIds = ['c090a3b5-d81b-49a6-8ab1-7089546c00d8'];
+      for (const id of testIds) {
+        try {
+          const pub = await fetch(API + `/providers/${id}/public`).then(r => r.ok ? r.json() : null);
+          if (pub) providers.push({ id, ...pub });
+        } catch (e) {}
+      }
+    }
+
+    // Also fetch payment links if logged in
+    let paymentLinks = [];
+    if (token) {
+      try {
+        paymentLinks = await api('GET', '/payment-links');
+      } catch (e) {}
+    }
+
+    if (providers.length === 0 && paymentLinks.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:40px;">
+          <div style="font-size:40px;margin-bottom:12px;">🔍</div>
+          <p style="font-weight:600;margin-bottom:8px;">No providers found</p>
+          <p style="color:#636E72;font-size:13px;">Login as a provider first, create a profile, then come back here.</p>
+          <p style="color:#636E72;font-size:13px;margin-top:8px;">Or enter a provider ID manually below.</p>
+        </div>`;
+      return;
+    }
+
+    let html = '';
+    providers.forEach(p => {
+      const name = p.displayName || p.name || 'Provider';
+      const cat = p.category || 'SERVICE';
+      const initial = name[0]?.toUpperCase() || '?';
+      const rating = p.ratingAverage ? Number(p.ratingAverage).toFixed(1) : 'New';
+      html += `
+        <div style="background:white;border-radius:16px;padding:20px;border:1px solid #E9ECEF;transition:all 0.2s;">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,#6C5CE7,#A29BFE);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:20px;font-weight:800;">${initial}</div>
+            <div style="flex:1;">
+              <div style="font-weight:700;font-size:15px;">${name}</div>
+              <div style="font-size:12px;color:#636E72;">${cat} · ⭐ ${rating}</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:#B2BEC3;margin-bottom:12px;word-break:break-all;">ID: ${p.id}</div>
+          <div style="display:flex;gap:8px;">
+            <button class="small-btn" onclick="openTipV5('${p.id}')" style="background:#6C5CE7;color:white;flex:1;">V5 Tip Flow →</button>
+            <button class="small-btn" onclick="openTipSPA('${p.id}')" style="flex:1;">SPA Tip</button>
+          </div>
+        </div>`;
+    });
+
+    // Show payment links too
+    if (paymentLinks.length > 0) {
+      paymentLinks.forEach(pl => {
+        html += `
+          <div style="background:white;border-radius:16px;padding:20px;border:1px solid #6C5CE744;transition:all 0.2s;">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+              <div style="width:48px;height:48px;background:linear-gradient(135deg,#00B894,#55efc4);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:20px;">🔗</div>
+              <div style="flex:1;">
+                <div style="font-weight:700;font-size:15px;">Tip Link: ${pl.shortCode}</div>
+                <div style="font-size:12px;color:#636E72;">${pl.role || ''} ${pl.workplace ? '@ ' + pl.workplace : ''}</div>
+              </div>
+            </div>
+            <div style="font-size:11px;color:#B2BEC3;margin-bottom:12px;">Short code: <code>${pl.shortCode}</code></div>
+            <button class="small-btn" onclick="openTipV5('${pl.shortCode}')" style="background:#00B894;color:white;width:100%;">Open V5 Tip Flow →</button>
+          </div>`;
+      });
+    }
+
+    grid.innerHTML = html;
+  } catch (e) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#E17055;">Error loading providers: ${e.message}</div>`;
+  }
+}
+
+function openTipV5(idOrCode) {
+  if (!idOrCode) { showToast('Enter a provider ID or short code'); return; }
+  // First try as payment link (short code), then as provider ID
+  window.open(`/tip/${idOrCode}`, '_blank');
+}
+
+function openTipSPA(id) {
+  if (!id) { showToast('Enter a provider ID'); return; }
+  location.hash = `#tip/${id}`;
+  checkRoute();
+}

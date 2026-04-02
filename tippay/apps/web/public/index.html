@@ -473,6 +473,53 @@
 
   <div id="print-area" class="print-only"></div>
 
+  <!-- ==================== TIPPER DEMO (TESTING ONLY — REMOVE FOR PROD) ==================== -->
+  <div id="tipper-demo-page" class="page hidden">
+    <nav class="topbar"><div class="topbar-inner">
+      <div class="topbar-brand"><img src="logo-full.png" alt="Fliq" class="topbar-logo"><span style="background:#FF6B6B;color:white;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;margin-left:8px;">DEMO</span></div>
+      <div class="topbar-right">
+        <span style="font-size:13px;color:#636E72;">🧪 Tipper Testing Dashboard</span>
+        <button class="topbar-btn" onclick="goTo('landing')">← Back</button>
+      </div>
+    </div></nav>
+    <div class="container" style="padding-top:80px;">
+      <div style="background:linear-gradient(135deg,#FF6B6B22,#FDCB6E22);border:1px solid #FF6B6B44;border-radius:12px;padding:16px 20px;margin-bottom:24px;">
+        <p style="font-size:13px;color:#E17055;font-weight:600;">⚠️ Testing only — this page will be removed before production.</p>
+      </div>
+
+      <h2 style="margin-bottom:8px;">Test the V5 Tipper Flow</h2>
+      <p style="color:#636E72;margin-bottom:24px;">Pick a provider below to open the full 6-screen tip experience.</p>
+
+      <!-- Provider Cards -->
+      <div id="demo-providers" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:32px;">
+        <div style="text-align:center;padding:40px;color:#B2BEC3;">Loading providers...</div>
+      </div>
+
+      <!-- Manual Test -->
+      <div style="background:white;border-radius:16px;padding:24px;border:1px solid #E9ECEF;margin-bottom:24px;">
+        <h3 style="margin-bottom:12px;">Manual Test</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:200px;">
+            <label style="font-size:12px;font-weight:600;color:#636E72;">Provider ID or Payment Link Code</label>
+            <input type="text" id="demo-manual-id" class="input-full" placeholder="Enter provider ID or short code" style="margin-top:4px;">
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:8px;">
+            <button class="small-btn" onclick="openTipV5(document.getElementById('demo-manual-id').value)" style="background:#6C5CE7;color:white;padding:10px 20px;">Open V5 Tip Flow →</button>
+            <button class="small-btn" onclick="openTipSPA(document.getElementById('demo-manual-id').value)" style="padding:10px 20px;">Open SPA Tip</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tip History -->
+      <div style="background:white;border-radius:16px;padding:24px;border:1px solid #E9ECEF;">
+        <h3 style="margin-bottom:12px;">Recent Test Tips</h3>
+        <div id="demo-tip-history">
+          <p style="color:#B2BEC3;font-size:13px;">No tips sent yet. Open a provider's tip page to start testing.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== V5 LANDING PAGE ==================== -->
   <div id="landing-page" class="page">
 
@@ -487,6 +534,7 @@
         <a href="#pillars" style="color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;">Features</a>
         <a href="#how" style="color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;">How it Works</a>
         <a href="#tip" style="color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;">Tip Now</a>
+        <a href="javascript:void(0)" onclick="goTo('tipper-demo')" style="background:#FF6B6B;color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;">🧪 Tipper Demo</a>
         <a href="javascript:void(0)" onclick="goTo('login')" style="background:var(--pri);color:white;border:none;border-radius:8px;padding:8px 20px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;">Provider Login</a>
       </div>
     </div>
