@@ -9,7 +9,189 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Inter:wght@300..900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --pri: #6C5CE7; --pri-dark: #5A4BD1; --pri-light: #A29BFE; --pri-bg: #F0EDFF;
+      --green: #00B894; --green-bg: #E8FFF8; --yellow: #FDCB6E;
+      --text: #2D3436; --text2: #636E72; --muted: #B2BEC3;
+      --bg: #F8F9FA; --card: #FFFFFF; --border: #E9ECEF;
+      --shadow: 0 2px 16px rgba(0,0,0,0.07); --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+      --r: 16px; --r-sm: 10px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    .hidden { display: none !important; }
+
+    /* Nav */
+    .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(255,255,255,0.92); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(0,0,0,0.06); }
+    .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-brand { display: flex; align-items: center; gap: 10px; }
+    .nav-logo { height: 44px; width: auto; }
+    .nav-badge { background: var(--green); color: white; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 10px; letter-spacing: 0.5px; }
+    .nav-links { display: flex; align-items: center; gap: 24px; }
+    .nav-links a { color: var(--text2); text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--pri); }
+    .nav-cta { background: var(--pri); color: white; border: none; border-radius: var(--r-sm); padding: 8px 20px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.2s; text-decoration: none; }
+    .nav-cta:hover { background: var(--pri-dark); }
+
+    /* Hero */
+    .hero {
+      min-height: 100vh; padding: 100px 24px 60px;
+      background: linear-gradient(160deg, #1a1145 0%, #2d1b69 30%, #6C5CE7 60%, #A29BFE 100%);
+      display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at 30% 40%, rgba(108,92,231,0.3) 0%, transparent 50%),
+                  radial-gradient(circle at 70% 60%, rgba(0,184,148,0.2) 0%, transparent 40%);
+    }
+    .hero-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 80px; flex-wrap: wrap; justify-content: center; position: relative; z-index: 2; }
+    .hero-content { max-width: 560px; }
+    .hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); padding: 6px 16px; border-radius: 24px; font-size: 13px; color: rgba(255,255,255,0.9); font-weight: 600; margin-bottom: 24px; }
+    .hero-eyebrow .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: blink 2s infinite; }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .hero-title { font-size: 56px; font-weight: 900; color: white; line-height: 1.08; margin-bottom: 20px; letter-spacing: -1px; }
+    .hero-title .gradient { background: linear-gradient(135deg, #FDCB6E, #00B894); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero-sub { font-size: 19px; color: rgba(255,255,255,0.8); line-height: 1.7; margin-bottom: 36px; }
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+    .hero-btn { padding: 16px 32px; border-radius: var(--r-sm); font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; border: none; }
+    .hero-btn-primary { background: white; color: var(--pri); box-shadow: 0 4px 24px rgba(0,0,0,0.15); }
+    .hero-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+    .hero-btn-outline { background: transparent; color: white; border: 2px solid rgba(255,255,255,0.3); }
+    .hero-btn-outline:hover { border-color: white; background: rgba(255,255,255,0.1); }
+
+    /* Hero visual */
+    .hero-visual { flex-shrink: 0; position: relative; }
+    .phone-mockup {
+      width: 280px; height: 560px; background: #1a1a2e; border-radius: 40px;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.4), inset 0 0 0 3px rgba(255,255,255,0.1);
+      padding: 16px; position: relative; overflow: hidden;
+    }
+    .phone-notch { width: 100px; height: 8px; background: #111; border-radius: 4px; margin: 8px auto 20px; }
+    .phone-screen { background: white; border-radius: 24px; padding: 20px 16px; height: calc(100% - 40px); overflow: hidden; }
+    .phone-avatar { width: 56px; height: 56px; background: linear-gradient(135deg, var(--pri), var(--pri-light)); border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 22px; font-weight: 800; }
+    .phone-name { font-weight: 700; font-size: 16px; text-align: center; margin-bottom: 4px; }
+    .phone-badge { text-align: center; margin-bottom: 12px; }
+    .phone-badge span { background: var(--green-bg); color: var(--green); font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 10px; }
+    .phone-dream { background: linear-gradient(135deg, var(--pri-bg), var(--green-bg)); border-radius: 10px; padding: 12px; margin-bottom: 14px; }
+    .phone-dream-label { font-size: 8px; font-weight: 700; text-transform: uppercase; color: var(--pri); letter-spacing: 0.5px; margin-bottom: 4px; }
+    .phone-dream-title { font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+    .phone-progress { height: 5px; background: rgba(108,92,231,0.15); border-radius: 3px; overflow: hidden; }
+    .phone-progress-fill { height: 100%; width: 65%; background: linear-gradient(90deg, var(--pri), var(--green)); border-radius: 3px; animation: fillProgress 3s ease-out forwards; }
+    @keyframes fillProgress { from { width: 20%; } to { width: 65%; } }
+    .phone-presets { display: flex; gap: 6px; margin-bottom: 14px; }
+    .phone-presets span { flex: 1; padding: 8px 4px; border-radius: 8px; font-size: 12px; font-weight: 700; text-align: center; background: var(--bg); color: var(--text2); border: 2px solid var(--border); }
+    .phone-presets .active { background: var(--pri-bg); color: var(--pri); border-color: var(--pri); }
+    .phone-cta { background: var(--pri); color: white; text-align: center; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 14px; }
+    .phone-float {
+      position: absolute; background: white; border-radius: 14px; padding: 12px 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15); font-size: 12px; font-weight: 600;
+      animation: float 3s ease-in-out infinite;
+    }
+    .phone-float-1 { top: 60px; right: -60px; }
+    .phone-float-2 { bottom: 100px; left: -70px; animation-delay: 1.5s; }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+    /* Sections */
+    .section { padding: 100px 24px; }
+    .section-dark { background: #1a1145; color: white; }
+    .section-gray { background: var(--bg); }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .section-title { font-size: 40px; font-weight: 900; text-align: center; margin-bottom: 16px; letter-spacing: -0.5px; }
+    .section-sub { font-size: 18px; color: var(--text2); text-align: center; margin-bottom: 60px; max-width: 640px; margin-left: auto; margin-right: auto; }
+    .section-dark .section-sub { color: rgba(255,255,255,0.6); }
+
+    /* V5 Pillars */
+    .pillars-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+    .pillar {
+      background: white; border-radius: 20px; padding: 36px 28px; position: relative;
+      overflow: hidden; transition: all 0.3s; border: 1px solid var(--border);
+    }
+    .pillar:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--pri-light); }
+    .pillar-icon { font-size: 40px; margin-bottom: 16px; }
+    .pillar-tag { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+    .pillar h3 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    .pillar p { font-size: 14px; color: var(--text2); line-height: 1.7; }
+    .pillar-dream .pillar-tag { background: #F0EDFF; color: var(--pri); }
+    .pillar-intent .pillar-tag { background: #FFF8E1; color: #FF8F00; }
+    .pillar-reputation .pillar-tag { background: #E8FFF8; color: var(--green); }
+    .pillar-impact .pillar-tag { background: #FFEDE9; color: #E17055; }
+
+    /* How it works */
+    .steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+    .step { text-align: center; position: relative; }
+    .step-num {
+      width: 48px; height: 48px; background: linear-gradient(135deg, var(--pri), var(--pri-light));
+      color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 800; margin: 0 auto 16px;
+      box-shadow: 0 4px 16px rgba(108,92,231,0.3);
+    }
+    .step-icon { font-size: 40px; margin-bottom: 12px; }
+    .step h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .step p { font-size: 14px; color: var(--text2); line-height: 1.6; }
+
+    /* Stats banner */
+    .stats-banner {
+      background: linear-gradient(135deg, var(--pri), var(--pri-dark));
+      border-radius: 20px; padding: 48px 40px; display: flex;
+      justify-content: space-around; flex-wrap: wrap; gap: 24px;
+    }
+    .stat-block { text-align: center; }
+    .stat-number { font-size: 42px; font-weight: 900; color: white; }
+    .stat-label { font-size: 14px; color: rgba(255,255,255,0.7); font-weight: 500; }
+
+    /* Tip input */
+    .tip-box { max-width: 500px; margin: 0 auto; text-align: center; }
+    .tip-input-row {
+      display: flex; gap: 8px; background: white; border-radius: 14px;
+      padding: 6px; box-shadow: var(--shadow-lg); border: 2px solid var(--border);
+    }
+    .tip-input-row input { border: none; outline: none; padding: 12px 18px; font-size: 15px; font-family: inherit; flex: 1; border-radius: 10px; }
+    .tip-btn { background: var(--pri); color: white; border: none; border-radius: var(--r-sm); padding: 12px 28px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s; white-space: nowrap; }
+    .tip-btn:hover { background: var(--pri-dark); }
+    .tip-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .tip-error { color: #E17055; font-size: 13px; margin-top: 8px; }
+
+    /* CTA */
+    .cta-section {
+      padding: 100px 24px; text-align: center;
+      background: linear-gradient(160deg, #1a1145, #2d1b69, #6C5CE7);
+    }
+    .cta-title { font-size: 40px; font-weight: 900; color: white; margin-bottom: 16px; }
+    .cta-sub { font-size: 18px; color: rgba(255,255,255,0.7); margin-bottom: 36px; max-width: 500px; margin-left: auto; margin-right: auto; }
+    .cta-features { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 40px; }
+    .cta-feat { display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.9); font-size: 15px; font-weight: 500; }
+    .cta-feat::before { content: '✓'; width: 24px; height: 24px; background: var(--green); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; }
+
+    /* Footer */
+    .footer { background: #111; padding: 48px 24px; text-align: center; }
+    .footer-inner { max-width: 1200px; margin: 0 auto; }
+    .footer-brand { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
+    .footer-logo { height: 36px; filter: brightness(0) invert(1); }
+    .footer-tagline { color: rgba(255,255,255,0.4); font-size: 14px; margin-bottom: 20px; }
+    .footer-links { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+    .footer-links a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 13px; transition: color 0.2s; }
+    .footer-links a:hover { color: white; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--text); color: white; padding: 12px 28px; border-radius: 24px; font-size: 14px; font-weight: 600; transition: transform 0.3s; z-index: 999; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 768px) {
+      .hero-title { font-size: 36px; }
+      .hero-sub { font-size: 16px; }
+      .hero-inner { gap: 40px; }
+      .pillars-grid { grid-template-columns: 1fr; }
+      .steps-grid { grid-template-columns: 1fr; gap: 24px; }
+      .phone-mockup { width: 240px; height: 480px; }
+      .phone-float { display: none; }
+      .section-title { font-size: 28px; }
+      .nav-links a:not(.nav-cta) { display: none; }
+      .stats-banner { padding: 32px 20px; }
+      .stat-number { font-size: 32px; }
+    }
+  </style>
 </head>
 <body>
 
@@ -77,171 +259,173 @@
 
   <!-- ==================== PROVIDER LOGIN ==================== -->
   <div id="login-page" class="page hidden">
-    <div class="auth-box glass-panel">
+    <div class="auth-box">
       <div class="brand">
         <img src="logo-full.png" alt="Fliq" class="brand-logo">
         <p class="brand-sub">Provider Dashboard</p>
       </div>
       <div id="phone-step">
-        <h3 class="text-h3">Login with Phone</h3>
-        <div class="phone-input-row" style="margin-top:16px;">
-          <span class="prefix" style="background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2);">+91</span>
-          <input type="tel" id="phone" placeholder="9876543210" maxlength="10" class="glass-input">
+        <h3>Login with Phone</h3>
+        <div class="phone-input-row">
+          <span class="prefix">+91</span>
+          <input type="tel" id="phone" placeholder="9876543210" maxlength="10">
         </div>
-        <button class="glass-btn glass-btn-primary" style="width:100%; margin-top:20px;" onclick="sendOtp()">Send OTP</button>
+        <button class="auth-btn" onclick="sendOtp()">Send OTP</button>
       </div>
       <div id="otp-step" class="hidden">
-        <h3 class="text-h3">Enter OTP</h3>
-        <p class="otp-sub muted" id="otp-sub" style="margin-bottom:16px;"></p>
-        <div class="otp-row" style="display:flex; gap:8px;">
-          <input type="text" maxlength="1" class="otp-box glass-input" style="text-align:center; padding:10px 0;" data-i="0">
-          <input type="text" maxlength="1" class="otp-box glass-input" style="text-align:center; padding:10px 0;" data-i="1">
-          <input type="text" maxlength="1" class="otp-box glass-input" style="text-align:center; padding:10px 0;" data-i="2">
-          <input type="text" maxlength="1" class="otp-box glass-input" style="text-align:center; padding:10px 0;" data-i="3">
-          <input type="text" maxlength="1" class="otp-box glass-input" style="text-align:center; padding:10px 0;" data-i="4">
-          <input type="text" maxlength="1" class="otp-box glass-input" style="text-align:center; padding:10px 0;" data-i="5">
+        <h3>Enter OTP</h3>
+        <p class="otp-sub" id="otp-sub"></p>
+        <div class="otp-row">
+          <input type="text" maxlength="1" class="otp-box" data-i="0">
+          <input type="text" maxlength="1" class="otp-box" data-i="1">
+          <input type="text" maxlength="1" class="otp-box" data-i="2">
+          <input type="text" maxlength="1" class="otp-box" data-i="3">
+          <input type="text" maxlength="1" class="otp-box" data-i="4">
+          <input type="text" maxlength="1" class="otp-box" data-i="5">
         </div>
-        <button class="glass-btn glass-btn-primary" style="width:100%; margin-top:20px;" onclick="verifyOtp()">Verify Provider</button>
+        <div id="otp-dev-hint" class="dev-hint hidden"></div>
+        <button class="auth-btn" onclick="verifyOtp()">Verify</button>
+        <button class="link-btn" onclick="showPhoneStep()">Change number</button>
       </div>
+      <div id="auth-error" class="error-box hidden"></div>
     </div>
   </div>
 
   <!-- ==================== BUSINESS LOGIN ==================== -->
-  <div id="business-login-page" class="page hidden" style="display:flex; align-items:center; justify-content:center; padding:24px;">
-    <div class="auth-box glass-panel" style="max-width: 400px; width: 100%;">
+  <div id="business-login-page" class="page hidden">
+    <div class="auth-box">
       <div class="brand">
-        <img src="logo-full.png" alt="Fliq" class="brand-logo" style="filter: brightness(0) invert(1);">
+        <img src="logo-full.png" alt="Fliq" class="brand-logo">
         <p class="brand-sub">Business Access</p>
       </div>
       <div id="biz-email-step">
-        <h3 class="text-h3">Login with Email</h3>
-        <p class="muted" style="margin-bottom:16px; font-size:13px;">Enter your registered business email.</p>
-        <input type="email" id="biz-email" placeholder="manager@hotel.com" class="glass-input">
-        <button class="glass-btn glass-btn-primary" style="width:100%; margin-top:20px;" onclick="sendBizOtp()">Get Access Code</button>
+        <h3>Login with Email</h3>
+        <p style="color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 20px;">Enter your registered business email.</p>
+        <div style="margin-bottom: 16px;">
+          <input type="email" id="biz-email" placeholder="manager@hotel.com" style="width: 100%; border: none; outline: none; padding: 14px 18px; font-size: 16px; border-radius: 12px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
+        </div>
+        <button class="auth-btn" onclick="sendBizOtp()">Get Access Code</button>
       </div>
       <div id="biz-otp-step" class="hidden">
-        <h3 class="text-h3">Enter Access Code</h3>
-        <p class="muted" id="biz-otp-sub" style="margin-bottom:16px; font-size:13px;"></p>
-        <div class="otp-row" style="display:flex; gap:8px;" id="biz-otp-row">
-          <input type="text" maxlength="1" class="otp-box glass-input" style="text-align:center; padding:10px 0;" data-i="0">
-          <input type="text" maxlength="1" class="otp-box glass-input" style="text-align:center; padding:10px 0;" data-i="1">
-          <input type="text" maxlength="1" class="otp-box glass-input" style="text-align:center; padding:10px 0;" data-i="2">
-          <input type="text" maxlength="1" class="otp-box glass-input" style="text-align:center; padding:10px 0;" data-i="3">
-          <input type="text" maxlength="1" class="otp-box glass-input" style="text-align:center; padding:10px 0;" data-i="4">
-          <input type="text" maxlength="1" class="otp-box glass-input" style="text-align:center; padding:10px 0;" data-i="5">
+        <h3>Enter Access Code</h3>
+        <p class="otp-sub" id="biz-otp-sub"></p>
+        <div class="otp-row" id="biz-otp-row">
+          <input type="text" maxlength="1" class="otp-box" data-i="0">
+          <input type="text" maxlength="1" class="otp-box" data-i="1">
+          <input type="text" maxlength="1" class="otp-box" data-i="2">
+          <input type="text" maxlength="1" class="otp-box" data-i="3">
+          <input type="text" maxlength="1" class="otp-box" data-i="4">
+          <input type="text" maxlength="1" class="otp-box" data-i="5">
         </div>
-        <button class="glass-btn glass-btn-primary" style="width:100%; margin-top:20px;" onclick="verifyBizOtp()">Access Dashboard</button>
+        <button class="auth-btn" onclick="verifyBizOtp()">Access Dashboard</button>
+        <button class="link-btn" onclick="showBizEmailStep()">Change email</button>
       </div>
     </div>
   </div>
-  <div id="auth-error" class="error-box hidden" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--red); color:white; padding:10px 20px; border-radius:8px; z-index:1000; box-shadow:0 10px 30px rgba(0,0,0,0.5);"></div>
 
   <!-- ==================== PROVIDER DASHBOARD ==================== -->
   <div id="dashboard-page" class="page hidden">
     <nav class="topbar"><div class="topbar-inner">
       <div class="topbar-brand"><img src="logo-full.png" alt="Fliq" class="topbar-logo"></div>
-      <div class="topbar-right" style="display:flex; align-items:center; gap:16px;">
-        <span id="dash-phone" class="topbar-phone text-label"></span>
-        <button class="glass-btn" style="padding:8px 16px; font-size:12px;" onclick="logout()">Logout</button>
+      <div class="topbar-right">
+        <span id="dash-phone" class="topbar-phone"></span>
+        <button class="topbar-logout" onclick="logout()">Logout</button>
       </div>
     </div></nav>
-    <div id="onboarding" class="hidden"><div class="dash-container"><div class="glass-panel" style="max-width:500px; margin:0 auto;">
-      <h2 class="text-h2 text-gradient" style="margin-bottom:8px;">Provider Profile</h2>
-      <p class="muted" style="margin-bottom:24px;">Tell us about yourself to start receiving tips.</p>
-      <div class="avatar-upload" onclick="document.getElementById('avatar-input').click()" style="margin-bottom:20px; text-align:center;">
-        <img id="avatar-preview" class="avatar-preview hidden" alt="Avatar" style="width:100px; height:100px; border-radius:50%; object-fit:cover; margin:0 auto; border:2px solid var(--pri);">
-        <div id="avatar-placeholder" class="avatar-placeholder" style="width:100px; height:100px; background:rgba(255,255,255,0.05); border:1px dashed rgba(255,255,255,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto; cursor:pointer;">
-          <span class="avatar-label text-label">Add Photo</span>
-        </div>
+    <div id="onboarding" class="hidden"><div class="container"><div class="onboard-card">
+      <h2>Create Your Provider Profile</h2>
+      <p>Tell us about yourself to start receiving tips</p>
+      <div class="avatar-upload" onclick="document.getElementById('avatar-input').click()">
+        <img id="avatar-preview" class="avatar-preview hidden" alt="Avatar">
+        <div id="avatar-placeholder" class="avatar-placeholder"><span class="avatar-plus">+</span><span class="avatar-label">Add Photo</span></div>
         <input type="file" id="avatar-input" accept="image/*" class="hidden" onchange="previewAvatar(this)">
       </div>
-      <input type="text" id="name-input" class="glass-input" placeholder="Your name (required)" maxlength="100" style="margin-bottom:16px;">
-      <select id="cat-select" class="glass-input" style="margin-bottom:16px;">
-        <option value="" disabled selected>Select your category</option>
+      <input type="text" id="name-input" class="input-full" placeholder="Your name (required)" maxlength="100">
+      <select id="cat-select" class="select-full">
+        <option value="">Select your category</option>
         <option value="RESTAURANT">Restaurant / Cafe</option><option value="SALON">Salon / Spa</option>
         <option value="DELIVERY">Delivery</option><option value="HOTEL">Hotel</option>
         <option value="TRANSPORT">Transport / Auto / Cab</option><option value="HEALTHCARE">Healthcare</option>
         <option value="EDUCATION">Education / Tutoring</option><option value="FITNESS">Fitness / Trainer</option>
         <option value="OTHER">Other</option>
       </select>
-      <textarea id="bio-input" class="glass-input" placeholder="Tell customers about yourself (optional)" rows="3" maxlength="500" style="margin-bottom:24px;"></textarea>
-      <button class="glass-btn glass-btn-primary" style="width:100%;" onclick="createProfile()">Create Profile</button>
+      <textarea id="bio-input" class="input-full" placeholder="Tell customers about yourself (optional)" rows="2" maxlength="500"></textarea>
+      <button class="auth-btn" onclick="createProfile()">Create Profile</button>
     </div></div></div>
-    <div id="dashboard" class="hidden"><div class="dash-container">
+    <div id="dashboard" class="hidden"><div class="container">
       <!-- Stats Grid -->
-      <div class="bento-grid" style="margin-bottom:24px;">
-        <div class="glass-card"><div class="text-label" style="margin-bottom:8px;">Total Tips</div><div class="text-h2 text-gradient" id="d-tips">0</div></div>
-        <div class="glass-card"><div class="text-label" style="margin-bottom:8px;">Rating</div><div class="text-h2" id="d-rating" style="color:var(--yellow);">-</div></div>
-        <div class="glass-card"><div class="text-label" style="margin-bottom:8px;">Category</div><div class="text-h3" id="d-category" style="margin-top:8px;">-</div></div>
-        <div class="glass-card"><div class="text-label" style="margin-bottom:8px;">Trust Score</div><div class="text-h2 text-gradient" id="d-reputation">-</div></div>
+      <div class="earnings-banner" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;">
+        <div><div class="eb-label">Total Tips</div><div class="eb-value" id="d-tips">0</div></div>
+        <div><div class="eb-label">Rating</div><div class="eb-value" id="d-rating">-</div></div>
+        <div><div class="eb-label">Category</div><div class="eb-value eb-cat" id="d-category">-</div></div>
+        <div><div class="eb-label">Trust Score</div><div class="eb-value" id="d-reputation" style="color:#00B894;">-</div></div>
       </div>
 
       <!-- V5 Feature Cards Row -->
-      <!-- V5 Feature Cards Row -->
-      <div class="bento-grid">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0;">
 
         <!-- Dream Card -->
-        <div id="dream-mgmt" class="glass-card" style="box-shadow: 0 4px 20px rgba(138,43,226,0.2);">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <span class="text-label" style="color:var(--pri-light);">✨ Your Dream</span>
-            <button class="glass-btn" onclick="showDreamForm()" id="dream-edit-btn" style="padding:6px 12px; font-size:12px;">Edit</button>
+        <div id="dream-mgmt" style="background:linear-gradient(135deg,#F0EDFF,#E8FFF8);border-radius:16px;padding:24px;border:1px solid rgba(108,92,231,0.15);position:relative;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6C5CE7;">✨ Your Dream</span>
+            <button class="small-btn" onclick="showDreamForm()" id="dream-edit-btn" style="font-size:11px;padding:4px 12px;">Edit</button>
           </div>
           <div id="dream-display">
-            <div id="dream-empty" style="text-align:center;padding:24px 0;">
-              <div style="font-size:40px;margin-bottom:12px;">🌟</div>
-              <p class="text-h3">Set Your Dream</p>
-              <p class="muted" style="margin-bottom:20px;">Tell tippers what you're working toward</p>
-              <button class="glass-btn glass-btn-primary" onclick="showDreamForm()">+ Add Dream</button>
+            <div id="dream-empty" style="text-align:center;padding:16px 0;">
+              <div style="font-size:32px;margin-bottom:8px;">🌟</div>
+              <p style="font-size:14px;font-weight:600;margin-bottom:4px;">Set Your Dream</p>
+              <p style="font-size:12px;color:#636E72;margin-bottom:12px;">Tell tippers what you're working toward</p>
+              <button class="small-btn" onclick="showDreamForm()">+ Add Dream</button>
             </div>
             <div id="dream-active" class="hidden">
-              <h4 class="text-h3" id="d-dream-title"></h4>
-              <p class="muted" id="d-dream-desc" style="margin-bottom:16px;"></p>
-              <div style="height:10px;background:rgba(255,255,255,0.1);border-radius:5px;overflow:hidden;margin-bottom:8px;">
-                <div id="d-dream-fill" style="height:100%;background:linear-gradient(90deg,var(--pri),var(--accent));border-radius:5px;width:0%;transition:width 1.5s ease-out;"></div>
+              <h4 style="font-size:16px;font-weight:700;margin-bottom:4px;" id="d-dream-title"></h4>
+              <p style="font-size:12px;color:#636E72;margin-bottom:12px;" id="d-dream-desc"></p>
+              <div style="height:8px;background:rgba(108,92,231,0.15);border-radius:4px;overflow:hidden;margin-bottom:6px;">
+                <div id="d-dream-fill" style="height:100%;background:linear-gradient(90deg,#6C5CE7,#00B894);border-radius:4px;width:0%;transition:width 1.5s ease-out;"></div>
               </div>
-              <div style="display:flex;justify-content:space-between;font-size:13px;">
-                <span style="font-weight:700;color:var(--accent);" id="d-dream-pct">0%</span>
-                <span class="muted" id="d-dream-amounts"></span>
+              <div style="display:flex;justify-content:space-between;font-size:12px;">
+                <span style="font-weight:700;color:#6C5CE7;" id="d-dream-pct">0%</span>
+                <span style="color:#636E72;" id="d-dream-amounts"></span>
               </div>
             </div>
           </div>
           <!-- Dream Form (hidden by default) -->
-          <div id="dream-form" class="hidden" style="margin-top:16px;">
-            <input type="text" id="dream-title-input" class="glass-input" placeholder="Dream title (e.g. Daughter's school)" maxlength="200" style="margin-bottom:12px;">
-            <textarea id="dream-desc-input" class="glass-input" placeholder="Describe your dream..." rows="2" maxlength="500" style="margin-bottom:12px;"></textarea>
-            <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;">
-              <span class="text-label">Goal: ₹</span>
-              <input type="number" id="dream-goal-input" class="glass-input" placeholder="5000" min="100">
+          <div id="dream-form" class="hidden" style="margin-top:8px;">
+            <input type="text" id="dream-title-input" class="input-full" placeholder="Dream title (e.g. Daughter's school books)" maxlength="200" style="margin-bottom:8px;">
+            <textarea id="dream-desc-input" class="input-full" placeholder="Describe your dream..." rows="2" maxlength="500" style="margin-bottom:8px;"></textarea>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
+              <span style="font-size:13px;font-weight:600;">Goal: ₹</span>
+              <input type="number" id="dream-goal-input" class="input-sm" placeholder="5000" min="100" style="width:120px;">
             </div>
-            <div style="display:flex;gap:12px;">
-              <button class="glass-btn glass-btn-primary" onclick="saveDream()">Save</button>
-              <button class="glass-btn" onclick="hideDreamForm()">Cancel</button>
+            <div style="display:flex;gap:8px;">
+              <button class="small-btn" onclick="saveDream()">Save Dream</button>
+              <button class="small-btn" onclick="hideDreamForm()" style="background:#E9ECEF;color:#636E72;">Cancel</button>
             </div>
           </div>
         </div>
 
-        <!-- Intent & Reputation Card Group -->
-        <div style="display:flex;flex-direction:column;gap:24px;">
+        <!-- Intent & Reputation Card -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
           <!-- Reputation -->
-          <div class="glass-card">
-            <span class="text-label" style="color:var(--accent);">🏆 Reputation</span>
-            <div style="display:flex;align-items:center;gap:16px;margin-top:16px;">
-              <div style="width:64px;height:64px;border-radius:50%;background:rgba(0,255,135,0.1);border:1px solid rgba(0,255,135,0.3);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:var(--accent);" id="d-rep-circle">-</div>
+          <div style="background:white;border-radius:16px;padding:20px;border:1px solid #E9ECEF;">
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#00B894;">🏆 Reputation</span>
+            <div style="display:flex;align-items:center;gap:16px;margin-top:12px;">
+              <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#E8FFF8,#C6F6E9);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#00B894;" id="d-rep-circle">-</div>
               <div>
-                <div style="font-weight:700;font-size:16px;">Your trust score</div>
-                <div class="muted" style="font-size:13px;margin-top:4px;" id="d-rep-detail">Based on consistency, frequency & unique tippers</div>
+                <div style="font-size:12px;color:#636E72;">Your trust score</div>
+                <div style="font-size:11px;color:#B2BEC3;margin-top:2px;" id="d-rep-detail">Based on consistency, frequency & unique tippers</div>
               </div>
             </div>
           </div>
           <!-- Intent Breakdown -->
-          <div class="glass-card" style="flex:1;">
-            <span class="text-label" style="color:#FFAF00;">🤗 Intent Breakdown</span>
-            <div id="d-intent-breakdown" style="margin-top:16px;">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <div style="text-align:center;padding:12px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.05);border-radius:12px;"><div style="font-size:24px;margin-bottom:4px;">🤗</div><div class="text-label" id="d-intent-kindness">0 kindness</div></div>
-                <div style="text-align:center;padding:12px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.05);border-radius:12px;"><div style="font-size:24px;margin-bottom:4px;">⚡</div><div class="text-label" id="d-intent-speed">0 speed</div></div>
-                <div style="text-align:center;padding:12px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.05);border-radius:12px;"><div style="font-size:24px;margin-bottom:4px;">✨</div><div class="text-label" id="d-intent-experience">0 experience</div></div>
-                <div style="text-align:center;padding:12px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.05);border-radius:12px;"><div style="font-size:24px;margin-bottom:4px;">💪</div><div class="text-label" id="d-intent-support">0 support</div></div>
+          <div style="background:white;border-radius:16px;padding:20px;border:1px solid #E9ECEF;flex:1;">
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#FF8F00;">🤗 Intent Breakdown</span>
+            <div id="d-intent-breakdown" style="margin-top:12px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div style="text-align:center;padding:8px;background:#F8F9FA;border-radius:8px;"><div style="font-size:18px;">🤗</div><div style="font-size:10px;color:#636E72;font-weight:600;" id="d-intent-kindness">0 kindness</div></div>
+                <div style="text-align:center;padding:8px;background:#F8F9FA;border-radius:8px;"><div style="font-size:18px;">⚡</div><div style="font-size:10px;color:#636E72;font-weight:600;" id="d-intent-speed">0 speed</div></div>
+                <div style="text-align:center;padding:8px;background:#F8F9FA;border-radius:8px;"><div style="font-size:18px;">✨</div><div style="font-size:10px;color:#636E72;font-weight:600;" id="d-intent-experience">0 experience</div></div>
+                <div style="text-align:center;padding:8px;background:#F8F9FA;border-radius:8px;"><div style="font-size:18px;">💪</div><div style="font-size:10px;color:#636E72;font-weight:600;" id="d-intent-support">0 support</div></div>
               </div>
             </div>
           </div>
@@ -249,64 +433,48 @@
       </div>
 
       <!-- Existing sections -->
-      <div class="glass-card" style="margin-bottom:24px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-          <h3 class="text-h3">Your QR Codes</h3>
-          <button class="glass-btn" onclick="newQr()">+ New QR</button>
+      <div class="section"><div class="section-header"><h3>Your QR Codes</h3><button class="small-btn" onclick="newQr()">+ New QR</button></div>
+        <div id="qr-grid" class="qr-grid"><p class="muted">Loading...</p></div>
+        <div class="share-hint"><p>Share your tip link: <code id="tip-link"></code></p></div>
+      </div>
+      <div class="section"><div class="section-header"><h3>Your Tip Links</h3></div>
+        <div class="tip-link-create">
+          <input type="text" id="link-role" class="input-sm" placeholder="Your role (e.g. Waiter)" maxlength="100">
+          <input type="text" id="link-workplace" class="input-sm" placeholder="Workplace (e.g. Cafe Mocha)" maxlength="200">
+          <button class="small-btn" onclick="createTipLink()">+ Create Tip Link</button>
         </div>
-        <div id="qr-grid" class="qr-grid" style="display:flex; gap:16px; overflow-x:auto;"><p class="muted">Loading...</p></div>
-        <div class="share-hint" style="margin-top:16px;"><p class="muted">Share your tip link: <code id="tip-link" style="color:var(--pri-light);"></code></p></div>
+        <div id="tip-links-list" class="tip-links-list"><p class="muted">Loading...</p></div>
       </div>
-
-      <div class="glass-card" style="margin-bottom:24px;">
-        <h3 class="text-h3" style="margin-bottom:16px;">Your Tip Links</h3>
-        <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
-          <input type="text" id="link-role" class="glass-input" placeholder="Your role (e.g. Waiter)" maxlength="100" style="flex:1;">
-          <input type="text" id="link-workplace" class="glass-input" placeholder="Workplace (e.g. Cafe Mocha)" maxlength="200" style="flex:1;">
-          <button class="glass-btn glass-btn-primary" onclick="createTipLink()">+ Create Tip Link</button>
-        </div>
-        <div id="tip-links-list"><p class="muted">Loading...</p></div>
-      </div>
-
-      <div class="glass-card" style="margin-bottom:24px;">
-        <h3 class="text-h3" style="margin-bottom:16px;">Recent Tips Received</h3>
-        <div id="d-tips-list"><p class="muted">Loading...</p></div>
-      </div>
+      <div class="section"><h3>Recent Tips Received</h3><div id="d-tips-list" class="tips-list"><p class="muted">Loading...</p></div></div>
 
       <!-- V5: Recurring Tips (AutoPay Subscribers) -->
-      <div class="glass-card" style="margin-bottom:24px;">
-        <h3 class="text-h3" style="margin-bottom:8px;">🔄 AutoPay Subscribers</h3>
-        <p class="muted" style="margin-bottom:16px;">Tippers who auto-send you tips on a recurring schedule via UPI AutoPay.</p>
+      <div class="section">
+        <div class="section-header"><h3>🔄 AutoPay Subscribers</h3></div>
+        <p style="font-size:12px;color:#636E72;margin-bottom:12px;">Tippers who auto-send you tips on a recurring schedule via UPI AutoPay.</p>
         <div id="d-recurring-list">
-          <div style="text-align:center;padding:24px;">
-            <div style="font-size:32px;margin-bottom:12px;">🔄</div>
-            <p class="muted">No subscribers yet. Share your tip link to get recurring support!</p>
+          <div style="text-align:center;padding:24px;color:#B2BEC3;">
+            <div style="font-size:28px;margin-bottom:6px;">🔄</div>
+            <p style="font-size:13px;">No subscribers yet. Share your tip link to get recurring support!</p>
           </div>
         </div>
       </div>
 
       <!-- V5: Worker Responses (Thank-you loop) -->
-      <div class="glass-card" style="margin-bottom:24px;">
-        <h3 class="text-h3" style="margin-bottom:8px;">💬 Thank-You Responses</h3>
-        <p class="muted" style="margin-bottom:16px;">Send quick thank-you messages to tippers. This boosts your reputation score!</p>
+      <div class="section">
+        <div class="section-header"><h3>💬 Thank-You Responses</h3></div>
+        <p style="font-size:12px;color:#636E72;margin-bottom:12px;">Send quick thank-you messages to tippers. This boosts your reputation score!</p>
         <div id="d-responses-list">
-          <div style="text-align:center;padding:24px;">
-            <div style="font-size:32px;margin-bottom:12px;">💬</div>
-            <p class="muted">No pending tips to respond to.</p>
+          <div style="text-align:center;padding:24px;color:#B2BEC3;">
+            <div style="font-size:28px;margin-bottom:6px;">💬</div>
+            <p style="font-size:13px;">No pending tips to respond to.</p>
           </div>
         </div>
       </div>
 
-      <div class="glass-card" style="margin-bottom:24px;">
-        <h3 class="text-h3" style="margin-bottom:16px;">Payouts</h3>
-        <div style="display:flex; gap:16px; margin-bottom:24px; align-items:center;">
-          <div class="glass-input" style="flex:1; display:flex; align-items:center; padding:0 16px;">
-            <span style="color:var(--accent); font-weight:700; margin-right:8px;">&#8377;</span>
-            <input type="number" id="payout-amt" placeholder="Amount" min="100" style="background:transparent; border:none; color:white; outline:none; width:100%; height:48px;">
-          </div>
-          <button class="glass-btn glass-btn-primary" onclick="requestPayout()">Request Payout</button>
-        </div>
-        <div id="d-payouts"><p class="muted">No payouts yet</p></div>
+      <div class="section"><h3>Payouts</h3>
+        <div class="payout-row"><div class="payout-input-row"><span class="rupee-sign">&#8377;</span><input type="number" id="payout-amt" placeholder="Amount" min="100"></div>
+          <button class="small-btn" onclick="requestPayout()">Request Payout</button></div>
+        <div id="d-payouts" class="payouts-list"><p class="muted">No payouts yet</p></div>
       </div>
     </div></div>
   </div>
@@ -314,247 +482,134 @@
   <!-- ==================== FLIQ FOR BUSINESS ==================== -->
   <div id="business-page" class="page hidden">
     <nav class="topbar"><div class="topbar-inner">
-      <div class="topbar-brand"><img src="logo-full.png" alt="Fliq" class="topbar-logo"><span class="text-label" style="background:var(--accent); color:var(--bg-dark); padding:2px 8px; border-radius:12px; margin-left:8px;">for Business</span></div>
-      <div class="topbar-right" style="display:flex; gap:16px; align-items:center;">
-        <span id="biz-phone" class="topbar-phone text-label"></span>
-        <button class="glass-btn" style="padding:6px 12px; font-size:12px;" onclick="goTo('dashboard')">Provider View</button>
-        <button class="glass-btn" style="padding:6px 12px; font-size:12px;" onclick="logout()">Logout</button>
+      <div class="topbar-brand"><img src="logo-full.png" alt="Fliq" class="topbar-logo"><span class="biz-badge">for Business</span></div>
+      <div class="topbar-right">
+        <span id="biz-phone" class="topbar-phone"></span>
+        <button class="topbar-btn" onclick="goTo('dashboard')">Provider View</button>
+        <button class="topbar-logout" onclick="logout()">Logout</button>
       </div>
     </div></nav>
-    <div id="biz-register-section" class="hidden"><div class="dash-container"><div class="glass-panel" style="max-width:600px; margin:40px auto;">
-      <div style="text-align:center; margin-bottom:32px;">
-        <div style="font-size:48px; margin-bottom:16px;">🏢</div>
-        <h2 class="text-h2 text-gradient">Register Your Business</h2>
-        <p class="muted">Manage tips for your entire team from one powerful dashboard.</p>
-      </div>
-      <form onsubmit="registerBusiness(event)" style="display:flex; flex-direction:column; gap:16px;">
-        <div style="display:flex; gap:16px;">
-          <div style="flex:1;"><label class="text-label" style="display:block;margin-bottom:8px;">Business Name *</label><input type="text" id="biz-name" class="glass-input" placeholder="The Grand Hotel" maxlength="200" required></div>
-          <div style="flex:1;"><label class="text-label" style="display:block;margin-bottom:8px;">Type *</label><select id="biz-type" class="glass-input" required><option value="" disabled selected>Select type</option><option value="HOTEL">🏨 Hotel</option><option value="SALON">💇 Salon</option><option value="RESTAURANT">🍽️ Restaurant</option><option value="SPA">🧖 Spa</option><option value="CAFE">☕ Café</option><option value="RETAIL">🛍️ Retail</option><option value="OTHER">🏢 Other</option></select></div>
-        </div>
-        <div><label class="text-label" style="display:block;margin-bottom:8px;">Address</label><input type="text" id="biz-address" class="glass-input" placeholder="12 MG Road, Bengaluru" maxlength="500"></div>
-        <div style="display:flex; gap:16px;">
-          <div style="flex:1;"><label class="text-label" style="display:block;margin-bottom:8px;">Contact Phone</label><input type="tel" id="biz-contact-phone" class="glass-input" placeholder="+919876543210"></div>
-          <div style="flex:1;"><label class="text-label" style="display:block;margin-bottom:8px;">Contact Email</label><input type="email" id="biz-contact-email" class="glass-input" placeholder="manager@business.com"></div>
-        </div>
-        <div><label class="text-label" style="display:block;margin-bottom:8px;">GSTIN (optional)</label><input type="text" id="biz-gstin" class="glass-input" placeholder="29AABCU9603R1ZM" maxlength="15" style="text-transform:uppercase"></div>
-        <div id="biz-register-error" class="error-box hidden" style="background:var(--red); color:white; padding:12px; border-radius:8px;"></div>
-        <button type="submit" class="glass-btn glass-btn-primary" id="biz-register-btn" style="width:100%; margin-top:16px;">Register Business</button>
+    <div id="biz-register-section" class="hidden"><div class="biz-container"><div class="biz-register-card">
+      <div class="biz-register-hero"><div class="biz-register-icon">🏢</div><h2>Register Your Business on Fliq</h2><p>Manage tips for your entire team from one dashboard.</p></div>
+      <form onsubmit="registerBusiness(event)">
+        <div class="form-row"><div class="form-group"><label>Business Name *</label><input type="text" id="biz-name" placeholder="The Grand Hotel" maxlength="200" required></div>
+          <div class="form-group"><label>Business Type *</label><select id="biz-type" required><option value="">Select type</option><option value="HOTEL">🏨 Hotel</option><option value="SALON">💇 Salon</option><option value="RESTAURANT">🍽️ Restaurant</option><option value="SPA">🧖 Spa</option><option value="CAFE">☕ Café</option><option value="RETAIL">🛍️ Retail</option><option value="OTHER">🏢 Other</option></select></div></div>
+        <div class="form-group"><label>Address</label><input type="text" id="biz-address" placeholder="12 MG Road, Bengaluru" maxlength="500"></div>
+        <div class="form-row"><div class="form-group"><label>Contact Phone</label><input type="tel" id="biz-contact-phone" placeholder="+919876543210"></div>
+          <div class="form-group"><label>Contact Email</label><input type="email" id="biz-contact-email" placeholder="manager@business.com"></div></div>
+        <div class="form-group"><label>GSTIN (optional)</label><input type="text" id="biz-gstin" placeholder="29AABCU9603R1ZM" maxlength="15" style="text-transform:uppercase"></div>
+        <div id="biz-register-error" class="error-box hidden"></div>
+        <button type="submit" class="biz-primary-btn" id="biz-register-btn">Register Business</button>
       </form>
     </div></div></div>
-    <div id="biz-dashboard-section" class="hidden"><div class="dash-container">
-      <div class="glass-card" id="biz-header-card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
-        <div style="display:flex; align-items:center; gap:20px;">
-          <div id="biz-type-emoji" style="font-size:48px; width:80px; height:80px; background:rgba(255,255,255,0.05); border-radius:24px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.1);">🏢</div>
-          <div><h2 class="text-h2" id="biz-header-name">Business Name</h2><p class="muted" id="biz-header-meta">Type • Address</p></div>
-        </div>
-        <div>
-          <button class="glass-btn glass-btn-primary" onclick="showInviteModal()">+ Invite Staff</button>
-        </div>
+    <div id="biz-dashboard-section" class="hidden"><div class="biz-container">
+      <div class="biz-header-card" id="biz-header-card"><div class="biz-header-left"><div class="biz-type-emoji" id="biz-type-emoji">🏢</div><div><h2 id="biz-header-name">Business Name</h2><p id="biz-header-meta">Type • Address</p></div></div><div class="biz-header-right"><button class="biz-outline-btn" onclick="showInviteModal()">+ Invite Staff</button></div></div>
+      <div class="biz-stats-grid" id="biz-stats-grid">
+        <div class="biz-stat-card"><div class="biz-stat-icon" style="background:#e8f5e9">💰</div><div><div class="biz-stat-value" id="stat-total-tips">—</div><div class="biz-stat-label">Total Tips</div></div></div>
+        <div class="biz-stat-card"><div class="biz-stat-icon" style="background:#e3f2fd">🧾</div><div><div class="biz-stat-value" id="stat-tip-count">—</div><div class="biz-stat-label">Transactions</div></div></div>
+        <div class="biz-stat-card"><div class="biz-stat-icon" style="background:#fff3e0">⭐</div><div><div class="biz-stat-value" id="stat-avg-rating">—</div><div class="biz-stat-label">Avg Rating</div></div></div>
+        <div class="biz-stat-card"><div class="biz-stat-icon" style="background:#f3e5f5">👥</div><div><div class="biz-stat-value" id="stat-staff-count">—</div><div class="biz-stat-label">Staff Members</div></div></div>
       </div>
-      
-      <div class="bento-grid" id="biz-stats-grid" style="margin-bottom:32px;">
-        <div class="glass-card"><div class="text-label" style="margin-bottom:8px;">Total Tips</div><div class="text-h2 text-gradient" id="stat-total-tips">—</div></div>
-        <div class="glass-card"><div class="text-label" style="margin-bottom:8px;">Transactions</div><div class="text-h2" id="stat-tip-count">—</div></div>
-        <div class="glass-card"><div class="text-label" style="margin-bottom:8px;">Avg Rating</div><div class="text-h2" id="stat-avg-rating" style="color:var(--yellow);">—</div></div>
-        <div class="glass-card"><div class="text-label" style="margin-bottom:8px;">Staff Members</div><div class="text-h2" id="stat-staff-count">—</div></div>
-      </div>
-      
-      <div class="dash-tabs">
-        <div class="dash-tab active" onclick="bizTab('staff')">Staff &amp; Earnings</div>
-        <div class="dash-tab" onclick="bizTab('pools')">Tip Pools</div>
-        <div class="dash-tab" onclick="bizTab('corporate')">Corporate Budget</div>
-        <div class="dash-tab" onclick="bizTab('whatsapp')">WhatsApp</div>
-        <div class="dash-tab" onclick="bizTab('satisfaction')">Satisfaction</div>
-        <div class="dash-tab" onclick="bizTab('qrcodes')">QR Codes</div>
-      </div>
-      
-      <div id="biz-tab-staff" class="biz-tab-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-          <h3 class="text-h3">Staff Earnings Breakdown</h3>
-          <button class="glass-btn" onclick="exportCsv()">⬇ Export CSV</button>
-        </div>
-        <div class="glass-panel" id="biz-staff-table-wrap">
-          <div class="muted" style="text-align:center; padding:40px;">Loading staff data...</div>
-        </div>
-      </div>
+      <div class="biz-tabs"><button class="biz-tab active" onclick="bizTab('staff')">Staff &amp; Earnings</button><button class="biz-tab" onclick="bizTab('pools')">Tip Pools</button><button class="biz-tab" onclick="bizTab('corporate')">Corporate Budget</button><button class="biz-tab" onclick="bizTab('whatsapp')">WhatsApp</button><button class="biz-tab" onclick="bizTab('satisfaction')">Satisfaction</button><button class="biz-tab" onclick="bizTab('qrcodes')">QR Codes</button></div>
+      <div id="biz-tab-staff" class="biz-tab-content"><div class="biz-section-header"><h3>Staff Earnings Breakdown</h3><button class="biz-outline-btn" onclick="exportCsv()">⬇ Export CSV</button></div><div id="biz-staff-table-wrap"><div class="biz-loading">Loading staff data...</div></div></div>
 
       <!-- Tip Pools Tab -->
       <div id="biz-tab-pools" class="biz-tab-content hidden">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-          <h3 class="text-h3">Tip Pools (Party Pots)</h3>
-          <button class="glass-btn" onclick="showPoolForm()">+ Create Pool</button>
+        <div class="biz-section-header"><h3>Tip Pools (Party Pots)</h3><button class="biz-outline-btn" onclick="showPoolForm()">+ Create Pool</button></div>
+        <p style="font-size:13px;color:#636E72;margin-bottom:16px;">Create shared tip pools for teams. Tips received by the pool are split among members based on your chosen method.</p>
+        <div id="pool-form" class="hidden" style="background:#F8F9FA;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #E9ECEF;">
+          <h4 style="margin-bottom:12px;">New Tip Pool</h4>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+            <div style="flex:1;min-width:200px;"><label style="font-size:12px;font-weight:600;color:#636E72;">Pool Name</label><input type="text" id="pool-name" class="input-full" placeholder="Kitchen Team Pool" maxlength="100" style="margin-top:4px;"></div>
+            <div style="flex:1;min-width:200px;"><label style="font-size:12px;font-weight:600;color:#636E72;">Split Method</label><select id="pool-split" class="input-full" style="margin-top:4px;"><option value="EQUAL">Equal Split</option><option value="PERCENTAGE">By Percentage</option><option value="ROLE_BASED">Role-based</option></select></div>
+          </div>
+          <div style="margin-bottom:12px;"><label style="font-size:12px;font-weight:600;color:#636E72;">Description</label><textarea id="pool-desc" class="input-full" rows="2" placeholder="Shared tip pool for the kitchen crew" maxlength="500" style="margin-top:4px;"></textarea></div>
+          <div style="display:flex;gap:8px;"><button class="small-btn" onclick="createPool()" style="background:#6C5CE7;color:white;">Create Pool</button><button class="small-btn" onclick="hidePoolForm()" style="background:#E9ECEF;color:#636E72;">Cancel</button></div>
         </div>
-        <p class="muted" style="margin-bottom:24px;">Create shared tip pools for teams. Tips received by the pool are split among members based on your chosen method.</p>
-        
-        <div id="pool-form" class="hidden glass-card" style="margin-bottom:24px;">
-          <h4 class="text-h3" style="margin-bottom:16px;">New Tip Pool</h4>
-          <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:16px;">
-            <div style="flex:1; min-width:200px;">
-              <label class="text-label" style="display:block; margin-bottom:8px;">Pool Name</label>
-              <input type="text" id="pool-name" class="glass-input" placeholder="Kitchen Team Pool" maxlength="100">
-            </div>
-            <div style="flex:1; min-width:200px;">
-              <label class="text-label" style="display:block; margin-bottom:8px;">Split Method</label>
-              <select id="pool-split" class="glass-input">
-                <option value="EQUAL">Equal Split</option>
-                <option value="PERCENTAGE">By Percentage</option>
-                <option value="ROLE_BASED">Role-based</option>
-              </select>
-            </div>
-          </div>
-          <div style="margin-bottom:24px;">
-            <label class="text-label" style="display:block; margin-bottom:8px;">Description</label>
-            <textarea id="pool-desc" class="glass-input" rows="2" placeholder="Shared tip pool for the kitchen crew" maxlength="500"></textarea>
-          </div>
-          <div style="display:flex; gap:12px;">
-            <button class="glass-btn glass-btn-primary" onclick="createPool()">Create Pool</button>
-            <button class="glass-btn" onclick="hidePoolForm()">Cancel</button>
-          </div>
-        </div>
-        
-        <div id="pools-list" class="glass-panel">
-          <div style="text-align:center; padding:40px;">
-            <div style="font-size:48px; margin-bottom:16px;">🫙</div>
-            <p class="text-h3">No tip pools yet</p>
-            <p class="muted">Create a pool to start splitting tips among team members.</p>
+        <div id="pools-list">
+          <div style="text-align:center;padding:40px;color:#B2BEC3;">
+            <div style="font-size:40px;margin-bottom:8px;">🫙</div>
+            <p style="font-weight:600;margin-bottom:4px;">No tip pools yet</p>
+            <p style="font-size:13px;">Create a pool to start splitting tips among team members.</p>
           </div>
         </div>
       </div>
 
       <!-- Corporate Budget Tab (UPI Circle Concept) -->
       <div id="biz-tab-corporate" class="biz-tab-content hidden">
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
-          <h3 class="text-h3">Corporate Tipping Budget</h3>
-          <span class="text-label" style="background:#FF8F00; color:var(--bg-dark); padding:2px 8px; border-radius:12px;">UPI Circle</span>
-        </div>
-        <p class="muted" style="margin-bottom:24px;">Set monthly tipping allowances for employees. Tips are debited from the corporate account via UPI Circle delegation.</p>
-        
-        <div class="glass-card" style="margin-bottom:24px;">
-          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; text-align:center;">
-            <div><div class="text-h2" style="color:var(--accent);" id="corp-budget-total">₹0</div><div class="text-label">Monthly Budget</div></div>
-            <div><div class="text-h2 text-gradient" id="corp-budget-used">₹0</div><div class="text-label">Used This Month</div></div>
-            <div><div class="text-h2" style="color:#FF8F00;" id="corp-budget-remaining">₹0</div><div class="text-label">Remaining</div></div>
+        <div class="biz-section-header"><h3>Corporate Tipping Budget</h3><span style="background:#FF8F00;color:white;font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px;">UPI Circle</span></div>
+        <p style="font-size:13px;color:#636E72;margin-bottom:20px;">Set monthly tipping allowances for employees. Tips are debited from the corporate account via UPI Circle delegation.</p>
+        <div style="background:linear-gradient(135deg,#E8FFF8,#F0EDFF);border-radius:16px;padding:24px;border:1px solid rgba(0,184,148,0.2);margin-bottom:20px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;text-align:center;">
+            <div><div style="font-size:24px;font-weight:800;color:#00B894;" id="corp-budget-total">₹0</div><div style="font-size:11px;color:#636E72;">Monthly Budget</div></div>
+            <div><div style="font-size:24px;font-weight:800;color:#6C5CE7;" id="corp-budget-used">₹0</div><div style="font-size:11px;color:#636E72;">Used This Month</div></div>
+            <div><div style="font-size:24px;font-weight:800;color:#FF8F00;" id="corp-budget-remaining">₹0</div><div style="font-size:11px;color:#636E72;">Remaining</div></div>
           </div>
         </div>
-        
-        <div class="glass-card" style="margin-bottom:24px;">
-          <h4 class="text-h3" style="margin-bottom:16px;">Set Employee Allowances</h4>
-          <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:16px;">
-            <div style="flex:1; min-width:180px;">
-              <label class="text-label" style="display:block; margin-bottom:8px;">Employee Phone</label>
-              <input type="tel" id="corp-emp-phone" class="glass-input" placeholder="+919876543210">
-            </div>
-            <div style="width:160px;">
-              <label class="text-label" style="display:block; margin-bottom:8px;">Monthly Limit</label>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span class="text-h3">₹</span>
-                <input type="number" id="corp-emp-limit" class="glass-input" placeholder="3000" min="100">
-              </div>
-            </div>
-            <div style="display:flex; align-items:flex-end;">
-              <button class="glass-btn glass-btn-primary" onclick="addCorpAllowance()">+ Add</button>
-            </div>
+        <div style="background:white;border-radius:12px;padding:20px;border:1px solid #E9ECEF;margin-bottom:16px;">
+          <h4 style="margin-bottom:12px;">Set Employee Allowances</h4>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+            <div style="flex:1;min-width:180px;"><label style="font-size:12px;font-weight:600;color:#636E72;">Employee Phone</label><input type="tel" id="corp-emp-phone" class="input-full" placeholder="+919876543210" style="margin-top:4px;"></div>
+            <div style="width:140px;"><label style="font-size:12px;font-weight:600;color:#636E72;">Monthly Limit</label><div style="display:flex;align-items:center;gap:4px;margin-top:4px;"><span style="font-weight:600;">₹</span><input type="number" id="corp-emp-limit" class="input-full" placeholder="3000" min="100"></div></div>
+            <div style="display:flex;align-items:flex-end;"><button class="small-btn" onclick="addCorpAllowance()" style="background:#00B894;color:white;padding:10px 16px;">+ Add</button></div>
           </div>
         </div>
-        
-        <div id="corp-allowances-list" class="glass-panel" style="margin-bottom:24px;">
-          <h4 class="text-h3" style="margin-bottom:16px;">Employee Tipping Allowances</h4>
-          <div style="text-align:center; padding:24px;">
-            <p class="muted">No employees added yet. Set allowances above.</p>
+        <div id="corp-allowances-list" style="background:white;border-radius:12px;padding:20px;border:1px solid #E9ECEF;">
+          <h4 style="margin-bottom:12px;">Employee Tipping Allowances</h4>
+          <div style="text-align:center;padding:20px;color:#B2BEC3;">
+            <p style="font-size:13px;">No employees added yet. Set allowances above.</p>
           </div>
         </div>
-        
-        <div class="glass-card" style="background:rgba(255, 143, 0, 0.1); border-color:rgba(255, 143, 0, 0.3);">
-          <div style="font-size:14px; color:#FFAF00;">💡 <strong>How it works:</strong> When an employee scans a Fliq QR code, they select "Corporate UPI Circle" as their payment method. The tip is debited from your company's linked bank account — no personal expense for the employee.</div>
+        <div style="background:#FFF3E0;border-radius:12px;padding:16px;margin-top:16px;">
+          <div style="font-size:12px;color:#E65100;">💡 <strong>How it works:</strong> When an employee scans a Fliq QR code, they select "Corporate UPI Circle" as their payment method. The tip is debited from your company's linked bank account — no personal expense for the employee.</div>
         </div>
       </div>
 
-      <div id="biz-tab-satisfaction" class="biz-tab-content hidden">
-        <h3 class="text-h3" style="margin-bottom:24px;">Customer Satisfaction</h3>
-        <div class="glass-panel" id="biz-rating-dist" style="margin-bottom:24px;"></div>
-        <div id="biz-reviews-list"></div>
-      </div>
-      
-      <div id="biz-tab-qrcodes" class="biz-tab-content hidden">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-          <h3 class="text-h3">Staff QR Codes</h3>
-          <button class="glass-btn" onclick="printAllQr()">🖨 Print All</button>
-        </div>
-        <p class="muted" style="margin-bottom:24px;">Print these standee cards and place them on desks or counters.</p>
-        <div id="biz-qr-grid" class="bento-grid"></div>
-      </div>
+      <div id="biz-tab-satisfaction" class="biz-tab-content hidden"><h3>Customer Satisfaction</h3><div class="biz-rating-dist" id="biz-rating-dist"></div><div id="biz-reviews-list"></div></div>
+      <div id="biz-tab-qrcodes" class="biz-tab-content hidden"><div class="biz-section-header"><h3>Staff QR Codes</h3><button class="biz-outline-btn" onclick="printAllQr()">🖨 Print All</button></div><p class="biz-muted">Print these standee cards and place them on desks or counters.</p><div id="biz-qr-grid" class="biz-qr-grid"></div></div>
 
       <!-- WhatsApp Nudge Tab -->
       <div id="biz-tab-whatsapp" class="biz-tab-content hidden">
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
-          <h3 class="text-h3">💬 WhatsApp Nudges</h3>
-          <span class="text-label" style="background:#25D366; color:var(--bg-dark); padding:2px 8px; border-radius:12px;">WhatsApp + UPI</span>
-        </div>
-        <p class="muted" style="margin-bottom:24px;">Automatically send tip reminders to customers after their visit via WhatsApp. They rate and tip — all inside the chat.</p>
-        
-        <div class="glass-card" style="margin-bottom:24px; border-color:rgba(37, 211, 102, 0.3);">
-          <h4 class="text-h3" style="margin-bottom:24px;">How it works</h4>
-          <div class="bento-grid">
-            <div style="text-align:center;">
-              <div style="font-size:40px; margin-bottom:12px;">1️⃣</div>
-              <div class="text-h3" style="margin-bottom:8px;">Capture Phone</div>
-              <div class="muted">At billing, enter customer's number</div>
+        <div class="biz-section-header"><h3>💬 WhatsApp Tip Nudges</h3><span style="background:#25D366;color:white;font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px;">WhatsApp + UPI</span></div>
+        <p style="font-size:13px;color:#636E72;margin-bottom:20px;">Automatically send tip reminders to customers after their visit via WhatsApp. They rate and tip — all inside the chat.</p>
+        <div style="background:linear-gradient(135deg,#E8FFF8,#DCF8C6);border-radius:16px;padding:24px;border:1px solid rgba(37,211,102,0.2);margin-bottom:20px;">
+          <h4 style="margin-bottom:16px;">How it works</h4>
+          <div style="display:flex;gap:20px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:200px;text-align:center;">
+              <div style="font-size:32px;margin-bottom:8px;">1️⃣</div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Capture Phone</div>
+              <div style="font-size:12px;color:#636E72;">At billing, enter customer's number</div>
             </div>
-            <div style="text-align:center;">
-              <div style="font-size:40px; margin-bottom:12px;">2️⃣</div>
-              <div class="text-h3" style="margin-bottom:8px;">Auto-Send Nudge</div>
-              <div class="muted">10 min later: "Rate your server 1-5"</div>
+            <div style="flex:1;min-width:200px;text-align:center;">
+              <div style="font-size:32px;margin-bottom:8px;">2️⃣</div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Auto-Send Nudge</div>
+              <div style="font-size:12px;color:#636E72;">10 min later: "Rate your server 1-5"</div>
             </div>
-            <div style="text-align:center;">
-              <div style="font-size:40px; margin-bottom:12px;">3️⃣</div>
-              <div class="text-h3" style="margin-bottom:8px;">Instant Tip</div>
-              <div class="muted">UPI payment button right in WhatsApp</div>
+            <div style="flex:1;min-width:200px;text-align:center;">
+              <div style="font-size:32px;margin-bottom:8px;">3️⃣</div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Instant Tip</div>
+              <div style="font-size:12px;color:#636E72;">UPI payment button right in WhatsApp</div>
             </div>
           </div>
         </div>
-        
-        <div class="glass-card" style="margin-bottom:24px;">
-          <h4 class="text-h3" style="margin-bottom:16px;">Configuration</h4>
-          <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:24px;">
-            <div style="flex:1; min-width:200px;">
-              <label class="text-label" style="display:block; margin-bottom:8px;">Delay after billing</label>
-              <select id="wa-delay" class="glass-input">
-                <option value="10">10 minutes</option>
-                <option value="15">15 minutes</option>
-                <option value="30">30 minutes</option>
-                <option value="60">1 hour</option>
-              </select>
-            </div>
-            <div style="flex:1; min-width:200px;">
-              <label class="text-label" style="display:block; margin-bottom:8px;">Default tip suggestion</label>
-              <select id="wa-default-tip" class="glass-input">
-                <option value="50">₹50</option>
-                <option value="100" selected>₹100</option>
-                <option value="150">₹150</option>
-                <option value="200">₹200</option>
-              </select>
-            </div>
+        <div style="background:white;border-radius:12px;padding:20px;border:1px solid #E9ECEF;margin-bottom:16px;">
+          <h4 style="margin-bottom:12px;">Configuration</h4>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+            <div style="flex:1;min-width:200px;"><label style="font-size:12px;font-weight:600;color:#636E72;">Delay after billing</label><select id="wa-delay" class="input-full" style="margin-top:4px;"><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 hour</option></select></div>
+            <div style="flex:1;min-width:200px;"><label style="font-size:12px;font-weight:600;color:#636E72;">Default tip suggestion</label><select id="wa-default-tip" class="input-full" style="margin-top:4px;"><option value="50">₹50</option><option value="100" selected>₹100</option><option value="150">₹150</option><option value="200">₹200</option></select></div>
           </div>
-          <div style="margin-bottom:24px;">
-            <label class="text-label" style="display:block; margin-bottom:8px;">Message template</label>
-            <textarea id="wa-template" class="glass-input" rows="3">Hi! Hope you enjoyed your visit at {business_name}. Rate your experience with {worker_name} from 1-5 ⭐</textarea>
+          <div style="margin-bottom:16px;"><label style="font-size:12px;font-weight:600;color:#636E72;">Message template</label><textarea id="wa-template" class="input-full" rows="3" style="margin-top:4px;">Hi! Hope you enjoyed your visit at {business_name}. Rate your experience with {worker_name} from 1-5 ⭐</textarea></div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+            <label class="toggle-switch" style="position:relative;display:inline-block;width:48px;height:26px;"><input type="checkbox" id="wa-enabled" checked style="opacity:0;width:0;height:0;"><span style="position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:13px;transition:0.3s;"></span></label>
+            <span style="font-size:13px;font-weight:600;">Enable WhatsApp nudges</span>
           </div>
-          <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
-            <label class="toggle-switch" style="position:relative; display:inline-block; width:48px; height:26px;">
-              <input type="checkbox" id="wa-enabled" checked style="opacity:0; width:0; height:0;">
-              <span style="position:absolute; cursor:pointer; inset:0; background:var(--pri); border-radius:13px; transition:0.3s;"></span>
-            </label>
-            <span class="text-h3" style="margin-bottom:0;">Enable WhatsApp nudges</span>
-          </div>
-          <button class="glass-btn" onclick="showToast('WhatsApp nudge settings saved!')" style="background:rgba(37, 211, 102, 0.2); border-color:#25D366; color:#25D366;">Save Settings</button>
+          <button class="small-btn" onclick="showToast('WhatsApp nudge settings saved!')" style="background:#25D366;color:white;">Save Settings</button>
         </div>
-        
-        <div class="glass-card">
-          <h4 class="text-h3" style="margin-bottom:16px;">Test Nudge</h4>
-          <div style="display:flex; gap:16px;">
-            <input type="tel" id="wa-test-phone" class="glass-input" placeholder="+919876543210" style="flex:1;">
-            <button class="glass-btn" onclick="showToast('Test nudge sent!')" style="background:rgba(37, 211, 102, 0.2); border-color:#25D366; color:#25D366;">Send Test</button>
+        <div style="background:white;border-radius:12px;padding:20px;border:1px solid #E9ECEF;">
+          <h4 style="margin-bottom:12px;">Test Nudge</h4>
+          <div style="display:flex;gap:8px;">
+            <input type="tel" id="wa-test-phone" class="input-full" placeholder="+919876543210" style="flex:1;">
+            <button class="small-btn" onclick="showToast('Test nudge sent!')" style="background:#25D366;color:white;">Send Test</button>
           </div>
         </div>
       </div>
@@ -564,25 +619,11 @@
 
   <!-- ==================== INVITE MODAL ==================== -->
   <div id="invite-modal" class="modal-backdrop hidden">
-    <div class="glass-panel" style="max-width:400px; width:90%; padding:32px; border-radius:24px; position:relative;">
-      <h3 class="text-h2" style="margin-bottom:24px;">Invite Staff Member</h3>
-      <div style="margin-bottom:24px;">
-        <label class="text-label" style="display:block; margin-bottom:8px;">Phone Number</label>
-        <input type="tel" id="invite-phone" class="glass-input" placeholder="+919876543210">
-      </div>
-      <div style="margin-bottom:24px;">
-        <label class="text-label" style="display:block; margin-bottom:8px;">Role</label>
-        <select id="invite-role" class="glass-input">
-          <option value="STAFF">Staff</option>
-          <option value="MANAGER">Manager</option>
-          <option value="ADMIN">Admin</option>
-        </select>
-      </div>
-      <div id="invite-error" class="error-box hidden" style="background:var(--red); color:white; padding:12px; border-radius:8px; margin-bottom:24px;"></div>
-      <div style="display:flex; gap:16px;">
-        <button class="glass-btn" style="flex:1;" onclick="closeInviteModal()">Cancel</button>
-        <button class="glass-btn glass-btn-primary" style="flex:1;" onclick="sendInvite()">Send Invite</button>
-      </div>
+    <div class="modal-box"><div class="modal-header"><h3>Invite Staff Member</h3><button class="modal-close" onclick="closeInviteModal()">✕</button></div>
+      <div class="modal-body"><div class="form-group"><label>Phone Number</label><input type="tel" id="invite-phone" placeholder="+919876543210"></div>
+        <div class="form-group"><label>Role</label><select id="invite-role"><option value="STAFF">Staff</option><option value="MANAGER">Manager</option><option value="ADMIN">Admin</option></select></div>
+        <div id="invite-error" class="error-box hidden"></div></div>
+      <div class="modal-footer"><button class="biz-outline-btn" onclick="closeInviteModal()">Cancel</button><button class="biz-primary-btn" onclick="sendInvite()">Send Invite</button></div>
     </div>
   </div>
 
@@ -591,48 +632,45 @@
   <!-- ==================== TIPPER DEMO (TESTING ONLY — REMOVE FOR PROD) ==================== -->
   <div id="tipper-demo-page" class="page hidden">
     <nav class="topbar"><div class="topbar-inner">
-      <div class="topbar-brand">
-        <img src="logo-full.png" alt="Fliq" class="topbar-logo">
-        <span class="text-label" style="background:#FF6B6B; color:white; padding:2px 8px; border-radius:12px; margin-left:8px;">DEMO</span>
-      </div>
-      <div class="topbar-right" style="display:flex; align-items:center; gap:16px;">
-        <span class="muted" style="font-size:13px;">🧪 Tipper Testing Dashboard</span>
-        <button class="glass-btn" style="padding:6px 12px; font-size:12px;" onclick="goTo('landing')">← Back</button>
+      <div class="topbar-brand"><img src="logo-full.png" alt="Fliq" class="topbar-logo"><span style="background:#FF6B6B;color:white;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;margin-left:8px;">DEMO</span></div>
+      <div class="topbar-right">
+        <span style="font-size:13px;color:#636E72;">🧪 Tipper Testing Dashboard</span>
+        <button class="topbar-btn" onclick="goTo('landing')">← Back</button>
       </div>
     </div></nav>
-    <div class="dash-container">
-      <div class="glass-card" style="background:rgba(255, 107, 107, 0.1); border-color:rgba(255, 107, 107, 0.3); margin-bottom:32px;">
-        <p class="text-h3" style="color:#FF6B6B; margin-bottom:0;">⚠️ Testing only — this page will be removed before production.</p>
+    <div class="container" style="padding-top:80px;">
+      <div style="background:linear-gradient(135deg,#FF6B6B22,#FDCB6E22);border:1px solid #FF6B6B44;border-radius:12px;padding:16px 20px;margin-bottom:24px;">
+        <p style="font-size:13px;color:#E17055;font-weight:600;">⚠️ Testing only — this page will be removed before production.</p>
       </div>
 
-      <h2 class="text-h2 text-gradient" style="margin-bottom:8px;">Test the V5 Tipper Flow</h2>
-      <p class="muted" style="margin-bottom:32px;">Pick a provider below to open the full 6-screen tip experience.</p>
+      <h2 style="margin-bottom:8px;">Test the V5 Tipper Flow</h2>
+      <p style="color:#636E72;margin-bottom:24px;">Pick a provider below to open the full 6-screen tip experience.</p>
 
       <!-- Provider Cards -->
-      <div id="demo-providers" class="bento-grid" style="margin-bottom:32px;">
-        <div style="text-align:center; padding:40px; color:var(--text-muted); grid-column:1 / -1;">Loading providers...</div>
+      <div id="demo-providers" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:32px;">
+        <div style="text-align:center;padding:40px;color:#B2BEC3;">Loading providers...</div>
       </div>
 
       <!-- Manual Test -->
-      <div class="glass-card" style="margin-bottom:32px;">
-        <h3 class="text-h3" style="margin-bottom:16px;">Manual Test</h3>
-        <div style="display:flex; gap:16px; flex-wrap:wrap;">
-          <div style="flex:1; min-width:200px;">
-            <label class="text-label" style="display:block; margin-bottom:8px;">Provider ID or Payment Link Code</label>
-            <input type="text" id="demo-manual-id" class="glass-input" placeholder="Enter provider ID or short code">
+      <div style="background:white;border-radius:16px;padding:24px;border:1px solid #E9ECEF;margin-bottom:24px;">
+        <h3 style="margin-bottom:12px;">Manual Test</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:200px;">
+            <label style="font-size:12px;font-weight:600;color:#636E72;">Provider ID or Payment Link Code</label>
+            <input type="text" id="demo-manual-id" class="input-full" placeholder="Enter provider ID or short code" style="margin-top:4px;">
           </div>
-          <div style="display:flex; align-items:flex-end; gap:16px;">
-            <button class="glass-btn glass-btn-primary" onclick="openTipV5(document.getElementById('demo-manual-id').value)">Open V5 Tip Flow →</button>
-            <button class="glass-btn" onclick="openTipSPA(document.getElementById('demo-manual-id').value)">Open SPA Tip</button>
+          <div style="display:flex;align-items:flex-end;gap:8px;">
+            <button class="small-btn" onclick="openTipV5(document.getElementById('demo-manual-id').value)" style="background:#6C5CE7;color:white;padding:10px 20px;">Open V5 Tip Flow →</button>
+            <button class="small-btn" onclick="openTipSPA(document.getElementById('demo-manual-id').value)" style="padding:10px 20px;">Open SPA Tip</button>
           </div>
         </div>
       </div>
 
       <!-- Tip History -->
-      <div class="glass-card">
-        <h3 class="text-h3" style="margin-bottom:16px;">Recent Test Tips</h3>
+      <div style="background:white;border-radius:16px;padding:24px;border:1px solid #E9ECEF;">
+        <h3 style="margin-bottom:12px;">Recent Test Tips</h3>
         <div id="demo-tip-history">
-          <p class="muted">No tips sent yet. Open a provider's tip page to start testing.</p>
+          <p style="color:#B2BEC3;font-size:13px;">No tips sent yet. Open a provider's tip page to start testing.</p>
         </div>
       </div>
     </div>

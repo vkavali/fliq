@@ -15,7 +15,7 @@ function goTo(page) {
   document.querySelectorAll('.page').forEach(p => { p.style.display = 'none'; p.classList.add('hidden'); });
   const el = document.getElementById(`${page}-page`);
   if (el) {
-    const isFlex = page === 'landing' || page === 'login' || page === 'tip' || page === 'business-login';
+    const isFlex = page === 'landing' || page === 'login' || page === 'tip';
     el.style.display = isFlex ? 'flex' : 'block';
     el.classList.remove('hidden');
   }
@@ -364,62 +364,6 @@ function showPhoneStep() {
   document.getElementById('phone-step').classList.remove('hidden');
   document.getElementById('otp-step').classList.add('hidden');
   hideAuthErr();
-}
-
-// ===== BUSINESS AUTH =====
-let authBizEmail = '';
-
-async function sendBizOtp() {
-  const email = document.getElementById('biz-email').value.trim();
-  if (!email || !email.includes('@')) return showAuthErr('Enter a valid email address');
-
-  authBizEmail = email;
-  const btn = document.querySelector('#biz-email-step button');
-  btn.disabled = true; btn.textContent = 'Sending...';
-
-  try {
-    const res = await api('POST', '/auth/otp/email/send', { email: authBizEmail }, false);
-    document.getElementById('biz-email-step').classList.add('hidden');
-    document.getElementById('biz-otp-step').classList.remove('hidden');
-    document.getElementById('biz-otp-sub').textContent = `Access code sent to ${authBizEmail}`;
-
-    if (res.otp) {
-      const boxes = document.querySelectorAll('#biz-otp-row .otp-box');
-      res.otp.split('').forEach((c, i) => { if (boxes[i]) boxes[i].value = c; });
-    } else {
-      document.querySelector('#biz-otp-row .otp-box[data-i="0"]').focus();
-    }
-    hideAuthErr();
-  } catch (e) {
-    showAuthErr(e.message);
-  } finally {
-    btn.disabled = false; btn.textContent = 'Get Access Code';
-  }
-}
-
-async function verifyBizOtp() {
-  const boxes = document.querySelectorAll('#biz-otp-row .otp-box');
-  const code = Array.from(boxes).map(b => b.value).join('');
-  if (code.length !== 6) return showAuthErr('Enter the full 6-digit code');
-
-  const btn = document.querySelector('#biz-otp-step button');
-  btn.disabled = true; btn.textContent = 'Verifying...';
-
-  try {
-    const d = await api('POST', '/auth/otp/email/verify', { email: authBizEmail, code }, false);
-    token = d.accessToken;
-    user = d.user;
-    localStorage.setItem('tp_token', token);
-    localStorage.setItem('tp_refresh', d.refreshToken);
-    localStorage.setItem('tp_user', JSON.stringify(user));
-
-    goToBusiness();
-    toast('Business Login Successful');
-  } catch (e) {
-    showAuthErr(e.message);
-  } finally {
-    btn.disabled = false; btn.textContent = 'Access Dashboard';
-  }
 }
 
 function showAuthErr(m) { const e = document.getElementById('auth-error'); e.textContent = m; e.classList.remove('hidden'); }
@@ -808,24 +752,15 @@ const BIZ_TYPE_EMOJIS = {
   SPA: '🧖', CAFE: '☕', RETAIL: '🛍️', OTHER: '🏢',
 };
 
+let authBizEmail = '';
+
 async function goToBusiness() {
   if (!token) {
+    pendingRedirect = 'business';
     goTo('business-login');
     toast('Please login with your business email');
     return;
   }
-
-  // Double check if this is a business user or just a customer trying to access business
-  if (user?.type !== 'BUSINESS_ADMIN' && user?.type !== 'ADMIN') {
-    // Force relogin if they are a regular provider trying to access business
-    // Or we could let them register. Let's just route them to business login for simplicity.
-    token = null;
-    localStorage.removeItem('tp_token');
-    goTo('business-login');
-    toast('Please login with a business account');
-    return;
-  }
-
   document.getElementById('biz-phone').textContent = user?.email || user?.phone || '';
   goTo('business');
   try {
@@ -838,6 +773,65 @@ async function goToBusiness() {
     document.getElementById('biz-register-section').classList.remove('hidden');
     document.getElementById('biz-dashboard-section').classList.add('hidden');
   }
+}
+
+async function sendBizOtp() {
+  const email = document.getElementById('biz-email').value.trim();
+  if (!email || !email.includes('@')) return showAuthErr('Enter a valid email address');
+
+  authBizEmail = email;
+  const btn = document.querySelector('#biz-email-step button');
+  btn.disabled = true; btn.textContent = 'Sending...';
+
+  try {
+    const res = await api('POST', '/auth/otp/email/send', { email: authBizEmail }, false);
+    document.getElementById('biz-email-step').classList.add('hidden');
+    document.getElementById('biz-otp-step').classList.remove('hidden');
+    document.getElementById('biz-otp-sub').textContent = `Access code sent to ${authBizEmail}`;
+
+    if (res.otp) {
+      const boxes = document.querySelectorAll('#biz-otp-row .otp-box');
+      res.otp.split('').forEach((c, i) => { if (boxes[i]) boxes[i].value = c; });
+    } else {
+      document.querySelector('#biz-otp-row .otp-box[data-i="0"]').focus();
+    }
+    hideAuthErr();
+  } catch (e) {
+    showAuthErr(e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Get Access Code';
+  }
+}
+
+async function verifyBizOtp() {
+  const boxes = document.querySelectorAll('#biz-otp-row .otp-box');
+  const code = Array.from(boxes).map(b => b.value).join('');
+  if (code.length !== 6) return showAuthErr('Enter the full 6-digit code');
+
+  const btn = document.querySelector('#biz-otp-step button');
+  btn.disabled = true; btn.textContent = 'Verifying...';
+
+  try {
+    const d = await api('POST', '/auth/otp/email/verify', { email: authBizEmail, code }, false);
+    token = d.accessToken;
+    user = d.user;
+    localStorage.setItem('tp_token', token);
+    localStorage.setItem('tp_refresh', d.refreshToken);
+    localStorage.setItem('tp_user', JSON.stringify(user));
+
+    goToBusiness();
+    toast('Business Login Successful');
+  } catch (e) {
+    showAuthErr(e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Access Dashboard';
+  }
+}
+
+function showBizEmailStep() {
+  document.getElementById('biz-otp-step').classList.add('hidden');
+  document.getElementById('biz-email-step').classList.remove('hidden');
+  hideAuthErr();
 }
 
 async function registerBusiness(e) {
