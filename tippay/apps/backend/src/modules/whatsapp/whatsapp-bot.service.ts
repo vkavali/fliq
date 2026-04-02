@@ -87,7 +87,7 @@ export class WhatsAppBotService {
   }
 
   private async handleProviderCommand(
-    user: { id: string; name: string | null; phone: string },
+    user: { id: string; name: string | null; phone: string | null },
     provider: { id: string; qrCodeUrl: string | null; razorpayFundAccountId: string | null },
     from: string,
     command: string,

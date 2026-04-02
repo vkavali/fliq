@@ -224,7 +224,7 @@ export class ProvidersService {
       providers: providers.map((p) => ({
         id: p.id,
         name: p.displayName || p.user.name,
-        phone: p.user.phone.replace(/(\d{2})\d{6}(\d{4})/, '$1******$2'), // mask phone
+        phone: p.user.phone ? p.user.phone.replace(/(\d{2})\d{6}(\d{4})/, '$1******$2') : '', // mask phone
         category: p.category,
         ratingAverage: p.ratingAverage,
         totalTipsReceived: p.totalTipsReceived,

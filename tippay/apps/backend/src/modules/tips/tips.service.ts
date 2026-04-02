@@ -188,7 +188,7 @@ export class TipsService {
     this.notifications
       .notifyTipReceived(
         paidTip.providerId,
-        paidTip.provider.phone,
+        paidTip.provider.phone ?? '',
         Number(paidTip.amountPaise),
         paidTip.customer?.name ?? undefined,
         paidTip.message ?? undefined,

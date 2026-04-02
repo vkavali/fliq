@@ -72,7 +72,7 @@ export class TipLaterService {
     try {
       const rupees = (dto.amountPaise / 100).toFixed(2);
       await this.notifications.sendSms(
-        provider.phone,
+        provider.phone ?? '',
         `${customer.name ?? 'A customer'} has promised to tip you Rs ${rupees} on Fliq — arriving within ${DEFERRED_TIP_HOURS}h!`,
       );
     } catch (err) {
@@ -278,7 +278,7 @@ export class TipLaterService {
       try {
         const rupees = (Number(tip.amountPaise) / 100).toFixed(2);
         await this.notifications.sendSms(
-          tip.customer.phone,
+          tip.customer.phone ?? '',
           `Reminder: You promised Rs ${rupees} to ${tip.provider.name ?? 'a provider'} on Fliq. Tap to pay now before it expires!`,
         );
       } catch (err) {

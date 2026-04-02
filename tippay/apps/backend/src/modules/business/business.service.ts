@@ -162,7 +162,7 @@ export class BusinessService {
       where: {
         id: invitationId,
         status: 'PENDING',
-        OR: [{ recipientId: userId }, { phone: user.phone }],
+        OR: [{ recipientId: userId }, ...(user.phone ? [{ phone: user.phone }] : [])],
       },
       include: { business: { select: { id: true, name: true } } },
     });
@@ -193,7 +193,7 @@ export class BusinessService {
           update: { isActive: true, role: invitation.role },
         }),
       ]);
-      return { message: `Joined ${invitation.business.name}` };
+      return { message: `Joined business successfully` };
     } else {
       await this.prisma.businessInvitation.update({
         where: { id: invitationId },
@@ -209,7 +209,7 @@ export class BusinessService {
 
     return this.prisma.businessInvitation.findMany({
       where: {
-        OR: [{ recipientId: userId }, { phone: user.phone }],
+        OR: [{ recipientId: userId }, ...(user.phone ? [{ phone: user.phone }] : [])],
         status: 'PENDING',
       },
       include: {

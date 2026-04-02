@@ -102,13 +102,13 @@ export class PayoutsService {
         `Payout reversal ${payout.id}`,
       );
       this.notifications
-        .notifyPayoutFailed(userId, provider.user.phone, dto.amountPaise)
+        .notifyPayoutFailed(userId, provider.user.phone ?? '', dto.amountPaise)
         .catch((err) => this.logger.error('Failed to send payout failed notification', err));
       throw new BadRequestException('Payout initiation failed. Amount refunded to wallet.');
     }
 
     this.notifications
-      .notifyPayoutProcessed(userId, provider.user.phone, dto.amountPaise)
+      .notifyPayoutProcessed(userId, provider.user.phone ?? '', dto.amountPaise)
       .catch((err) => this.logger.error('Failed to send payout notification', err));
 
     return {
