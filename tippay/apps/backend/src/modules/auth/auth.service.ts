@@ -190,13 +190,11 @@ export class AuthService {
     await this.redis.incr(hourKey);
     await this.redis.setex(hourKey, 3600, (await this.redis.get(hourKey)) || '1');
 
-    // Simulate sending email log for now
-    this.logger.log(`\n==========================================`);
-    this.logger.log(`📧 Simulated Email to: ${email}`);
-    this.logger.log(`   [Fliq Business] Your login OTP is: ${code}`);
-    this.logger.log(`==========================================\n`);
+    // TODO: Replace with real email service (Resend, Sendgrid, etc.)
+    // For now, return OTP in response so frontend can auto-fill it
+    this.logger.log(`📧 Email OTP for ${email}: ${code} (no email service configured — returning in response)`);
 
-    return { message: 'OTP sent to email successfully' };
+    return { message: 'OTP sent to email successfully', otp: code };
   }
 
   async verifyEmailOtp(
