@@ -773,7 +773,94 @@
 
   <div id="print-area" class="print-only"></div>
 
-  <!-- ==================== TIPPER DEMO (TESTING ONLY — REMOVE FOR PROD) ==================== -->
+  <!-- ==================== TIPPER PORTAL — Manage Subscriptions ==================== -->
+  <div id="tipper-portal-page" class="page hidden">
+    <nav class="topbar"><div class="topbar-inner">
+      <div class="topbar-brand"><img src="logo-full.png" alt="Fliq" class="topbar-logo"><span style="background:linear-gradient(135deg,#FDCB6E,#FF8F00);color:white;font-size:9px;font-weight:800;padding:2px 10px;border-radius:10px;margin-left:8px;">MY TIPS</span></div>
+      <div class="topbar-right">
+        <button class="topbar-btn" onclick="goTo('landing')">← Home</button>
+        <button id="tipper-logout-btn" class="topbar-logout hidden" onclick="tipperLogout()">Logout</button>
+      </div>
+    </div></nav>
+    <div class="container" style="padding-top:80px;max-width:640px;">
+      
+      <!-- Auth Section (shown when not logged in) -->
+      <div id="tipper-auth-section">
+        <div style="text-align:center;margin-bottom:32px;">
+          <div style="font-size:48px;margin-bottom:12px;">💳</div>
+          <h2 style="font-size:24px;font-weight:900;margin-bottom:8px;">My Tips & Subscriptions</h2>
+          <p style="font-size:14px;color:var(--text2);max-width:400px;margin:0 auto;">Verify your phone number to view your tip history, manage recurring tips, and cancel subscriptions.</p>
+        </div>
+
+        <!-- Phone Step -->
+        <div id="tipper-phone-step" style="background:white;border-radius:16px;padding:28px;border:1px solid var(--border);">
+          <label style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;display:block;">Your Phone Number</label>
+          <div style="display:flex;gap:8px;">
+            <span style="padding:12px;background:var(--bg);border-radius:10px;font-size:14px;font-weight:600;border:1px solid var(--border);">+91</span>
+            <input type="tel" id="tipper-phone-input" class="input-full" placeholder="Enter your phone number" maxlength="10" style="flex:1;">
+          </div>
+          <button class="auth-btn" onclick="tipperSendOtp()" style="margin-top:12px;width:100%;">Send OTP</button>
+        </div>
+
+        <!-- OTP Step -->
+        <div id="tipper-otp-step" class="hidden" style="background:white;border-radius:16px;padding:28px;border:1px solid var(--border);">
+          <label style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;display:block;">Enter Verification Code</label>
+          <div style="display:flex;gap:8px;justify-content:center;margin-bottom:16px;">
+            <input type="text" maxlength="1" class="otp-box tipper-otp-box" data-ti="0">
+            <input type="text" maxlength="1" class="otp-box tipper-otp-box" data-ti="1">
+            <input type="text" maxlength="1" class="otp-box tipper-otp-box" data-ti="2">
+            <input type="text" maxlength="1" class="otp-box tipper-otp-box" data-ti="3">
+            <input type="text" maxlength="1" class="otp-box tipper-otp-box" data-ti="4">
+            <input type="text" maxlength="1" class="otp-box tipper-otp-box" data-ti="5">
+          </div>
+          <button class="auth-btn" onclick="tipperVerifyOtp()" style="width:100%;">Verify & View My Tips</button>
+          <button class="link-btn" onclick="tipperBackToPhone()" style="margin-top:8px;">← Change number</button>
+        </div>
+
+        <div id="tipper-auth-error" class="error-box hidden"></div>
+      </div>
+
+      <!-- Dashboard Section (shown after login) -->
+      <div id="tipper-dashboard-section" class="hidden">
+        <div style="text-align:center;margin-bottom:24px;">
+          <h2 style="font-size:22px;font-weight:900;margin-bottom:4px;">Your Tip Activity</h2>
+          <p style="font-size:13px;color:var(--text2);" id="tipper-phone-label"></p>
+        </div>
+
+        <!-- Recurring Subscriptions -->
+        <div style="background:white;border-radius:16px;padding:20px;border:1px solid var(--border);margin-bottom:20px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:18px;">🔄</span>
+              <span style="font-size:15px;font-weight:700;">Active Subscriptions</span>
+            </div>
+            <span id="tipper-sub-count" style="background:var(--pri-bg);color:var(--pri);font-size:11px;font-weight:700;padding:2px 10px;border-radius:10px;">0</span>
+          </div>
+          <div id="tipper-subscriptions-list">
+            <div style="text-align:center;padding:20px;color:var(--text2);">
+              <p style="font-size:13px;">Loading subscriptions...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tip History -->
+        <div style="background:white;border-radius:16px;padding:20px;border:1px solid var(--border);">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+            <span style="font-size:18px;">💰</span>
+            <span style="font-size:15px;font-weight:700;">Tip History</span>
+          </div>
+          <div id="tipper-tips-list">
+            <div style="text-align:center;padding:20px;color:var(--text2);">
+              <p style="font-size:13px;">Loading tip history...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==================== TIPPER DEMO ==================== -->
   <div id="tipper-demo-page" class="page hidden">
     <nav class="topbar"><div class="topbar-inner">
       <div class="topbar-brand"><img src="logo-full.png" alt="Fliq" class="topbar-logo"><span style="background:var(--pri);color:white;font-size:9px;font-weight:800;padding:2px 10px;border-radius:10px;margin-left:8px;">LIVE DEMO</span></div>
@@ -1003,7 +1090,10 @@
           <div style="font-size:48px;margin-bottom:12px;">📱</div>
           <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">For Tippers</h3>
           <p style="font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Scan any Fliq QR code or open a shared tip link. Choose an amount, see the impact, and pay via UPI. No app needed.</p>
-          <span style="display:inline-block;padding:10px 24px;border-radius:8px;background:var(--green-bg);color:var(--green);font-size:14px;font-weight:600;">Just Scan & Tip — No Login</span>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+            <span style="display:inline-block;padding:10px 24px;border-radius:8px;background:var(--green-bg);color:var(--green);font-size:14px;font-weight:600;">Just Scan & Tip — No Login</span>
+            <a href="javascript:void(0)" onclick="goTo('tipper-portal')" style="display:inline-block;padding:10px 24px;border-radius:8px;background:var(--pri-bg);color:var(--pri);font-size:14px;font-weight:600;text-decoration:none;">Manage My Tips →</a>
+          </div>
         </div>
         <div style="background:white;border-radius:var(--r);padding:32px 24px;text-align:center;box-shadow:var(--shadow);border:1px solid var(--border);">
           <div style="font-size:48px;margin-bottom:12px;">🏢</div>
@@ -1040,6 +1130,7 @@
       <p style="color:rgba(255,255,255,0.4);font-size:14px;margin-bottom:20px;">Built for India. UPI-native. Zero friction.</p>
       <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;">
         <a href="javascript:void(0)" onclick="goTo('login')" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">Login</a>
+        <a href="javascript:void(0)" onclick="goTo('tipper-portal')" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">My Tips</a>
         <a href="#pillars" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">Features</a>
         <a href="#how" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">How it Works</a>
         <a href="/api/docs" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">API Docs</a>

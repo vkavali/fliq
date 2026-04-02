@@ -15,7 +15,7 @@ function goTo(page) {
   document.querySelectorAll('.page').forEach(p => { p.style.display = 'none'; p.classList.add('hidden'); });
   const el = document.getElementById(`${page}-page`);
   if (el) {
-    const isFlex = page === 'landing' || page === 'login' || page === 'business-login' || page === 'tip';
+    const isFlex = page === 'landing' || page === 'login' || page === 'business-login' || page === 'tip' || page === 'tipper-portal';
     el.style.display = isFlex ? 'flex' : 'block';
     el.classList.remove('hidden');
   }
@@ -27,6 +27,8 @@ function goTo(page) {
   if (page === 'business-login') resetBizLoginForm();
   // Reset provider login form when navigating to it
   if (page === 'login') { showPhoneStep(); hideAuthErr(); }
+  // Init tipper portal OTP boxes
+  if (page === 'tipper-portal') initTipperPortalOtp();
 }
 
 function demoCust() {
@@ -84,6 +86,10 @@ function checkRoute() {
   if (hash.startsWith('#tip/')) {
     const pid = hash.replace('#tip/', '');
     if (pid) { openTipPage(pid); return; }
+  }
+  if (hash === '#my-tips' || hash === '#tipper-portal') {
+    goTo('tipper-portal');
+    return;
   }
   // Check for saved session
   const saved = localStorage.getItem('tp_token');
@@ -1491,4 +1497,230 @@ function renderCorpAllowances() {
           <button onclick="corpAllowances.splice(${i},1);renderCorpAllowances();" style="background:none;border:none;cursor:pointer;color:#E17055;font-size:14px;">✕</button>
         </div>
       </div>`).join('');
+}
+
+// ===== TIPPER PORTAL — Manage Subscriptions =====
+let tipperToken = null;
+let tipperUser = null;
+
+function initTipperPortalOtp() {
+  // Set up auto-tab for tipper OTP boxes
+  document.querySelectorAll('.tipper-otp-box').forEach(box => {
+    box.value = '';
+    box.addEventListener('input', function () {
+      if (this.value.length === 1) {
+        const next = this.nextElementSibling;
+        if (next && next.classList.contains('tipper-otp-box')) next.focus();
+      }
+    });
+    box.addEventListener('keydown', function (e) {
+      if (e.key === 'Backspace' && !this.value) {
+        const prev = this.previousElementSibling;
+        if (prev && prev.classList.contains('tipper-otp-box')) prev.focus();
+      }
+    });
+  });
+}
+
+async function tipperSendOtp() {
+  const phone = document.getElementById('tipper-phone-input').value.trim();
+  const errEl = document.getElementById('tipper-auth-error');
+  errEl.classList.add('hidden');
+
+  if (!/^\d{10}$/.test(phone)) {
+    errEl.textContent = 'Please enter a valid 10-digit phone number';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  try {
+    await api('POST', '/auth/otp/send', { phone: `+91${phone}` }, false);
+    document.getElementById('tipper-phone-step').classList.add('hidden');
+    document.getElementById('tipper-otp-step').classList.remove('hidden');
+    document.querySelector('.tipper-otp-box')?.focus();
+    toast('📱 OTP sent to +91' + phone);
+  } catch (e) {
+    errEl.textContent = e.message || 'Failed to send OTP';
+    errEl.classList.remove('hidden');
+  }
+}
+
+function tipperBackToPhone() {
+  document.getElementById('tipper-otp-step').classList.add('hidden');
+  document.getElementById('tipper-phone-step').classList.remove('hidden');
+  document.getElementById('tipper-auth-error').classList.add('hidden');
+}
+
+async function tipperVerifyOtp() {
+  const phone = document.getElementById('tipper-phone-input').value.trim();
+  const boxes = document.querySelectorAll('.tipper-otp-box');
+  const code = Array.from(boxes).map(b => b.value).join('');
+  const errEl = document.getElementById('tipper-auth-error');
+  errEl.classList.add('hidden');
+
+  if (code.length !== 6) {
+    errEl.textContent = 'Please enter all 6 digits';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  try {
+    const res = await api('POST', '/auth/otp/verify', { phone: `+91${phone}`, code }, false);
+    tipperToken = res.accessToken || res.token;
+    tipperUser = res.user || {};
+
+    // Show dashboard, hide auth
+    document.getElementById('tipper-auth-section').classList.add('hidden');
+    document.getElementById('tipper-dashboard-section').classList.remove('hidden');
+    document.getElementById('tipper-logout-btn').classList.remove('hidden');
+    document.getElementById('tipper-phone-label').textContent = `📞 +91${phone}`;
+
+    // Load data
+    loadTipperSubscriptions();
+    loadTipperHistory();
+  } catch (e) {
+    errEl.textContent = e.message || 'Invalid OTP. Please try again.';
+    errEl.classList.remove('hidden');
+  }
+}
+
+function tipperLogout() {
+  tipperToken = null;
+  tipperUser = null;
+  document.getElementById('tipper-auth-section').classList.remove('hidden');
+  document.getElementById('tipper-dashboard-section').classList.add('hidden');
+  document.getElementById('tipper-logout-btn').classList.add('hidden');
+  document.getElementById('tipper-phone-step').classList.remove('hidden');
+  document.getElementById('tipper-otp-step').classList.add('hidden');
+  document.getElementById('tipper-phone-input').value = '';
+  document.querySelectorAll('.tipper-otp-box').forEach(b => b.value = '');
+  toast('Logged out');
+}
+
+async function tipperApi(method, path, body) {
+  const h = { 'Content-Type': 'application/json' };
+  if (tipperToken) h['Authorization'] = `Bearer ${tipperToken}`;
+  const opts = { method, headers: h };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.message || `Error ${r.status}`);
+  return d;
+}
+
+async function loadTipperSubscriptions() {
+  const list = document.getElementById('tipper-subscriptions-list');
+  const countEl = document.getElementById('tipper-sub-count');
+  try {
+    const subs = await tipperApi('GET', '/recurring-tips');
+    if (!subs || subs.length === 0) {
+      countEl.textContent = '0';
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);"><div style="font-size:28px;margin-bottom:6px;">🔄</div><p style="font-size:13px;">No active subscriptions</p></div>';
+      return;
+    }
+
+    const active = subs.filter(s => s.status === 'ACTIVE' || s.status === 'PAUSED');
+    countEl.textContent = active.length;
+
+    list.innerHTML = subs.map(s => {
+      const amt = (Number(s.amountPaise) / 100).toFixed(0);
+      const freq = s.frequency === 'MONTHLY' ? 'month' : 'week';
+      const next = s.nextChargeDate ? new Date(s.nextChargeDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '-';
+      const statusColors = { ACTIVE: '#00B894', PAUSED: '#FDCB6E', CANCELLED: '#E17055' };
+      const statusColor = statusColors[s.status] || '#B2BEC3';
+      const providerName = s.provider?.displayName || s.provider?.user?.name || 'Provider';
+
+      let actions = '';
+      if (s.status === 'ACTIVE') {
+        actions = `
+          <button onclick="tipperPauseSub('${s.id}')" style="background:#FFF3E0;color:#FF8F00;border:none;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;">⏸ Pause</button>
+          <button onclick="tipperCancelSub('${s.id}')" style="background:#FFEDE9;color:#E17055;border:none;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;">✕ Cancel</button>`;
+      } else if (s.status === 'PAUSED') {
+        actions = `
+          <button onclick="tipperResumeSub('${s.id}')" style="background:#E8FFF8;color:#00B894;border:none;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;">▶ Resume</button>
+          <button onclick="tipperCancelSub('${s.id}')" style="background:#FFEDE9;color:#E17055;border:none;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;">✕ Cancel</button>`;
+      } else {
+        actions = `<span style="font-size:11px;color:#B2BEC3;">Ended</span>`;
+      }
+
+      return `
+        <div style="padding:14px 0;border-bottom:1px solid var(--border);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div>
+              <div style="font-weight:700;font-size:14px;">₹${amt}/${freq} → ${providerName}</div>
+              <div style="font-size:11px;color:var(--text2);">Next: ${next} · ${s.totalCharges || 0} charges</div>
+            </div>
+            <span style="font-size:11px;font-weight:700;color:${statusColor};">● ${s.status}</span>
+          </div>
+          <div style="display:flex;gap:6px;">${actions}</div>
+        </div>`;
+    }).join('');
+  } catch (e) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);"><p style="font-size:13px;">Could not load subscriptions</p></div>';
+  }
+}
+
+async function tipperPauseSub(id) {
+  if (!confirm('Pause this subscription? You can resume it anytime.')) return;
+  try {
+    await tipperApi('PATCH', `/recurring-tips/${id}/pause`);
+    toast('⏸ Subscription paused');
+    loadTipperSubscriptions();
+  } catch (e) {
+    toast('Failed to pause: ' + (e.message || 'Error'));
+  }
+}
+
+async function tipperResumeSub(id) {
+  try {
+    await tipperApi('PATCH', `/recurring-tips/${id}/resume`);
+    toast('▶ Subscription resumed');
+    loadTipperSubscriptions();
+  } catch (e) {
+    toast('Failed to resume: ' + (e.message || 'Error'));
+  }
+}
+
+async function tipperCancelSub(id) {
+  if (!confirm('Cancel this subscription permanently? This cannot be undone.')) return;
+  try {
+    await tipperApi('DELETE', `/recurring-tips/${id}`);
+    toast('✕ Subscription cancelled');
+    loadTipperSubscriptions();
+  } catch (e) {
+    toast('Failed to cancel: ' + (e.message || 'Error'));
+  }
+}
+
+async function loadTipperHistory() {
+  const list = document.getElementById('tipper-tips-list');
+  try {
+    const result = await tipperApi('GET', '/tips/customer?limit=20');
+    const tips = result.data || result || [];
+    if (!tips || tips.length === 0) {
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);"><div style="font-size:28px;margin-bottom:6px;">💰</div><p style="font-size:13px;">No tips sent yet</p></div>';
+      return;
+    }
+
+    list.innerHTML = tips.map(t => {
+      const amt = (Number(t.amountPaise || t.netAmountPaise) / 100).toFixed(0);
+      const date = new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+      const intentLabel = t.intent ? { KINDNESS: '🤗 Kindness', SPEED: '⚡ Speed', EXPERIENCE: '✨ Experience', SUPPORT: '💪 Support' }[t.intent] || '' : '';
+      const providerName = t.provider?.displayName || t.provider?.user?.name || 'Provider';
+      const statusBadge = t.status === 'PAID' || t.status === 'SETTLED' 
+        ? '<span style="color:#00B894;font-size:11px;font-weight:600;">✓ Paid</span>' 
+        : `<span style="color:#FDCB6E;font-size:11px;font-weight:600;">${t.status}</span>`;
+
+      return `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);">
+          <div>
+            <div style="font-weight:600;font-size:14px;">₹${amt} → ${providerName}</div>
+            <div style="font-size:11px;color:var(--text2);">${date}${intentLabel ? ' · ' + intentLabel : ''}${t.message ? ' · "' + t.message + '"' : ''}</div>
+          </div>
+          ${statusBadge}
+        </div>`;
+    }).join('');
+  } catch (e) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);"><p style="font-size:13px;">Could not load tip history</p></div>';
+  }
 }
