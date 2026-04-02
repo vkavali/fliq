@@ -909,11 +909,58 @@ async function loadBizStats(bizId) {
   } catch (e) { /* non-fatal */ }
 }
 
+function loadSettingsTab() {
+  // Load user profile
+  document.getElementById('settings-name').value = user?.name || '';
+  document.getElementById('settings-email').value = user?.email || '';
+  document.getElementById('settings-phone').value = user?.phone || '';
+  // Load business details
+  const biz = bizState.business;
+  if (biz) {
+    document.getElementById('settings-biz-name').value = biz.name || '';
+    document.getElementById('settings-biz-type').value = biz.type || '';
+    document.getElementById('settings-biz-address').value = biz.address || '';
+  }
+}
+
+async function saveProfile() {
+  const btn = document.getElementById('settings-save-btn');
+  const msg = document.getElementById('settings-msg');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  msg.classList.add('hidden');
+
+  const name = document.getElementById('settings-name').value.trim();
+  const phone = document.getElementById('settings-phone').value.trim();
+
+  const payload = {};
+  if (name) payload.name = name;
+  if (phone) payload.phone = phone;
+
+  try {
+    const updated = await api('PATCH', '/users/me', payload);
+    user = { ...user, ...updated };
+    localStorage.setItem('tp_user', JSON.stringify(user));
+    document.getElementById('biz-phone').textContent = user.email || user.phone || '';
+    msg.textContent = '✅ Profile updated';
+    msg.style.background = 'var(--green-bg)';
+    msg.style.color = 'var(--green)';
+    msg.classList.remove('hidden');
+    toast('Profile saved');
+  } catch (e) {
+    msg.textContent = '❌ ' + (e.message || 'Failed to save');
+    msg.style.background = '#FFF0F0';
+    msg.style.color = '#E17055';
+    msg.classList.remove('hidden');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save Changes';
+  }
+}
+
 function bizTab(tab) {
   document.querySelectorAll('.biz-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.biz-tab-content').forEach(t => t.classList.add('hidden'));
 
-  const idx = { staff: 0, pools: 1, corporate: 2, whatsapp: 3, satisfaction: 4, qrcodes: 5 }[tab] ?? 0;
+  const idx = { staff: 0, pools: 1, satisfaction: 2, qrcodes: 3, settings: 4 }[tab] ?? 0;
   document.querySelectorAll('.biz-tab')[idx]?.classList.add('active');
   document.getElementById(`biz-tab-${tab}`)?.classList.remove('hidden');
 
@@ -921,6 +968,7 @@ function bizTab(tab) {
   else if (tab === 'pools') loadPools();
   else if (tab === 'satisfaction') loadBizSatisfaction();
   else if (tab === 'qrcodes') loadBizQrCodes();
+  else if (tab === 'settings') loadSettingsTab();
 }
 
 async function loadBizStaff() {

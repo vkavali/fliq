@@ -513,7 +513,7 @@
         <div class="biz-stat-card"><div class="biz-stat-icon" style="background:#fff3e0">⭐</div><div><div class="biz-stat-value" id="stat-avg-rating">—</div><div class="biz-stat-label">Avg Rating</div></div></div>
         <div class="biz-stat-card"><div class="biz-stat-icon" style="background:#f3e5f5">👥</div><div><div class="biz-stat-value" id="stat-staff-count">—</div><div class="biz-stat-label">Staff Members</div></div></div>
       </div>
-      <div class="biz-tabs"><button class="biz-tab active" onclick="bizTab('staff')">Staff &amp; Earnings</button><button class="biz-tab" onclick="bizTab('pools')">Tip Pools</button><button class="biz-tab" onclick="bizTab('satisfaction')">Satisfaction</button><button class="biz-tab" onclick="bizTab('qrcodes')">QR Codes</button></div>
+      <div class="biz-tabs"><button class="biz-tab active" onclick="bizTab('staff')">Staff &amp; Earnings</button><button class="biz-tab" onclick="bizTab('pools')">Tip Pools</button><button class="biz-tab" onclick="bizTab('satisfaction')">Satisfaction</button><button class="biz-tab" onclick="bizTab('qrcodes')">QR Codes</button><button class="biz-tab" onclick="bizTab('settings')">⚙ Settings</button></div>
       <div id="biz-tab-staff" class="biz-tab-content"><div class="biz-section-header"><h3>Staff Earnings Breakdown</h3><button class="biz-outline-btn" onclick="exportCsv()">⬇ Export CSV</button></div><div id="biz-staff-table-wrap"><div class="biz-loading">Loading staff data...</div></div></div>
 
       <!-- Tip Pools Tab -->
@@ -570,6 +570,53 @@
 
       <div id="biz-tab-satisfaction" class="biz-tab-content hidden"><h3>Customer Satisfaction</h3><div class="biz-rating-dist" id="biz-rating-dist"></div><div id="biz-reviews-list"></div></div>
       <div id="biz-tab-qrcodes" class="biz-tab-content hidden"><div class="biz-section-header"><h3>Staff QR Codes</h3><button class="biz-outline-btn" onclick="printAllQr()">🖨 Print All</button></div><p class="biz-muted">Print these standee cards and place them on desks or counters.</p><div id="biz-qr-grid" class="biz-qr-grid"></div></div>
+
+      <!-- Settings Tab -->
+      <div id="biz-tab-settings" class="biz-tab-content hidden">
+        <h3 style="margin-bottom:24px;">Profile Settings</h3>
+        <div style="display:grid;gap:20px;max-width:560px;">
+          <div style="background:white;border-radius:var(--r);padding:24px;border:1px solid var(--border);">
+            <h4 style="margin-bottom:16px;font-size:15px;">Your Profile</h4>
+            <div style="display:grid;gap:12px;">
+              <div>
+                <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;">Display Name</label>
+                <input type="text" id="settings-name" placeholder="Your name" style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;width:100%;box-sizing:border-box;">
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;">Email</label>
+                <input type="email" id="settings-email" disabled style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;width:100%;box-sizing:border-box;background:var(--bg);color:var(--text2);">
+                <p style="font-size:11px;color:var(--text2);margin-top:4px;">Email is used for login and cannot be changed here.</p>
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;">Phone (optional)</label>
+                <input type="tel" id="settings-phone" placeholder="+91 9876543210" style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;width:100%;box-sizing:border-box;">
+              </div>
+              <button class="auth-btn" onclick="saveProfile()" id="settings-save-btn" style="max-width:200px;">Save Changes</button>
+              <div id="settings-msg" class="hidden" style="font-size:13px;padding:8px 12px;border-radius:8px;"></div>
+            </div>
+          </div>
+          <div style="background:white;border-radius:var(--r);padding:24px;border:1px solid var(--border);">
+            <h4 style="margin-bottom:12px;font-size:15px;">🔐 Authentication</h4>
+            <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:12px;">Fliq uses <strong>passwordless authentication</strong>. Each time you login, a one-time access code is sent to your email. No password to remember or reset.</p>
+            <div style="background:var(--green-bg);border-radius:10px;padding:14px;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:20px;">✅</span>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--green);">Passwordless &amp; Secure</div>
+                <div style="font-size:11px;color:var(--text2);">OTP codes expire in 5 minutes and can only be used once.</div>
+              </div>
+            </div>
+          </div>
+          <div style="background:white;border-radius:var(--r);padding:24px;border:1px solid var(--border);">
+            <h4 style="margin-bottom:12px;font-size:15px;">🏢 Business Details</h4>
+            <div style="display:grid;gap:12px;">
+              <div><label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;">Business Name</label><input type="text" id="settings-biz-name" disabled style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;width:100%;box-sizing:border-box;background:var(--bg);color:var(--text2);"></div>
+              <div><label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;">Type</label><input type="text" id="settings-biz-type" disabled style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;width:100%;box-sizing:border-box;background:var(--bg);color:var(--text2);"></div>
+              <div><label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;">Address</label><input type="text" id="settings-biz-address" disabled style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;width:100%;box-sizing:border-box;background:var(--bg);color:var(--text2);"></div>
+              <p style="font-size:11px;color:var(--text2);">To update business details, please contact support.</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- WhatsApp Nudge Tab -->
       <div id="biz-tab-whatsapp" class="biz-tab-content hidden">

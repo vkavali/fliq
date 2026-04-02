@@ -1212,4 +1212,10 @@ textarea.input-full { resize: none; }
   .biz-header-card { flex-direction: column; align-items: flex-start; gap: 12px; }
   .biz-table { font-size: 12px; }
   .biz-table th, .biz-table td { padding: 8px 10px; }
+  .biz-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; scrollbar-width: none; }
+  .biz-tabs::-webkit-scrollbar { display: none; }
+  .biz-tab { flex-shrink: 0; font-size: 12px; padding: 8px 14px; }
+  .biz-content { padding: 16px; }
+  .auth-box { margin: 16px; max-width: calc(100% - 32px); }
+  .staff-name-cell { flex-direction: column; align-items: flex-start; gap: 4px; }
 }

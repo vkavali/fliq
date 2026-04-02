@@ -13,6 +13,11 @@ export class UpdateUserDto {
   @IsEmail()
   email?: string;
 
+  @ApiPropertyOptional({ example: '+919876543210' })
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
   @ApiPropertyOptional({ example: 'hi', description: 'Language code: en, hi, ta, te, kn, mr' })
   @IsOptional()
   @IsString()
