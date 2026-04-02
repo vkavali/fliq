@@ -300,9 +300,9 @@
       </div>
       <div id="biz-email-step">
         <h3>Login with Email</h3>
-        <p style="color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 20px;">Enter your registered business email.</p>
-        <div style="margin-bottom: 16px;">
-          <input type="email" id="biz-email" placeholder="manager@hotel.com" style="width: 100%; border: none; outline: none; padding: 14px 18px; font-size: 16px; border-radius: 12px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
+        <div class="phone-input-row">
+          <span class="prefix">✉</span>
+          <input type="email" id="biz-email" placeholder="manager@hotel.com">
         </div>
         <button class="auth-btn" onclick="sendBizOtp()">Get Access Code</button>
       </div>
@@ -320,6 +320,7 @@
         <button class="auth-btn" onclick="verifyBizOtp()">Access Dashboard</button>
         <button class="link-btn" onclick="showBizEmailStep()">Change email</button>
       </div>
+      <div id="biz-auth-error" class="error-box hidden"></div>
     </div>
   </div>
 
@@ -842,17 +843,30 @@
     </div>
   </section>
 
-  <!-- Tip Someone -->
+  <!-- How Tipping Works -->
   <section style="padding:80px 24px;background:var(--bg);" id="tip">
     <div style="max-width:1200px;margin:0 auto;">
-      <h2 style="font-size:40px;font-weight:900;text-align:center;margin-bottom:16px;">Tip Someone Right Now</h2>
-      <p style="font-size:18px;color:var(--text2);text-align:center;margin-bottom:40px;">Enter a provider code or ID to start the tipping experience.</p>
-      <div style="max-width:500px;margin:0 auto;text-align:center;">
-        <div id="demo-tip-input" style="display:flex;gap:8px;background:white;border-radius:14px;padding:6px;box-shadow:0 8px 32px rgba(0,0,0,0.12);border:2px solid var(--border);">
-          <input type="text" id="demo-provider-id" placeholder="Enter provider code or ID" style="border:none;outline:none;padding:12px 18px;font-size:15px;font-family:inherit;flex:1;border-radius:10px;">
-          <button id="tip-now-btn" onclick="goTipPage()" style="background:var(--pri);color:white;border:none;border-radius:8px;padding:12px 28px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">Tip Now</button>
+      <h2 style="font-size:40px;font-weight:900;text-align:center;margin-bottom:16px;">How Do People Tip?</h2>
+      <p style="font-size:18px;color:var(--text2);text-align:center;margin-bottom:40px;max-width:600px;margin-left:auto;margin-right:auto;">Tippers don't need to download anything. They simply scan the provider's Fliq QR code or tap their shared link — the tip page opens instantly in any browser.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:24px;max-width:900px;margin:0 auto;">
+        <div style="background:white;border-radius:var(--r);padding:32px 24px;text-align:center;box-shadow:var(--shadow);border:1px solid var(--border);">
+          <div style="font-size:48px;margin-bottom:12px;">👨‍💼</div>
+          <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">For Providers</h3>
+          <p style="font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Sign up, create your profile, and get a unique QR code and tip link. Share it with your customers — done.</p>
+          <a href="javascript:void(0)" onclick="goTo('login')" style="display:inline-block;padding:10px 24px;border-radius:8px;background:var(--pri);color:white;font-size:14px;font-weight:600;text-decoration:none;">Register as Provider →</a>
         </div>
-        <div id="demo-tip-error" class="hidden" style="color:#E17055;font-size:13px;margin-top:8px;"></div>
+        <div style="background:white;border-radius:var(--r);padding:32px 24px;text-align:center;box-shadow:var(--shadow);border:1px solid var(--border);">
+          <div style="font-size:48px;margin-bottom:12px;">📱</div>
+          <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">For Tippers</h3>
+          <p style="font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Scan any Fliq QR code or open a shared tip link. Choose an amount, see the impact, and pay via UPI. No app needed.</p>
+          <span style="display:inline-block;padding:10px 24px;border-radius:8px;background:var(--green-bg);color:var(--green);font-size:14px;font-weight:600;">Just Scan & Tip — No Login</span>
+        </div>
+        <div style="background:white;border-radius:var(--r);padding:32px 24px;text-align:center;box-shadow:var(--shadow);border:1px solid var(--border);">
+          <div style="font-size:48px;margin-bottom:12px;">🏢</div>
+          <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">For Businesses</h3>
+          <p style="font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Manage your team's tips from a single dashboard. Set budgets, track performance, and print bulk QR codes.</p>
+          <a href="javascript:void(0)" onclick="goToBusiness()" style="display:inline-block;padding:10px 24px;border-radius:8px;background:var(--pri-bg);color:var(--pri);font-size:14px;font-weight:600;text-decoration:none;">Business Dashboard →</a>
+        </div>
       </div>
     </div>
   </section>
