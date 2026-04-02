@@ -157,6 +157,115 @@ export class AuthService {
     };
   }
 
+  async sendEmailOtp(email: string): Promise<{ message: string; otp?: string }> {
+    // Dev bypass test emails
+    const testEmails = ['test@fliq.co.in', 'business@fliq.co.in'];
+    if (this.isBypassEnabled() && testEmails.includes(email)) {
+      this.logger.warn(`[DEV BYPASS] OTP for ${email} is always: ${BYPASS_TEST_OTP}`);
+      return { message: `OTP sent (dev bypass active — use ${BYPASS_TEST_OTP})`, otp: BYPASS_TEST_OTP };
+    }
+
+    // Rate limiting (simplified for email)
+    const hourKey = `otp_email_rate:hour:${email}`;
+    const hourCount = parseInt((await this.redis.get(hourKey)) || '0', 10);
+    if (hourCount >= OTP_RATE_LIMIT_HOUR) {
+      throw new HttpException('Too many OTP requests. Try again in an hour.', HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    const code = this.generateOtp();
+    const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
+
+    const existingUser = await this.prisma.user.findUnique({ where: { email } });
+
+    await this.prisma.otpCode.create({
+      data: {
+        phone: null, // No phone
+        email,
+        code,
+        expiresAt,
+        userId: existingUser?.id ?? null,
+      },
+    });
+
+    await this.redis.incr(hourKey);
+    await this.redis.setex(hourKey, 3600, (await this.redis.get(hourKey)) || '1');
+
+    // Simulate sending email log for now
+    this.logger.log(`\n==========================================`);
+    this.logger.log(`📧 Simulated Email to: ${email}`);
+    this.logger.log(`   [Fliq Business] Your login OTP is: ${code}`);
+    this.logger.log(`==========================================\n`);
+
+    return { message: 'OTP sent to email successfully' };
+  }
+
+  async verifyEmailOtp(
+    email: string,
+    code: string,
+  ): Promise<{ accessToken: string; refreshToken: string; user: Record<string, unknown> }> {
+    
+    // Dev Bypass
+    const testEmails = ['test@fliq.co.in', 'business@fliq.co.in'];
+    if (this.isBypassEnabled() && testEmails.includes(email) && code === BYPASS_TEST_OTP) {
+      this.logger.warn(`[DEV BYPASS] Accepting magic OTP for ${email}`);
+      let user = await this.prisma.user.findUnique({ where: { email } });
+      if (!user) {
+        user = await this.prisma.user.create({
+          data: { email, type: 'BUSINESS_ADMIN' as any, status: 'ACTIVE' },
+        });
+      }
+      const accessToken = this.generateAccessToken(user.id, user.type as UserType);
+      const refreshToken = this.generateRefreshToken(user.id);
+      return { accessToken, refreshToken, user: { id: user.id, email: user.email, name: user.name, type: user.type, kycStatus: user.kycStatus } };
+    }
+
+    const otpRecord = await this.prisma.otpCode.findFirst({
+      where: {
+        email,
+        verified: false,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!otpRecord) throw new BadRequestException('No valid OTP found. Request a new one.');
+    if (otpRecord.attempts >= OTP_MAX_ATTEMPTS) throw new BadRequestException('Too many failed attempts. Request a new OTP.');
+
+    if (otpRecord.code !== code) {
+      await this.prisma.otpCode.update({ where: { id: otpRecord.id }, data: { attempts: { increment: 1 } } });
+      throw new BadRequestException('Invalid OTP');
+    }
+
+    await this.prisma.otpCode.update({ where: { id: otpRecord.id }, data: { verified: true } });
+
+    let user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          email,
+          type: UserType.BUSINESS_ADMIN,
+          status: 'ACTIVE',
+        },
+      });
+    }
+
+    const accessToken = this.generateAccessToken(user.id, user.type as UserType);
+    const refreshToken = this.generateRefreshToken(user.id);
+
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        type: user.type,
+        kycStatus: user.kycStatus,
+      },
+    };
+  }
+
+
   private generateOtp(): string {
     // Cryptographically random 6-digit OTP
     const buffer = crypto.randomBytes(4);

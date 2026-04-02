@@ -3,6 +3,8 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { SendEmailOtpDto } from './dto/send-email-otp.dto';
+import { VerifyEmailOtpDto } from './dto/verify-email-otp.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RateLimitGuard, RateLimit } from '../../common/guards/rate-limit.guard';
 
@@ -32,6 +34,24 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Invalid or expired OTP' })
   async verifyOtp(@Body() dto: VerifyOtpDto) {
     return this.authService.verifyOtp(dto.phone, dto.code);
+  }
+
+  @Post('otp/email/send')
+  @HttpCode(HttpStatus.OK)
+  @RateLimit({ limit: 5, windowSeconds: 3600 })
+  @ApiOperation({ summary: 'Send OTP to email address for business login' })
+  @ApiResponse({ status: 200, description: 'OTP sent to email successfully' })
+  async sendEmailOtp(@Body() dto: SendEmailOtpDto) {
+    return this.authService.sendEmailOtp(dto.email);
+  }
+
+  @Post('otp/email/verify')
+  @HttpCode(HttpStatus.OK)
+  @RateLimit({ limit: 10, windowSeconds: 900 })
+  @ApiOperation({ summary: 'Verify Email OTP and get JWT tokens for business login' })
+  @ApiResponse({ status: 200, description: 'Returns access token, refresh token, and user info' })
+  async verifyEmailOtp(@Body() dto: VerifyEmailOtpDto) {
+    return this.authService.verifyEmailOtp(dto.email, dto.code);
   }
 
   @Post('refresh')

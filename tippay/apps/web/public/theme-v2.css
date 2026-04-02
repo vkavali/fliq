@@ -1,0 +1,140 @@
+/* ===== FLIQ V2: GLASSMORPHISM THEME ===== */
+
+:root {
+  /* Color Palette */
+  --bg-dark: #0F0C29;
+  --bg-gradient-start: #302b63;
+  --bg-gradient-end: #24243e;
+  
+  --pri: #8A2BE2; /* Electric Purple */
+  --pri-light: #B47CFF;
+  --pri-dark: #6517A7;
+  
+  --accent: #00FF87; /* Neon Green */
+  --accent-light: #5CFFB6;
+  
+  --text-main: #FFFFFF;
+  --text-muted: rgba(255, 255, 255, 0.6);
+  
+  /* Glass Cards */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-blur: blur(24px);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  
+  --r-lg: 24px;
+  --r-md: 16px;
+  --r-sm: 10px;
+}
+
+body {
+  font-family: 'Space Grotesk', 'Inter', sans-serif; /* We will import Space Grotesk */
+  background: var(--bg-dark);
+  background-image: radial-gradient(circle at 15% 50%, rgba(138, 43, 226, 0.25), transparent 25%),
+                    radial-gradient(circle at 85% 30%, rgba(0, 255, 135, 0.15), transparent 25%);
+  background-attachment: fixed;
+  color: var(--text-main);
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+}
+
+/* Base Overrides */
+input, select, textarea, button { font-family: inherit; }
+
+/* ======== GLASSMORPHISM COMPONENTS ======== */
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--glass-shadow);
+  padding: 24px;
+}
+
+.glass-card {
+  background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-md);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  padding: 20px;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.glass-btn {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 12px 24px;
+  border-radius: var(--r-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.glass-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.02);
+}
+
+.glass-btn-primary {
+  background: linear-gradient(135deg, var(--pri), var(--pri-dark));
+  border: 1px solid var(--pri-light);
+  box-shadow: 0 4px 16px rgba(138, 43, 226, 0.4);
+}
+.glass-btn-primary:hover {
+  box-shadow: 0 6px 20px rgba(138, 43, 226, 0.6);
+  background: linear-gradient(135deg, var(--pri-light), var(--pri));
+}
+
+.glass-input {
+  width: 100%;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: white;
+  padding: 14px 16px;
+  border-radius: var(--r-sm);
+  transition: all 0.3s ease;
+}
+.glass-input:focus {
+  outline: none;
+  border-color: var(--pri);
+  background: rgba(0,0,0,0.4);
+  box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.25);
+}
+.glass-input::placeholder { color: var(--text-muted); }
+
+/* ======== BENTO BOX ======== */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+.bento-large {
+  grid-column: span 2;
+}
+@media(max-width: 768px) {
+  .bento-large { grid-column: span 1; }
+}
+
+/* ======== UTILS ======== */
+.text-gradient {
+  background: linear-gradient(135deg, var(--accent), #00d2ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.text-h1 { font-size: 3rem; font-weight: 800; letter-spacing: -1px; }
+.text-h2 { font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; }
+.text-h3 { font-size: 1.25rem; font-weight: 600; }
+.text-label { font-size: 0.875rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+

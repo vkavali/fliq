@@ -192,8 +192,8 @@ enum DreamCategory {
 model User {
   id                 String     @id @default(uuid()) @db.Uuid
   type               UserType
-  phone              String     @unique @db.VarChar(15)
-  email              String?    @db.VarChar(255)
+  phone              String?    @unique @db.VarChar(15)
+  email              String?    @unique @db.VarChar(255)
   name               String?    @db.VarChar(255)
   languagePreference String     @default("en") @db.VarChar(5)
   kycStatus          KycStatus  @default(PENDING)
@@ -266,7 +266,8 @@ model OtpCode {
   id        String   @id @default(uuid()) @db.Uuid
   userId    String?  @db.Uuid
   user      User?    @relation(fields: [userId], references: [id])
-  phone     String   @db.VarChar(15)
+  phone     String?  @db.VarChar(15)
+  email     String?  @db.VarChar(255)
   code      String   @db.VarChar(6)
   expiresAt DateTime @db.Timestamptz()
   verified  Boolean  @default(false)
@@ -274,6 +275,7 @@ model OtpCode {
   createdAt DateTime @default(now()) @db.Timestamptz()
 
   @@index([phone, code])
+  @@index([email, code])
   @@map("otp_codes")
 }
 
