@@ -398,9 +398,27 @@ async function loadDashboard() {
     document.getElementById('onboarding').classList.add('hidden');
     document.getElementById('dashboard').classList.remove('hidden');
 
+    // Welcome header
+    const name = p.displayName || p.user?.name || 'Provider';
+    document.getElementById('d-provider-name').textContent = name;
+    document.getElementById('d-avatar-letter').textContent = name.charAt(0).toUpperCase();
+    document.getElementById('d-category').textContent = p.category || '-';
+    if (p.createdAt) {
+      const d = new Date(p.createdAt);
+      document.getElementById('d-member-since').textContent = `Member since ${d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}`;
+    }
+
+    // Stats
     document.getElementById('d-tips').textContent = p.totalTipsReceived || 0;
     document.getElementById('d-rating').textContent = p.ratingAverage ? Number(p.ratingAverage).toFixed(1) : 'N/A';
-    document.getElementById('d-category').textContent = p.category || '-';
+
+    // Wallet balance
+    try {
+      const wallet = await api('GET', '/wallets/balance');
+      document.getElementById('d-wallet-balance').textContent = wallet.balancePaise ? Math.round(wallet.balancePaise / 100) : '0';
+    } catch (e) {
+      document.getElementById('d-wallet-balance').textContent = '0';
+    }
 
     // Tip link
     document.getElementById('tip-link').textContent = `${location.origin}/app/#tip/${p.id}`;
@@ -425,6 +443,11 @@ async function loadDashboard() {
     document.getElementById('onboarding').classList.remove('hidden');
     document.getElementById('dashboard').classList.add('hidden');
   }
+}
+
+function copyTipLink() {
+  const link = document.getElementById('tip-link').textContent;
+  navigator.clipboard.writeText(link).then(() => toast('✅ Tip link copied!')).catch(() => toast('Failed to copy'));
 }
 
 // ===== Business Affiliation & Invitations =====

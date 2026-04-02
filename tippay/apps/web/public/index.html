@@ -219,6 +219,8 @@
       /* Reduce section padding */
       section, [style*="padding:80px"] { padding-left: 16px !important; padding-right: 16px !important; }
       [style*="padding:100px"] { padding-left: 16px !important; padding-right: 16px !important; }
+      /* Dashboard stats grid: 4 -> 2 columns on mobile */
+      [style*="grid-template-columns:repeat(4"] { grid-template-columns: repeat(2, 1fr) !important; }
     }
   </style>
 </head>
@@ -393,12 +395,48 @@
       <button class="auth-btn" onclick="createProfile()">Create Profile</button>
     </div></div></div>
     <div id="dashboard" class="hidden"><div class="container">
+      <!-- Welcome Header -->
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
+        <div id="d-avatar" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--pri),var(--pri-light));display:flex;align-items:center;justify-content:center;color:white;font-size:22px;font-weight:800;flex-shrink:0;overflow:hidden;">
+          <span id="d-avatar-letter">?</span>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:18px;font-weight:800;color:var(--text);" id="d-provider-name">Loading...</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+            <span style="background:var(--pri-bg);color:var(--pri);font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px;" id="d-category">-</span>
+            <span style="font-size:12px;color:var(--text2);" id="d-member-since"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Share Tip Link Card -->
+      <div style="background:linear-gradient(135deg,#6C5CE7,#4834D4);border-radius:16px;padding:20px;margin-bottom:20px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-20px;right:-20px;width:120px;height:120px;background:rgba(255,255,255,0.06);border-radius:50%;"></div>
+        <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">📲 Your Tip Link</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <code id="tip-link" style="background:rgba(255,255,255,0.15);color:white;padding:10px 14px;border-radius:10px;font-size:13px;flex:1;word-break:break-all;display:block;"></code>
+          <button onclick="copyTipLink()" style="background:white;color:var(--pri);border:none;padding:10px 16px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">📋 Copy</button>
+        </div>
+      </div>
+
       <!-- Stats Grid -->
-      <div class="earnings-banner" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;">
-        <div><div class="eb-label">Total Tips</div><div class="eb-value" id="d-tips">0</div></div>
-        <div><div class="eb-label">Rating</div><div class="eb-value" id="d-rating">-</div></div>
-        <div><div class="eb-label">Category</div><div class="eb-value eb-cat" id="d-category">-</div></div>
-        <div><div class="eb-label">Trust Score</div><div class="eb-value" id="d-reputation" style="color:#00B894;">-</div></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+        <div style="background:white;border-radius:14px;padding:16px;text-align:center;border:1px solid var(--border);">
+          <div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:4px;">Total Tips</div>
+          <div style="font-size:24px;font-weight:900;color:var(--pri);" id="d-tips">0</div>
+        </div>
+        <div style="background:white;border-radius:14px;padding:16px;text-align:center;border:1px solid var(--border);">
+          <div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:4px;">Rating</div>
+          <div style="font-size:24px;font-weight:900;color:#FF8F00;" id="d-rating">-</div>
+        </div>
+        <div style="background:white;border-radius:14px;padding:16px;text-align:center;border:1px solid var(--border);">
+          <div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:4px;">Trust Score</div>
+          <div style="font-size:24px;font-weight:900;color:#00B894;" id="d-reputation">-</div>
+        </div>
+        <div style="background:white;border-radius:14px;padding:16px;text-align:center;border:1px solid var(--border);">
+          <div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:4px;">Wallet</div>
+          <div style="font-size:24px;font-weight:900;color:var(--text);">₹<span id="d-wallet-balance">0</span></div>
+        </div>
       </div>
 
       <!-- Business Affiliation Badge -->
@@ -493,11 +531,10 @@
       </div>
 
       <!-- Existing sections -->
-      <div class="section"><div class="section-header"><h3>Your QR Codes</h3><button class="small-btn" onclick="newQr()">+ New QR</button></div>
+      <div class="section"><div class="section-header"><h3>📱 Your QR Codes</h3><button class="small-btn" onclick="newQr()">+ New QR</button></div>
         <div id="qr-grid" class="qr-grid"><p class="muted">Loading...</p></div>
-        <div class="share-hint"><p>Share your tip link: <code id="tip-link"></code></p></div>
       </div>
-      <div class="section"><div class="section-header"><h3>Your Tip Links</h3></div>
+      <div class="section"><div class="section-header"><h3>🔗 Your Tip Links</h3></div>
         <div class="tip-link-create">
           <input type="text" id="link-role" class="input-sm" placeholder="Your role (e.g. Waiter)" maxlength="100">
           <input type="text" id="link-workplace" class="input-sm" placeholder="Workplace (e.g. Cafe Mocha)" maxlength="200">
@@ -505,7 +542,7 @@
         </div>
         <div id="tip-links-list" class="tip-links-list"><p class="muted">Loading...</p></div>
       </div>
-      <div class="section"><h3>Recent Tips Received</h3><div id="d-tips-list" class="tips-list"><p class="muted">Loading...</p></div></div>
+      <div class="section"><div class="section-header"><h3>💰 Recent Tips Received</h3></div><div id="d-tips-list" class="tips-list"><p class="muted">Loading...</p></div></div>
 
       <!-- V5: Recurring Tips (AutoPay Subscribers) -->
       <div class="section">
@@ -531,7 +568,7 @@
         </div>
       </div>
 
-      <div class="section"><h3>Payouts</h3>
+      <div class="section"><div class="section-header"><h3>💸 Payouts</h3></div>
         <div class="payout-row"><div class="payout-input-row"><span class="rupee-sign">&#8377;</span><input type="number" id="payout-amt" placeholder="Amount" min="100"></div>
           <button class="small-btn" onclick="requestPayout()">Request Payout</button></div>
         <div id="d-payouts" class="payouts-list"><p class="muted">No payouts yet</p></div>
