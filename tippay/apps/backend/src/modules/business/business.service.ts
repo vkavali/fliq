@@ -89,6 +89,72 @@ export class BusinessService {
     return business;
   }
 
+  async getMyMemberships(userId: string) {
+    const [memberships, ownedBusinesses] = await Promise.all([
+      this.prisma.businessMember.findMany({
+        where: {
+          providerId: userId,
+          isActive: true,
+          business: { isActive: true },
+        },
+        include: {
+          business: {
+            select: {
+              id: true,
+              name: true,
+              type: true,
+              ownerId: true,
+              address: true,
+              contactPhone: true,
+              contactEmail: true,
+              createdAt: true,
+            },
+          },
+        },
+        orderBy: { joinedAt: 'desc' },
+      }),
+      this.prisma.business.findMany({
+        where: { ownerId: userId, isActive: true },
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          ownerId: true,
+          address: true,
+          contactPhone: true,
+          contactEmail: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
+
+    const seenBusinessIds = new Set<string>();
+
+    const membershipRows = memberships.map((membership: any) => {
+      seenBusinessIds.add(membership.businessId);
+      return {
+        businessId: membership.business.id,
+        business: membership.business,
+        role: membership.role,
+        joinedAt: membership.joinedAt,
+        isOwner: membership.business.ownerId === userId,
+      };
+    });
+
+    const ownerRows = ownedBusinesses
+      .filter((business: any) => !seenBusinessIds.has(business.id))
+      .map((business: any) => ({
+        businessId: business.id,
+        business,
+        role: BusinessMemberRole.ADMIN,
+        joinedAt: business.createdAt,
+        isOwner: true,
+      }));
+
+    return [...ownerRows, ...membershipRows];
+  }
+
   async getBusinessById(businessId: string, requesterId: string) {
     const business = await this.prisma.business.findUnique({
       where: { id: businessId },

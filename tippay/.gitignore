@@ -5,6 +5,7 @@ node_modules/
 # Build outputs
 dist/
 build/
+.gradle/
 *.tsbuildinfo
 
 # Environment
@@ -46,3 +47,4 @@ docker-compose.override.yml
 .turbo/
 /android/
 /ios/
+local.properties

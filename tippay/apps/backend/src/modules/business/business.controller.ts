@@ -46,6 +46,12 @@ export class BusinessController {
     return this.businessService.getMyBusiness(userId);
   }
 
+  @Get('memberships/mine')
+  @ApiOperation({ summary: 'Get the active business memberships for the current user' })
+  async getMyMemberships(@CurrentUser('id') userId: string) {
+    return this.businessService.getMyMemberships(userId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get business details (members only)' })
   async getBusiness(
