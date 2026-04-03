@@ -1,8 +1,7 @@
 // ===== Fliq Web App =====
-// Auto-detect: if served from backend (/app/), use same origin. Otherwise localhost.
-const API = location.port === '5173'
-  ? 'http://localhost:3000'
-  : location.origin;
+// Auto-detect: if in native wrapper, use production backend. Otherwise use same origin or localhost.
+const isCapacitor = Boolean(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const API = isCapacitor ? 'https://fliq.co.in' : (location.port === '5173' ? 'http://localhost:3000' : location.origin);
 
 let token = null;
 let user = null;
@@ -100,8 +99,9 @@ function checkRoute() {
     loadDashboard();
     return;
   }
-  // Native app or installed PWA → skip landing page, go to login
-  const isNativeApp = (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  // Native app or installed PWA → show app-home instead of landing page
+  const urlParams = new URLSearchParams(window.location.search);
+  const isNativeApp = urlParams.get('native') === '1' || (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
   const isInstalledPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
   if (isNativeApp || isInstalledPWA) {
     goTo('app-home');

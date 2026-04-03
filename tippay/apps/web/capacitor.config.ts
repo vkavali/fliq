@@ -4,10 +4,6 @@ const config: CapacitorConfig = {
   appId: 'co.in.fliq.app',
   appName: 'Fliq',
   webDir: 'public',
-  server: {
-    url: 'https://fliq.co.in/app/',
-    cleartext: false
-  },
   android: {
     backgroundColor: '#6C5CE7',
     allowMixedContent: false
