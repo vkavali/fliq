@@ -1,0 +1,12 @@
+# Signing
+keystore.properties
+*.jks
+*.keystore
+
+# Firebase
+google-services.json
+
+# IDE
+.idea/
+*.iml
+local.properties
