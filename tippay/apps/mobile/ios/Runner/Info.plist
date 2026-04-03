@@ -30,6 +30,10 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Fliq needs camera access to scan QR codes for tipping</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Fliq needs microphone access to enable voice-powered tip amounts and search</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Fliq uses speech recognition to let you set tip amounts and search by voice</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
