@@ -1,102 +1,91 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'core/router/app_router.dart';
+import 'core/services/notification_service.dart';
+import 'core/theme/app_theme.dart';
 
-const String kFliqUrl = 'https://fliq.co.in/app/';
+final _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-  ));
+
+  // Initialize Firebase (requires google-services.json / GoogleService-Info.plist).
+  // Falls back gracefully if config files are missing.
+  try {
+    await Firebase.initializeApp();
+  } catch (_) {}
+
   runApp(const ProviderScope(child: FliqApp()));
 }
 
-class FliqApp extends StatelessWidget {
+class FliqApp extends ConsumerStatefulWidget {
   const FliqApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Fliq',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorSchemeSeed: const Color(0xFF6C5CE7),
-        useMaterial3: true,
-        brightness: Brightness.dark,
-      ),
-      home: const FliqWebView(),
-    );
-  }
+  ConsumerState<FliqApp> createState() => _FliqAppState();
 }
 
-class FliqWebView extends StatefulWidget {
-  const FliqWebView({super.key});
-
-  @override
-  State<FliqWebView> createState() => _FliqWebViewState();
-}
-
-class _FliqWebViewState extends State<FliqWebView> {
-  late final WebViewController _controller;
-  bool _loading = true;
-
+class _FliqAppState extends ConsumerState<FliqApp> {
   @override
   void initState() {
     super.initState();
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(const Color(0xFF1a1145))
-      ..setNavigationDelegate(NavigationDelegate(
-        onPageStarted: (_) => setState(() => _loading = true),
-        onPageFinished: (_) => setState(() => _loading = false),
-        onNavigationRequest: (request) {
-          // Allow fliq.co.in and UPI deep links
-          final uri = Uri.parse(request.url);
-          if (uri.host.contains('fliq.co.in') ||
-              uri.host.contains('railway.app') ||
-              uri.scheme == 'upi') {
-            return NavigationDecision.navigate;
-          }
-          // Open external links in browser
-          return NavigationDecision.navigate;
-        },
-      ))
-      ..loadRequest(Uri.parse(kFliqUrl));
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initNotifications());
+  }
+
+  Future<void> _initNotifications() async {
+    if (!mounted) return;
+    final container = ProviderScope.containerOf(context);
+    final notifService = container.read(notificationServiceProvider);
+    await notifService.initialize();
+
+    // Show foreground notifications as snack bars
+    notifService.listenForeground((title, body, screen) {
+      _scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(body, style: const TextStyle(fontSize: 13)),
+            ],
+          ),
+          action: screen != null
+              ? SnackBarAction(
+                  label: 'View',
+                  onPressed: () {
+                    final router = container.read(appRouterProvider);
+                    router.go(screen);
+                  },
+                )
+              : null,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    });
+
+    // Handle notification tap deep-link
+    final router = container.read(appRouterProvider);
+    notifService.listenTaps((screen) => router.go(screen));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF1a1145),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            WebViewWidget(controller: _controller),
-            if (_loading)
-              const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(
-                      color: Color(0xFF6C5CE7),
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'Loading Fliq...',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
+    return Consumer(
+      builder: (context, ref, _) {
+        final router = ref.watch(appRouterProvider);
+        return MaterialApp.router(
+          title: 'Fliq',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: ThemeMode.system,
+          scaffoldMessengerKey: _scaffoldMessengerKey,
+          routerConfig: router,
+        );
+      },
     );
   }
 }

@@ -14,6 +14,7 @@ import '../../features/provider_dashboard/presentation/screens/earnings_screen.d
 import '../../features/provider_dashboard/presentation/screens/qr_display_screen.dart';
 import '../../features/provider_dashboard/presentation/screens/payout_screen.dart';
 import '../../features/splash/splash_screen.dart';
+import '../../features/splash/app_home_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/gamification/presentation/screens/badges_screen.dart';
@@ -62,6 +63,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/',
         builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/home-selection',
+        builder: (context, state) => const AppHomeScreen(),
       ),
 
       // ── Auth routes ───────────────────────────────────────────────────

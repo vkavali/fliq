@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -75,7 +76,7 @@ class _BusinessInvitationsScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text('Business Invitations'),
-        backgroundColor: AppTheme.primaryPurple,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
       body: _isLoading
@@ -104,7 +105,7 @@ class _BusinessInvitationsScreenState
                           ),
                         )
                       : ListView.separated(
-                          padding: AppSpacing.pagePadding,
+                          padding: const EdgeInsets.all(16.0),
                           itemCount: _invitations.length,
                           separatorBuilder: (_, __) => const SizedBox(height: 12),
                           itemBuilder: (context, i) {
@@ -169,7 +170,7 @@ class _BusinessInvitationsScreenState
                                             onPressed: () => _respond(
                                                 inv['id'] as String, 'ACCEPT', businessName),
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: AppTheme.primaryPurple,
+                                              backgroundColor: AppColors.primary,
                                               foregroundColor: Colors.white,
                                             ),
                                             child: const Text('Accept'),

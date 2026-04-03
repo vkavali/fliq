@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/onboarding_provider.dart';
-import 'provider_registration_screen.dart' show _OnboardingProgress;
+import 'provider_registration_screen.dart' show OnboardingProgress;
 
 class BankDetailsScreen extends ConsumerStatefulWidget {
   const BankDetailsScreen({super.key});
@@ -71,7 +71,7 @@ class _BankDetailsScreenState extends ConsumerState<BankDetailsScreen> {
           padding: AppSpacing.horizontalLg,
           children: [
             const SizedBox(height: AppSpacing.lg),
-            _OnboardingProgress(step: 2, total: 4),
+            OnboardingProgress(step: 2, total: 4),
             const SizedBox(height: AppSpacing.xl),
 
             Text(

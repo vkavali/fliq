@@ -26,7 +26,7 @@ class BusinessDashboardScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Business Dashboard'),
-        backgroundColor: AppTheme.primaryPurple,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
@@ -52,7 +52,7 @@ class BusinessDashboardScreen extends ConsumerWidget {
           return RefreshIndicator(
             onRefresh: () => ref.refresh(_businessProvider.future),
             child: ListView(
-              padding: AppSpacing.pagePadding,
+              padding: const EdgeInsets.all(16.0),
               children: [
                 // Business header card
                 _BusinessHeaderCard(business: business),
@@ -145,7 +145,7 @@ class _BusinessHeaderCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppTheme.primaryPurple, AppTheme.primaryPurple.withOpacity(0.7)],
+          colors: [AppColors.primary, AppColors.primary.withOpacity(0.7)],
         ),
         borderRadius: BorderRadius.circular(16),
       ),
@@ -388,11 +388,11 @@ class _ErrorView extends StatelessWidget {
     final theme = Theme.of(context);
     return Center(
       child: Padding(
-        padding: AppSpacing.pagePadding,
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.business_center, size: 64, color: AppTheme.primaryPurple),
+            const Icon(Icons.business_center, size: 64, color: AppColors.primary),
             const SizedBox(height: 16),
             Text('No Business Found', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
@@ -407,7 +407,7 @@ class _ErrorView extends StatelessWidget {
               icon: const Icon(Icons.add_business),
               label: const Text('Register Business'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryPurple,
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),

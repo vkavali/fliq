@@ -49,7 +49,7 @@ class _BusinessQrScreenState extends ConsumerState<BusinessQrScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Staff QR Codes'),
-        backgroundColor: AppTheme.primaryPurple,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
@@ -69,12 +69,12 @@ class _BusinessQrScreenState extends ConsumerState<BusinessQrScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.qr_code_2, size: 64, color: AppTheme.primaryPurple),
+                              const Icon(Icons.qr_code_2, size: 64, color: AppColors.primary),
                               const SizedBox(height: 16),
                               Text('No QR Codes', style: theme.textTheme.titleMedium),
                               const SizedBox(height: 8),
                               Padding(
-                                padding: AppSpacing.pagePadding,
+                                padding: const EdgeInsets.all(16.0),
                                 child: Text(
                                   'Staff members need to generate QR codes from their provider dashboard first.',
                                   textAlign: TextAlign.center,
@@ -85,7 +85,7 @@ class _BusinessQrScreenState extends ConsumerState<BusinessQrScreen> {
                           ),
                         )
                       : ListView.builder(
-                          padding: AppSpacing.pagePadding,
+                          padding: const EdgeInsets.all(16.0),
                           itemCount: _staffQr.length,
                           itemBuilder: (context, i) {
                             final member = _staffQr[i] as Map<String, dynamic>;
@@ -107,11 +107,11 @@ class _BusinessQrScreenState extends ConsumerState<BusinessQrScreen> {
                                         CircleAvatar(
                                           radius: 20,
                                           backgroundColor:
-                                              AppTheme.primaryPurple.withOpacity(0.1),
+                                              AppColors.primary.withOpacity(0.1),
                                           child: Text(
                                             name.isNotEmpty ? name[0].toUpperCase() : '?',
                                             style: const TextStyle(
-                                              color: AppTheme.primaryPurple,
+                                              color: AppColors.primary,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
@@ -153,7 +153,7 @@ class _BusinessQrScreenState extends ConsumerState<BusinessQrScreen> {
                                                   height: 80,
                                                   decoration: BoxDecoration(
                                                     border: Border.all(
-                                                        color: AppTheme.primaryPurple
+                                                        color: AppColors.primary
                                                             .withOpacity(0.3)),
                                                     borderRadius:
                                                         BorderRadius.circular(8),
@@ -170,7 +170,7 @@ class _BusinessQrScreenState extends ConsumerState<BusinessQrScreen> {
                                                           ),
                                                         )
                                                       : const Icon(Icons.qr_code,
-                                                          color: AppTheme.primaryPurple),
+                                                          color: AppColors.primary),
                                                 ),
                                                 if (label != null) ...[
                                                   const SizedBox(height: 4),
@@ -193,7 +193,7 @@ class _BusinessQrScreenState extends ConsumerState<BusinessQrScreen> {
                                                     child: const Icon(
                                                       Icons.share,
                                                       size: 14,
-                                                      color: AppTheme.primaryPurple,
+                                                      color: AppColors.primary,
                                                     ),
                                                   ),
                                                 ],

@@ -76,7 +76,9 @@ class _CreateTipJarScreenState extends ConsumerState<CreateTipJarScreen> {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: _eventTypes.map(((type, label, icon)) {
+              children:
+                  _eventTypes.map((e) {
+                    final (type, label, icon) = e;
                 final selected = _selectedEventType == type;
                 return GestureDetector(
                   onTap: () => setState(() => _selectedEventType = type),

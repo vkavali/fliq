@@ -81,30 +81,30 @@ class _BusinessRegistrationScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text('Register Your Business'),
-        backgroundColor: AppTheme.primaryPurple,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: AppSpacing.pagePadding,
+          padding: const EdgeInsets.all(16.0),
           children: [
             // Header
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.primaryPurple.withOpacity(0.08),
+                color: AppColors.primary.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
                 children: [
-                  const Icon(Icons.business_center, size: 48, color: AppTheme.primaryPurple),
+                  const Icon(Icons.business_center, size: 48, color: AppColors.primary),
                   const SizedBox(height: 8),
                   Text(
                     'Fliq for Business',
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.primaryPurple,
+                      color: AppColors.primary,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -130,7 +130,7 @@ class _BusinessRegistrationScreenState
                   label: Text('${t.$3} ${t.$2}'),
                   selected: selected,
                   onSelected: (_) => setState(() => _selectedType = t.$1),
-                  selectedColor: AppTheme.primaryPurple,
+                  selectedColor: AppColors.primary,
                   labelStyle: TextStyle(
                     color: selected ? Colors.white : null,
                     fontWeight: selected ? FontWeight.bold : null,
@@ -197,7 +197,7 @@ class _BusinessRegistrationScreenState
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _submit,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryPurple,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
