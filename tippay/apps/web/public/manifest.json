@@ -1,0 +1,36 @@
+{
+  "name": "Fliq — Tipping Reimagined",
+  "short_name": "Fliq",
+  "description": "Transform tipping into meaningful appreciation. Dreams, Intent, Reputation, Impact — built for India's service workers on UPI.",
+  "start_url": "/app/",
+  "scope": "/app/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#6C5CE7",
+  "background_color": "#F5F6FA",
+  "id": "co.in.fliq.app",
+  "categories": ["finance", "lifestyle"],
+  "lang": "en",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [],
+  "related_applications": [],
+  "prefer_related_applications": false
+}
