@@ -100,6 +100,13 @@ function checkRoute() {
     loadDashboard();
     return;
   }
+  // Native app or installed PWA → skip landing page, go to login
+  const isNativeApp = (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  const isInstalledPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (isNativeApp || isInstalledPWA) {
+    goTo('login');
+    return;
+  }
   goTo('landing');
 }
 
