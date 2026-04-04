@@ -22,68 +22,50 @@ struct RootView: View {
     private let roles: [RoleCard] = [
         RoleCard(
             role: .customer,
-            title: "TIPPER",
+            title: "Tipper",
             subtitle: "Scan QR codes, tip with intent, and see your impact on someone's dream.",
             sfSymbol: "heart",
-            accent: .black,
-            actionLabel: "ENTER AS TIPPER"
+            accent: Color.fliqTeal,
+            actionLabel: "Enter as Tipper"
         ),
         RoleCard(
             role: .provider,
-            title: "WORKER",
+            title: "Worker",
             subtitle: "Receive tips, share your dream, and build portable trust on UPI.",
             sfSymbol: "sparkles",
-            accent: Color.nothingRed,
-            actionLabel: "ENTER AS WORKER"
+            accent: Color.fliqGreen,
+            actionLabel: "Enter as Worker"
         ),
         RoleCard(
             role: .business,
-            title: "BUSINESS",
+            title: "Business",
             subtitle: "Manage staff, track satisfaction scores, and export QR codes at scale.",
             sfSymbol: "building.2",
-            accent: Color.black.opacity(0.65),
-            actionLabel: "ENTER AS BUSINESS"
+            accent: Color.fliqLilac,
+            actionLabel: "Enter as Business"
         )
     ]
 
     var body: some View {
         ZStack {
-            DotGridBackground()
+            GradientBackground()
 
             if viewModel.isLoading && viewModel.stage != .home {
                 VStack(spacing: 16) {
                     ProgressView()
-                        .tint(Color.nothingRed)
+                        .tint(.white)
                         .controlSize(.regular)
-                    Text("AUTHENTICATING_")
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundStyle(.black.opacity(0.35))
-                        .kerning(1.5)
+                    Text("Authenticating…")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.65))
                 }
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
                         switch viewModel.stage {
                         case .rolePicker:
-                            HeroSection()
+                            HeroSection(showDemo: $showDemo)
                                 .padding(.top, 8)
-
-                            // ── Try Demo button ───────────────────────────
-                            Button(action: { showDemo = true }) {
-                                HStack(spacing: 10) {
-                                    Image(systemName: "play.circle")
-                                        .font(.system(size: 13, weight: .light))
-                                    Text("TRY DEMO")
-                                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                                        .kerning(1.5)
-                                    Spacer()
-                                    Text("→")
-                                        .font(.system(size: 14, design: .monospaced))
-                                }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 14)
-                            }
-                            .buttonStyle(FliqPrimaryButtonStyle())
 
                             RoleSectionHeader()
                             ForEach(roles) { role in
@@ -95,7 +77,7 @@ struct RootView: View {
                         case .credential:
                             if let selectedRole = viewModel.selectedRole,
                                let role = roles.first(where: { $0.role == selectedRole }) {
-                                BackBar(title: "SIGN_IN", onBack: { viewModel.backToRolePicker() })
+                                BackBar(title: "Sign In", onBack: { viewModel.backToRolePicker() })
                                 AuthCard(
                                     role: role,
                                     credential: $viewModel.credential,
@@ -106,7 +88,7 @@ struct RootView: View {
                         case .otp:
                             if let selectedRole = viewModel.selectedRole,
                                let role = roles.first(where: { $0.role == selectedRole }) {
-                                BackBar(title: "VERIFY", onBack: { viewModel.backToCredential() })
+                                BackBar(title: "Verify", onBack: { viewModel.backToCredential() })
                                 OTPCard(
                                     role: role,
                                     credential: viewModel.credential,
@@ -172,25 +154,22 @@ private struct BackBar: View {
                 HStack(spacing: 7) {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 12, weight: .semibold))
-                    Text("BACK")
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .kerning(1.5)
+                    Text("Back")
+                        .font(.system(size: 13, weight: .medium))
                 }
-                .foregroundStyle(.black.opacity(0.5))
+                .foregroundStyle(.white.opacity(0.75))
             }
             .buttonStyle(.plain)
 
             Spacer()
 
             Text(title)
-                .font(.system(size: 10, weight: .medium, design: .monospaced))
-                .foregroundStyle(.black.opacity(0.3))
-                .kerning(2.5)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.6))
 
-            Text("FLIQ_v5")
-                .font(.system(size: 9, weight: .bold, design: .monospaced))
-                .foregroundStyle(Color.nothingRed.opacity(0.7))
-                .kerning(0.5)
+            Text("Fliq")
+                .font(.system(size: 11, weight: .bold))
+                .foregroundStyle(Color.fliqTeal.opacity(0.9))
         }
     }
 }
@@ -198,123 +177,94 @@ private struct BackBar: View {
 // MARK: - Hero Section
 
 private struct HeroSection: View {
-    @State private var dotOpacity: Double = 1.0
-    @State private var cursorVisible: Bool = true
+    @Binding var showDemo: Bool
     @State private var phoneFloat: CGFloat = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
 
             // ── Brand bar ──────────────────────────────────────────────────
-            HStack(alignment: .center) {
-                DotMatrixText(
-                    "FLIQ",
-                    font: .system(size: 30, weight: .black, design: .monospaced),
-                    foreground: .black,
-                    dotSpacing: 3.4,
-                    dotSize: 2.1
-                )
-
-                HStack(spacing: 1) {
-                    Text("v")
-                        .font(.system(size: 9, weight: .regular, design: .monospaced))
-                        .foregroundStyle(.black.opacity(0.4))
-                    Text("5")
-                        .font(.system(size: 9, weight: .black, design: .monospaced))
-                        .foregroundStyle(Color.nothingRed)
+            HStack {
+                // "Human Value Infrastructure" pill badge
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(Color.fliqGreen)
+                        .frame(width: 6, height: 6)
+                    Text("Human Value Infrastructure")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.9))
                 }
-                .padding(.horizontal, 7)
-                .padding(.vertical, 4)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
+                .background(Color.white.opacity(0.12))
+                .cornerRadius(20)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 3)
-                        .strokeBorder(Color.nothingRed.opacity(0.55), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 20)
+                        .strokeBorder(Color.white.opacity(0.22), lineWidth: 1)
                 )
 
                 Spacer()
 
-                HStack(spacing: 6) {
-                    Circle()
-                        .fill(Color.nothingRed)
-                        .frame(width: 5, height: 5)
-                        .opacity(dotOpacity)
-                    Text("LIVE")
-                        .font(.system(size: 9, weight: .bold, design: .monospaced))
-                        .foregroundStyle(.black.opacity(0.45))
-                        .kerning(1.5)
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 3)
-                        .strokeBorder(.black.opacity(0.12), lineWidth: 1)
-                )
+                Text("Fliq")
+                    .font(.system(size: 22, weight: .black))
+                    .foregroundStyle(.white)
             }
-            .padding(.bottom, 30)
-            .onAppear {
-                withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) {
-                    dotOpacity = 0.18
-                }
-                withAnimation(.easeInOut(duration: 0.65).repeatForever(autoreverses: true).delay(0.3)) {
-                    cursorVisible = false
-                }
-            }
-
-            // ── Tag line ───────────────────────────────────────────────────
-            HStack(spacing: 10) {
-                Rectangle()
-                    .fill(Color.nothingRed)
-                    .frame(width: 20, height: 1)
-                Text("HUMAN VALUE INFRASTRUCTURE")
-                    .font(.system(size: 9, weight: .bold, design: .monospaced))
-                    .foregroundStyle(.black.opacity(0.45))
-                    .kerning(2.5)
-            }
-            .padding(.bottom, 22)
+            .padding(.bottom, 40)
 
             // ── Hero title ─────────────────────────────────────────────────
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Every tip tells")
-                    .font(.system(size: 40, weight: .black))
-                    .foregroundStyle(.black)
-                    .kerning(-1)
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Every tip tells a")
+                    .font(.system(size: 42, weight: .black))
+                    .foregroundStyle(.white)
+                    .lineSpacing(2)
 
-                HStack(alignment: .bottom, spacing: 10) {
-                    Text("a")
-                        .font(.system(size: 40, weight: .black))
-                        .foregroundStyle(.black)
-                        .kerning(-1)
-
-                    DotMatrixText(
-                        "story.",
-                        font: .system(size: 48, weight: .black, design: .monospaced),
-                        foreground: Color.nothingRed,
-                        dotSpacing: 4.0,
-                        dotSize: 2.5
+                // "story" in green gradient
+                Text("story.")
+                    .font(.system(size: 52, weight: .black))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color.fliqGreen, Color.fliqTeal],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
                     )
-                }
-            }
-            .padding(.bottom, 16)
-
-            // Blinking cursor accent line
-            HStack(spacing: 0) {
-                Rectangle()
-                    .fill(.black.opacity(0.07))
-                    .frame(height: 1)
-                Text(cursorVisible ? "█" : " ")
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(Color.nothingRed.opacity(0.75))
-                    .frame(width: 11)
             }
             .padding(.bottom, 20)
 
             // ── Subtitle ───────────────────────────────────────────────────
-            Text("Fliq transforms tipping from a transaction into meaningful appreciation. Workers define dreams, tippers see impact, trust is portable — all on UPI, zero friction.")
-                .font(.system(size: 15, weight: .regular))
-                .foregroundStyle(.black.opacity(0.55))
+            Text("Fliq transforms tipping into meaningful appreciation. Workers define dreams, tippers see impact — all on UPI, zero friction.")
+                .font(.system(size: 16, weight: .regular))
+                .foregroundStyle(.white.opacity(0.7))
                 .lineSpacing(6)
-                .padding(.bottom, 36)
+                .padding(.bottom, 32)
 
-            // ── Phone widget ───────────────────────────────────────────────
+            // ── CTA buttons ────────────────────────────────────────────────
+            HStack(spacing: 12) {
+                Button(action: { showDemo = true }) {
+                    HStack(spacing: 8) {
+                        Text("Try Demo")
+                            .font(.system(size: 15, weight: .semibold))
+                        Text("→")
+                            .font(.system(size: 15, weight: .semibold))
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 13)
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(NothingGhostButtonStyle())
+
+                Button(action: {}) {
+                    Text("See What's New")
+                        .font(.system(size: 15, weight: .semibold))
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 13)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(NothingGhostButtonStyle())
+            }
+            .padding(.bottom, 36)
+
+            // ── Phone mockup card ──────────────────────────────────────────
             PhoneWidget()
                 .offset(y: phoneFloat)
                 .onAppear {
@@ -326,7 +276,7 @@ private struct HeroSection: View {
     }
 }
 
-// MARK: - Phone Widget
+// MARK: - Phone Widget (glassmorphism tipping mockup)
 
 private struct PhoneWidget: View {
     @State private var progressFraction: CGFloat = 0.18
@@ -337,66 +287,59 @@ private struct PhoneWidget: View {
 
             // Widget header
             HStack {
-                Text("PROVIDER_PROFILE")
-                    .font(.system(size: 9, weight: .medium, design: .monospaced))
-                    .foregroundStyle(.black.opacity(0.38))
-                    .kerning(1.5)
+                Text("Provider Profile")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.55))
                 Spacer()
                 HStack(spacing: 5) {
                     Circle()
-                        .fill(Color.nothingRed)
-                        .frame(width: 5, height: 5)
-                    Text("UPI_LIVE")
-                        .font(.system(size: 8, weight: .bold, design: .monospaced))
-                        .foregroundStyle(Color.nothingRed)
-                        .kerning(0.5)
+                        .fill(Color.fliqGreen)
+                        .frame(width: 6, height: 6)
+                    Text("UPI Live")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(Color.fliqGreen)
                 }
             }
             .padding(.bottom, 16)
 
             Rectangle()
-                .fill(.black.opacity(0.08))
+                .fill(Color.white.opacity(0.12))
                 .frame(height: 1)
                 .padding(.bottom, 18)
 
             // Provider row
             HStack(alignment: .top, spacing: 16) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .stroke(.black.opacity(0.2), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color.white.opacity(0.12))
                         .frame(width: 54, height: 54)
-                    DotMatrixText(
-                        "RK",
-                        font: .system(size: 17, weight: .black, design: .monospaced),
-                        foreground: .black,
-                        dotSpacing: 3.0,
-                        dotSize: 1.8
-                    )
+                    Text("RK")
+                        .font(.system(size: 16, weight: .black, design: .monospaced))
+                        .foregroundStyle(.white)
                 }
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("RAVI KUMAR")
-                        .font(.system(size: 13, weight: .bold, design: .monospaced))
-                        .foregroundStyle(.black)
-                        .kerning(1)
+                    Text("Ravi Kumar")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(.white)
 
                     HStack(spacing: 8) {
-                        Text("TRUST")
-                            .font(.system(size: 8, weight: .bold, design: .monospaced))
-                            .foregroundStyle(.black.opacity(0.38))
-                            .kerning(1)
-
+                        Text("Trust")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.5))
                         HStack(spacing: 2) {
-                            DotMatrixText(
-                                "82",
-                                font: .system(size: 14, weight: .black, design: .monospaced),
-                                foreground: Color.nothingRed,
-                                dotSpacing: 2.9,
-                                dotSize: 1.7
-                            )
+                            Text("82")
+                                .font(.system(size: 15, weight: .black))
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [Color.fliqGreen, Color.fliqTeal],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
                             Text("/ 100")
-                                .font(.system(size: 11, weight: .medium, design: .monospaced))
-                                .foregroundStyle(.black.opacity(0.4))
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.4))
                         }
                     }
                 }
@@ -406,42 +349,49 @@ private struct PhoneWidget: View {
 
             // Dream section
             VStack(alignment: .leading, spacing: 8) {
-                Text("ACTIVE_DREAM")
-                    .font(.system(size: 8, weight: .bold, design: .monospaced))
-                    .foregroundStyle(.black.opacity(0.38))
-                    .kerning(2)
+                Text("Active Dream")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.5))
+                    .kerning(0.5)
 
                 Text("Daughter's School Books")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.black.opacity(0.85))
+                    .foregroundStyle(.white.opacity(0.9))
 
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         Rectangle()
-                            .fill(.black.opacity(0.1))
-                            .frame(height: 2)
+                            .fill(Color.white.opacity(0.15))
+                            .frame(height: 3)
+                            .cornerRadius(2)
                         Rectangle()
-                            .fill(Color.nothingRed)
-                            .frame(width: geo.size.width * progressFraction, height: 2)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.fliqGreen, Color.fliqTeal],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .frame(width: geo.size.width * progressFraction, height: 3)
+                            .cornerRadius(2)
                     }
                 }
-                .frame(height: 2)
+                .frame(height: 3)
 
                 HStack {
-                    Text("65% FUNDED")
-                        .font(.system(size: 8, weight: .bold, design: .monospaced))
-                        .foregroundStyle(Color.nothingRed)
-                        .kerning(1)
+                    Text("65% funded")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(Color.fliqGreen)
                     Spacer()
                     Text("₹3,250 / ₹5,000")
-                        .font(.system(size: 8, weight: .medium, design: .monospaced))
-                        .foregroundStyle(.black.opacity(0.38))
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.4))
                 }
             }
             .padding(.bottom, 20)
 
             Rectangle()
-                .fill(.black.opacity(0.08))
+                .fill(Color.white.opacity(0.12))
                 .frame(height: 1)
                 .padding(.bottom, 16)
 
@@ -449,43 +399,55 @@ private struct PhoneWidget: View {
             HStack(spacing: 8) {
                 ForEach([50, 100, 200], id: \.self) { amount in
                     Text("₹\(amount)")
-                        .font(.system(size: 12, weight: .bold, design: .monospaced))
+                        .font(.system(size: 13, weight: .bold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 11)
-                        .foregroundStyle(selectedAmount == amount ? Color.nothingRed : .black.opacity(0.4))
+                        .foregroundStyle(selectedAmount == amount ? Color.fliqTeal : .white.opacity(0.5))
+                        .background(Color.white.opacity(selectedAmount == amount ? 0.15 : 0.06))
+                        .cornerRadius(8)
                         .overlay(
-                            Rectangle()
+                            RoundedRectangle(cornerRadius: 8)
                                 .strokeBorder(
                                     selectedAmount == amount
-                                        ? Color.nothingRed.opacity(0.75)
-                                        : Color.black.opacity(0.12),
+                                        ? Color.fliqTeal.opacity(0.8)
+                                        : Color.white.opacity(0.15),
                                     lineWidth: 1
                                 )
                         )
+                        .onTapGesture { selectedAmount = amount }
                 }
             }
             .padding(.bottom, 14)
 
-            // CTA — solid black fill
+            // CTA
             HStack {
                 Image(systemName: "bolt.fill")
-                    .font(.system(size: 11, weight: .bold))
-                Text("TIP ₹100 WITH KINDNESS")
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .kerning(0.5)
+                    .font(.system(size: 12, weight: .bold))
+                Text("Tip ₹100 with Kindness")
+                    .font(.system(size: 13, weight: .bold))
                 Spacer()
                 Text("→")
-                    .font(.system(size: 14, weight: .bold, design: .monospaced))
+                    .font(.system(size: 15, weight: .bold))
             }
             .foregroundStyle(.white)
             .padding(.horizontal, 14)
             .padding(.vertical, 13)
-            .background(.black)
+            .background(
+                LinearGradient(
+                    colors: [Color.fliqIndigo, Color.fliqTeal],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .cornerRadius(10)
         }
         .padding(20)
+        .background(.ultraThinMaterial)
+        .background(Color.white.opacity(0.07))
+        .cornerRadius(20)
         .overlay(
-            Rectangle()
-                .strokeBorder(.black.opacity(0.12), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 20)
+                .strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
         )
         .onAppear {
             withAnimation(.easeOut(duration: 2.8).delay(0.5)) {
@@ -502,16 +464,22 @@ private struct RoleSectionHeader: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 12) {
                 Rectangle()
-                    .fill(Color.nothingRed)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.fliqGreen, Color.fliqTeal],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
                     .frame(width: 3, height: 18)
-                Text("SELECT_ROLE")
-                    .font(.system(size: 10, weight: .bold, design: .monospaced))
-                    .foregroundStyle(.black.opacity(0.45))
-                    .kerning(2.5)
+                Text("Choose your role")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.55))
+                    .kerning(0.5)
             }
             Text("How would you like to use Fliq?")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(.black.opacity(0.85))
+                .font(.system(size: 20, weight: .bold))
+                .foregroundStyle(.white)
         }
     }
 }
@@ -527,23 +495,22 @@ private struct RoleEntryCard: View {
             // Header
             HStack(alignment: .top, spacing: 14) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 5, style: .continuous)
-                        .stroke(role.accent.opacity(0.28), lineWidth: 1)
-                        .frame(width: 46, height: 46)
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(role.accent.opacity(0.18))
+                        .frame(width: 48, height: 48)
                     Image(systemName: role.sfSymbol)
-                        .font(.system(size: 19, weight: .light))
+                        .font(.system(size: 20, weight: .medium))
                         .foregroundStyle(role.accent)
                 }
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text(role.title)
-                        .font(.system(size: 13, weight: .black, design: .monospaced))
-                        .foregroundStyle(role.accent)
-                        .kerning(2.5)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(.white)
 
                     Text(role.subtitle)
                         .font(.system(size: 13, weight: .regular))
-                        .foregroundStyle(.black.opacity(0.5))
+                        .foregroundStyle(.white.opacity(0.6))
                         .lineLimit(3)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -553,31 +520,33 @@ private struct RoleEntryCard: View {
             .padding(18)
 
             Rectangle()
-                .fill(role.accent.opacity(0.1))
+                .fill(Color.white.opacity(0.1))
                 .frame(height: 1)
 
             // Action row
             Button(action: action) {
                 HStack(spacing: 8) {
                     Image(systemName: role.sfSymbol)
-                        .font(.system(size: 11, weight: .regular))
+                        .font(.system(size: 12, weight: .medium))
                     Text(role.actionLabel)
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .kerning(1.5)
+                        .font(.system(size: 13, weight: .semibold))
                     Spacer()
                     Image(systemName: "arrow.right")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.system(size: 12, weight: .semibold))
                 }
                 .foregroundStyle(role.accent)
                 .padding(.horizontal, 18)
                 .padding(.vertical, 14)
-                .background(role.accent.opacity(0.03))
+                .background(role.accent.opacity(0.08))
             }
             .buttonStyle(.plain)
         }
+        .background(.ultraThinMaterial)
+        .background(Color.white.opacity(0.06))
+        .cornerRadius(16)
         .overlay(
-            Rectangle()
-                .strokeBorder(role.accent.opacity(0.16), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(Color.white.opacity(0.16), lineWidth: 1)
         )
     }
 }
@@ -598,13 +567,13 @@ private struct AuthCard: View {
                     .fill(role.accent)
                     .frame(width: 3, height: 36)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(role.title)
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    Text(role.title.uppercased())
+                        .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(role.accent)
-                        .kerning(2.5)
+                        .kerning(1.5)
                     Text(role.role.usesEmail ? "Enter business email" : "Enter phone number")
                         .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(.black)
+                        .foregroundStyle(.white)
                 }
             }
 
@@ -620,16 +589,16 @@ private struct AuthCard: View {
                             credential = code + raw
                         } label: {
                             Text(label)
-                                .font(.system(size: 12, weight: selectedCountryCode == code ? .bold : .regular,
-                                              design: .monospaced))
-                                .foregroundStyle(selectedCountryCode == code ? role.accent : .black.opacity(0.45))
+                                .font(.system(size: 13, weight: selectedCountryCode == code ? .bold : .regular))
+                                .foregroundStyle(selectedCountryCode == code ? role.accent : .white.opacity(0.5))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 11)
-                                .background(role.accent.opacity(selectedCountryCode == code ? 0.07 : 0.0))
+                                .background(role.accent.opacity(selectedCountryCode == code ? 0.15 : 0.0))
+                                .cornerRadius(8)
                                 .overlay(
-                                    Rectangle()
+                                    RoundedRectangle(cornerRadius: 8)
                                         .strokeBorder(
-                                            selectedCountryCode == code ? role.accent.opacity(0.6) : Color.black.opacity(0.12),
+                                            selectedCountryCode == code ? role.accent.opacity(0.6) : Color.white.opacity(0.18),
                                             lineWidth: 1
                                         )
                                 )
@@ -646,22 +615,22 @@ private struct AuthCard: View {
             .keyboardType(role.role.usesEmail ? .emailAddress : .phonePad)
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled()
-            .font(.system(size: 16, weight: .medium, design: .monospaced))
-            .foregroundStyle(.black)
+            .font(.system(size: 16, weight: .medium))
+            .foregroundStyle(.white)
             .padding(14)
-            .background(Color.black.opacity(0.04))
-            .overlay(Rectangle().strokeBorder(.black.opacity(0.12), lineWidth: 1))
+            .background(Color.white.opacity(0.1))
+            .cornerRadius(10)
+            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
 
             Button(action: onSubmit) {
                 HStack(spacing: 10) {
                     Image(systemName: "paperplane")
-                        .font(.system(size: 13, weight: .light))
-                    Text("SEND ONE-TIME CODE")
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .kerning(1.5)
+                        .font(.system(size: 13, weight: .medium))
+                    Text("Send One-Time Code")
+                        .font(.system(size: 14, weight: .semibold))
                     Spacer()
                     Text("→")
-                        .font(.system(size: 14, design: .monospaced))
+                        .font(.system(size: 15, weight: .bold))
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
@@ -670,7 +639,10 @@ private struct AuthCard: View {
             .disabled(credential.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
         .padding(20)
-        .overlay(Rectangle().strokeBorder(.black.opacity(0.12), lineWidth: 1))
+        .background(.ultraThinMaterial)
+        .background(Color.white.opacity(0.06))
+        .cornerRadius(16)
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color.white.opacity(0.18), lineWidth: 1))
     }
 }
 
@@ -691,18 +663,18 @@ private struct OTPCard: View {
                     .frame(width: 3, height: 36)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("VERIFICATION")
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(role.accent)
-                        .kerning(2.5)
+                        .kerning(1.5)
                     Text("Enter the code we sent")
                         .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(.black)
+                        .foregroundStyle(.white)
                 }
             }
 
             Text(credential)
-                .font(.system(size: 12, weight: .regular, design: .monospaced))
-                .foregroundStyle(.black.opacity(0.45))
+                .font(.system(size: 13, weight: .regular))
+                .foregroundStyle(.white.opacity(0.5))
 
             TextField("_ _ _ _ _ _", text: $code)
                 .keyboardType(.numberPad)
@@ -710,22 +682,22 @@ private struct OTPCard: View {
                 .autocorrectionDisabled()
                 .font(.system(size: 34, weight: .black, design: .monospaced))
                 .multilineTextAlignment(.center)
-                .foregroundStyle(.black)
+                .foregroundStyle(.white)
                 .kerning(10)
                 .padding(16)
-                .background(Color.black.opacity(0.04))
-                .overlay(Rectangle().strokeBorder(.black.opacity(0.12), lineWidth: 1))
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
 
             Button(action: onVerify) {
                 HStack(spacing: 10) {
                     Image(systemName: "checkmark.shield")
-                        .font(.system(size: 13, weight: .light))
-                    Text("VERIFY & SIGN IN")
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .kerning(1.5)
+                        .font(.system(size: 13, weight: .medium))
+                    Text("Verify & Sign In")
+                        .font(.system(size: 14, weight: .semibold))
                     Spacer()
                     Text("→")
-                        .font(.system(size: 14, design: .monospaced))
+                        .font(.system(size: 15, weight: .bold))
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
@@ -734,12 +706,15 @@ private struct OTPCard: View {
             .disabled(code.trimmingCharacters(in: .whitespacesAndNewlines).count < 4)
 
             Button("Resend code →", action: onResend)
-                .font(.system(size: 12, weight: .medium, design: .monospaced))
-                .foregroundStyle(.black.opacity(0.4))
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.white.opacity(0.5))
                 .buttonStyle(.plain)
         }
         .padding(20)
-        .overlay(Rectangle().strokeBorder(.black.opacity(0.12), lineWidth: 1))
+        .background(.ultraThinMaterial)
+        .background(Color.white.opacity(0.06))
+        .cornerRadius(16)
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color.white.opacity(0.18), lineWidth: 1))
     }
 }
 
@@ -751,17 +726,15 @@ private struct CustomerHomeCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            // Session header
-            DarkSectionHeader(label: "CUSTOMER_HOME", title: "Welcome back")
+            DarkSectionHeader(label: "CUSTOMER HOME", title: "Welcome back")
 
             if let name = session.user.name {
                 DetailLine(label: "SIGNED IN AS", value: name)
             }
 
-            Button("LOG OUT →") { viewModel.logout() }
-                .font(.system(size: 11, weight: .bold, design: .monospaced))
-                .kerning(1.5)
-                .foregroundStyle(.black.opacity(0.45))
+            Button("Log Out →") { viewModel.logout() }
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.5))
                 .buttonStyle(.plain)
 
             DarkDivider()
@@ -777,7 +750,6 @@ private struct CustomerHomeCard: View {
             )
             CustomerJarView(session: session)
 
-            // QR / Link resolution
             DarkSectionHeader(label: "RESOLVE", title: "QR or payment link")
 
             DarkTextField(placeholder: "Paste /qr/… or /tip/… or raw ID",
@@ -785,13 +757,13 @@ private struct CustomerHomeCard: View {
 
             HStack(spacing: 8) {
                 Button(action: { viewModel.openScanner() }) {
-                    labelMono(viewModel.isResolvingScannedCode ? "RESOLVING…" : "SCAN QR")
+                    labelMono(viewModel.isResolvingScannedCode ? "Resolving…" : "Scan QR")
                 }
                 .buttonStyle(NothingGhostButtonStyle())
                 .disabled(viewModel.isScannerPresented || viewModel.isResolvingScannedCode)
 
                 Button(action: { Task { await viewModel.resolveQr() } }) {
-                    labelMono(viewModel.isResolvingQr ? "RESOLVING…" : "RESOLVE QR")
+                    labelMono(viewModel.isResolvingQr ? "Resolving…" : "Resolve QR")
                 }
                 .buttonStyle(NothingGhostButtonStyle())
                 .disabled(
@@ -800,7 +772,7 @@ private struct CustomerHomeCard: View {
                 )
 
                 Button(action: { Task { await viewModel.resolvePaymentLink() } }) {
-                    labelMono(viewModel.isResolvingPaymentLink ? "RESOLVING…" : "RESOLVE LINK")
+                    labelMono(viewModel.isResolvingPaymentLink ? "Resolving…" : "Resolve Link")
                 }
                 .buttonStyle(NothingGhostButtonStyle())
                 .disabled(
@@ -809,7 +781,6 @@ private struct CustomerHomeCard: View {
                 )
             }
 
-            // Provider search
             DarkSectionHeader(label: "SEARCH", title: "Find a provider")
 
             DarkTextField(placeholder: "Name or phone number",
@@ -818,10 +789,10 @@ private struct CustomerHomeCard: View {
             Button(action: { Task { await viewModel.searchProviders() } }) {
                 HStack {
                     Image(systemName: "magnifyingglass")
-                        .font(.system(size: 12, weight: .light))
-                    labelMono(viewModel.isSearchingProviders ? "SEARCHING…" : "SEARCH PROVIDERS")
+                        .font(.system(size: 12, weight: .medium))
+                    labelMono(viewModel.isSearchingProviders ? "Searching…" : "Search Providers")
                     Spacer()
-                    Text("→").font(.system(size: 13, design: .monospaced))
+                    Text("→").font(.system(size: 13))
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 13)
@@ -832,11 +803,10 @@ private struct CustomerHomeCard: View {
                 viewModel.isSearchingProviders
             )
 
-            // Entry context
             if let entry = viewModel.selectedEntryContext {
                 DarkCard {
                     VStack(alignment: .leading, spacing: 10) {
-                        SectionLabel("ENTRY_CONTEXT")
+                        SectionLabel("ENTRY CONTEXT")
                         DetailLine(label: "SOURCE", value: entry.source.label)
                         DetailLine(label: "PROVIDER", value: entry.providerName)
                         if let category = entry.category {
@@ -853,7 +823,6 @@ private struct CustomerHomeCard: View {
                 }
             }
 
-            // Extracted into separate structs to keep body complexity manageable
             ProviderResultsSection(viewModel: viewModel)
             ProviderTipFlowSection(viewModel: viewModel)
             TipOrderSection(viewModel: viewModel)
@@ -885,18 +854,17 @@ private struct ProviderResultsSection: View {
                 DarkCard {
                     VStack(alignment: .leading, spacing: 10) {
                         Text(provider.name)
-                            .font(.system(size: 15, weight: .bold, design: .monospaced))
-                            .foregroundStyle(.black)
-                            .kerning(0.5)
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(.white)
                         if let cat = provider.category { DetailLine(label: "CATEGORY", value: cat) }
                         if let ph = provider.phone { DetailLine(label: "PHONE", value: ph) }
                         DetailLine(label: "RATING", value: scoreText(provider.ratingAverage))
                         DetailLine(label: "TOTAL TIPS", value: "\(provider.totalTipsReceived)")
                         Button(action: { Task { await viewModel.loadProvider(provider.id) } }) {
                             HStack {
-                                labelMono(viewModel.isLoadingProvider ? "LOADING…" : "OPEN PROVIDER")
+                                labelMono(viewModel.isLoadingProvider ? "Loading…" : "Open Provider")
                                 Spacer()
-                                Text("→").font(.system(size: 13, design: .monospaced))
+                                Text("→").font(.system(size: 13))
                             }
                             .padding(.horizontal, 14)
                             .padding(.vertical, 12)
@@ -930,7 +898,7 @@ private struct ProviderTipFlowSection: View {
         if let provider = viewModel.selectedProvider {
             DarkCard {
                 VStack(alignment: .leading, spacing: 14) {
-                    DarkSectionHeader(label: "SELECTED_PROVIDER", title: provider.displayName)
+                    DarkSectionHeader(label: "SELECTED PROVIDER", title: provider.displayName)
                     if let cat = provider.category { DetailLine(label: "CATEGORY", value: cat) }
                     if let bio = provider.bio { DetailLine(label: "BIO", value: bio) }
                     DetailLine(label: "RATING", value: scoreText(provider.ratingAverage))
@@ -943,11 +911,11 @@ private struct ProviderTipFlowSection: View {
                         DetailLine(label: "DREAM", value: "\(dream.title) (\(dream.percentage)% funded)")
                     }
                     DarkDivider()
-                    SectionLabel("TIP_AMOUNT")
+                    SectionLabel("TIP AMOUNT")
                     HStack(spacing: 8) {
                         ForEach([50, 100, 200], id: \.self) { amount in
                             Button("₹\(amount)") { viewModel.usePresetAmount(amount) }
-                                .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                .font(.system(size: 13, weight: .bold))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 11)
                                 .buttonStyle(NothingGhostButtonStyle())
@@ -959,8 +927,8 @@ private struct ProviderTipFlowSection: View {
                         .disabled(isCustomAmountLocked)
                     if isCustomAmountLocked {
                         Text("Amount locked by payment link.")
-                            .font(.system(size: 12, design: .monospaced))
-                            .foregroundStyle(.black.opacity(0.4))
+                            .font(.system(size: 12))
+                            .foregroundStyle(.white.opacity(0.4))
                     }
                     DarkDivider()
                     SectionLabel("INTENT")
@@ -983,9 +951,9 @@ private struct ProviderTipFlowSection: View {
                     Button(action: { Task { await viewModel.createTip() } }) {
                         HStack {
                             Image(systemName: "bolt.fill").font(.system(size: 12, weight: .bold))
-                            labelMono(viewModel.isSubmittingTip ? "CREATING ORDER…" : "CREATE TIP ORDER")
+                            labelMono(viewModel.isSubmittingTip ? "Creating Order…" : "Create Tip Order")
                             Spacer()
-                            Text("→").font(.system(size: 14, design: .monospaced))
+                            Text("→").font(.system(size: 14))
                         }
                         .padding(.horizontal, 14)
                         .padding(.vertical, 14)
@@ -1007,7 +975,7 @@ private struct TipOrderSection: View {
         if let order = viewModel.createdTipOrder {
             DarkCard {
                 VStack(alignment: .leading, spacing: 10) {
-                    DarkSectionHeader(label: "TIP_ORDER_CREATED", title: order.provider.name)
+                    DarkSectionHeader(label: "TIP ORDER CREATED", title: order.provider.name)
                     if let cat = order.provider.category { DetailLine(label: "CATEGORY", value: cat) }
                     DetailLine(label: "AMOUNT", value: "₹\(order.amount / 100)")
                     DetailLine(label: "CURRENCY", value: order.currency)
@@ -1022,7 +990,7 @@ private struct TipOrderSection: View {
                     }
                     HStack(spacing: 8) {
                         Button(action: { Task { await viewModel.refreshTipStatus() } }) {
-                            labelMono(viewModel.isRefreshingTipStatus ? "REFRESHING…" : "REFRESH STATUS")
+                            labelMono(viewModel.isRefreshingTipStatus ? "Refreshing…" : "Refresh Status")
                                 .padding(.vertical, 12)
                         }
                         .frame(maxWidth: .infinity)
@@ -1031,7 +999,7 @@ private struct TipOrderSection: View {
 
                         if order.isMockOrder {
                             Button(action: { Task { await viewModel.completeMockPayment() } }) {
-                                labelMono(viewModel.isCompletingMockPayment ? "COMPLETING…" : "MOCK PAYMENT")
+                                labelMono(viewModel.isCompletingMockPayment ? "Completing…" : "Mock Payment")
                                     .padding(.vertical, 12)
                             }
                             .frame(maxWidth: .infinity)
@@ -1039,8 +1007,8 @@ private struct TipOrderSection: View {
                             .disabled(viewModel.isCompletingMockPayment)
                         } else {
                             Button(action: { viewModel.openCheckout() }) {
-                                labelMono(viewModel.isVerifyingCheckout ? "VERIFYING…" :
-                                          viewModel.isLaunchingCheckout ? "OPENING…" : "OPEN CHECKOUT")
+                                labelMono(viewModel.isVerifyingCheckout ? "Verifying…" :
+                                          viewModel.isLaunchingCheckout ? "Opening…" : "Open Checkout")
                                     .padding(.vertical, 12)
                             }
                             .frame(maxWidth: .infinity)
@@ -1051,8 +1019,8 @@ private struct TipOrderSection: View {
                     Text(order.isMockOrder
                          ? "Dev-bypass order — complete without the Razorpay SDK."
                          : "Native Razorpay checkout wired. Opens SDK and verifies callback.")
-                        .font(.system(size: 11, design: .monospaced))
-                        .foregroundStyle(.black.opacity(0.38))
+                        .font(.system(size: 11))
+                        .foregroundStyle(.white.opacity(0.4))
                 }
             }
         }
@@ -1069,11 +1037,11 @@ private struct CustomerTipSuccessSection: View {
             DarkCard {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        DarkSectionHeader(label: "PAYMENT_SUCCESS", title: "Tip impact")
+                        DarkSectionHeader(label: "PAYMENT SUCCESS", title: "Tip impact")
                         Spacer()
                         if viewModel.tipImpact != nil {
                             Button(action: { Task { await viewModel.refreshTipImpact() } }) {
-                                labelMono(viewModel.isLoadingTipImpact ? "REFRESHING…" : "REFRESH")
+                                labelMono(viewModel.isLoadingTipImpact ? "Refreshing…" : "Refresh")
                             }
                             .buttonStyle(NothingGhostButtonStyle())
                             .disabled(viewModel.isLoadingTipImpact)
@@ -1081,7 +1049,7 @@ private struct CustomerTipSuccessSection: View {
                     }
 
                     if viewModel.isLoadingTipImpact, viewModel.tipImpact == nil {
-                        ProgressView().tint(Color.nothingRed).frame(maxWidth: .infinity)
+                        ProgressView().tint(Color.fliqTeal).frame(maxWidth: .infinity)
                     } else if let impact = viewModel.tipImpact {
                         DetailLine(label: "WORKER", value: impact.workerName)
                         DetailLine(label: "AMOUNT", value: historyAmountPaiseText(impact.amountPaise))
@@ -1090,7 +1058,7 @@ private struct CustomerTipSuccessSection: View {
                         }
                         Text(impact.message)
                             .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(.black)
+                            .foregroundStyle(.white)
                         if let dream = impact.dream {
                             DetailLine(label: "DREAM", value: dream.title)
                             DetailLine(label: "PROGRESS", value: "\(dream.previousProgress)% → \(dream.newProgress)%")
@@ -1111,10 +1079,10 @@ private struct PendingTipQueueSection: View {
         DarkCard {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    DarkSectionHeader(label: "OFFLINE_QUEUE", title: "Pending tips")
+                    DarkSectionHeader(label: "OFFLINE QUEUE", title: "Pending tips")
                     Spacer()
                     Button(action: { Task { await viewModel.syncPendingTipDrafts() } }) {
-                        labelMono(viewModel.isSyncingPendingTips ? "SYNCING…" : "SYNC NOW")
+                        labelMono(viewModel.isSyncingPendingTips ? "Syncing…" : "Sync Now")
                     }
                     .buttonStyle(NothingGhostButtonStyle())
                     .disabled(viewModel.pendingTipDrafts.isEmpty || viewModel.isSyncingPendingTips)
@@ -1122,14 +1090,14 @@ private struct PendingTipQueueSection: View {
 
                 if viewModel.pendingTipDrafts.isEmpty {
                     Text("Offline-created tips will queue here when the backend is unreachable.")
-                        .font(.system(size: 13, design: .monospaced))
-                        .foregroundStyle(.black.opacity(0.45))
+                        .font(.system(size: 13))
+                        .foregroundStyle(.white.opacity(0.5))
                 } else {
                     ForEach(viewModel.pendingTipDrafts) { draft in
                         VStack(alignment: .leading, spacing: 8) {
                             Text("\(historyAmountPaiseText(draft.amountPaise)) → \(draft.providerName)")
-                                .font(.system(size: 14, weight: .bold, design: .monospaced))
-                                .foregroundStyle(.black)
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(.white)
                             if let cat = draft.providerCategory { DetailLine(label: "CATEGORY", value: cat) }
                             DetailLine(label: "SOURCE", value: draft.source.label)
                             DetailLine(label: "INTENT", value: draft.intent.label)
@@ -1138,14 +1106,14 @@ private struct PendingTipQueueSection: View {
 
                             HStack(spacing: 8) {
                                 Button(action: { Task { await viewModel.syncPendingTipDrafts() } }) {
-                                    labelMono("RETRY SYNC").padding(.vertical, 11)
+                                    labelMono("Retry Sync").padding(.vertical, 11)
                                 }
                                 .frame(maxWidth: .infinity)
                                 .buttonStyle(FliqPrimaryButtonStyle())
                                 .disabled(viewModel.isSyncingPendingTips)
 
                                 Button(action: { viewModel.discardPendingTipDraft(draft.id) }) {
-                                    labelMono("DISCARD").padding(.vertical, 11)
+                                    labelMono("Discard").padding(.vertical, 11)
                                 }
                                 .frame(maxWidth: .infinity)
                                 .buttonStyle(NothingGhostButtonStyle())
@@ -1155,7 +1123,7 @@ private struct PendingTipQueueSection: View {
                         .padding(.top, 10)
 
                         Rectangle()
-                            .fill(.black.opacity(0.08))
+                            .fill(Color.white.opacity(0.1))
                             .frame(height: 1)
                     }
                 }
@@ -1188,7 +1156,7 @@ private struct CustomerProfileEditorCard: View {
 
                 HStack(spacing: 8) {
                     Button(action: { Task { await viewModel.refreshCustomerProfile() } }) {
-                        labelMono(viewModel.isLoadingCustomerProfile ? "REFRESHING…" : "REFRESH")
+                        labelMono(viewModel.isLoadingCustomerProfile ? "Refreshing…" : "Refresh")
                             .padding(.vertical, 12)
                     }
                     .frame(maxWidth: .infinity)
@@ -1196,7 +1164,7 @@ private struct CustomerProfileEditorCard: View {
                     .disabled(viewModel.isLoadingCustomerProfile || viewModel.isSavingCustomerProfile)
 
                     Button(action: { Task { await viewModel.saveCustomerProfile() } }) {
-                        labelMono(viewModel.isSavingCustomerProfile ? "SAVING…" : "SAVE PROFILE")
+                        labelMono(viewModel.isSavingCustomerProfile ? "Saving…" : "Save Profile")
                             .padding(.vertical, 12)
                     }
                     .frame(maxWidth: .infinity)
@@ -1220,24 +1188,24 @@ private struct CustomerHistorySection: View {
                     DarkSectionHeader(label: "HISTORY", title: "Recent tips")
                     Spacer()
                     Button(action: { Task { await viewModel.refreshCustomerHistory() } }) {
-                        labelMono(viewModel.isLoadingCustomerHistory ? "REFRESHING…" : "REFRESH")
+                        labelMono(viewModel.isLoadingCustomerHistory ? "Refreshing…" : "Refresh")
                     }
                     .buttonStyle(NothingGhostButtonStyle())
                     .disabled(viewModel.isLoadingCustomerHistory)
                 }
 
                 if viewModel.isLoadingCustomerHistory && viewModel.customerTipHistory.isEmpty {
-                    ProgressView().tint(Color.nothingRed).frame(maxWidth: .infinity)
+                    ProgressView().tint(Color.fliqTeal).frame(maxWidth: .infinity)
                 } else if viewModel.customerTipHistory.isEmpty {
                     Text("No tips yet. Authenticated tips will appear here.")
-                        .font(.system(size: 13, design: .monospaced))
-                        .foregroundStyle(.black.opacity(0.45))
+                        .font(.system(size: 13))
+                        .foregroundStyle(.white.opacity(0.5))
                 } else {
                     ForEach(viewModel.customerTipHistory) { tip in
                         VStack(alignment: .leading, spacing: 8) {
                             Text("\(historyAmountText(tip)) → \(tip.providerName)")
-                                .font(.system(size: 14, weight: .bold, design: .monospaced))
-                                .foregroundStyle(.black)
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(.white)
                             if let cat = tip.providerCategory { DetailLine(label: "CATEGORY", value: cat) }
                             DetailLine(label: "STATUS", value: tip.status)
                             if let intent = historyIntentText(tip.intent) { DetailLine(label: "INTENT", value: intent) }
@@ -1247,7 +1215,7 @@ private struct CustomerHistorySection: View {
                         .padding(.top, 10)
 
                         Rectangle()
-                            .fill(.black.opacity(0.08))
+                            .fill(Color.white.opacity(0.1))
                             .frame(height: 1)
                     }
                 }
@@ -1258,14 +1226,12 @@ private struct CustomerHistorySection: View {
 
 // MARK: - Shared UI Primitives
 
-/// Monospaced label used inside button closures.
 private func labelMono(_ text: String) -> some View {
     Text(text)
-        .font(.system(size: 11, weight: .bold, design: .monospaced))
-        .kerning(1)
+        .font(.system(size: 12, weight: .semibold))
+        .foregroundStyle(.white)
 }
 
-/// Two-line section header: small monospaced label + readable title.
 private struct DarkSectionHeader: View {
     let label: String
     let title: String
@@ -1273,39 +1239,36 @@ private struct DarkSectionHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label)
-                .font(.system(size: 9, weight: .bold, design: .monospaced))
-                .foregroundStyle(.black.opacity(0.38))
-                .kerning(2)
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(.white.opacity(0.5))
+                .kerning(1)
             Text(title)
-                .font(.system(size: 18, weight: .bold))
-                .foregroundStyle(.black)
+                .font(.system(size: 20, weight: .bold))
+                .foregroundStyle(.white)
         }
     }
 }
 
-/// Tiny all-caps monospaced label for in-card sections.
 private struct SectionLabel: View {
     let text: String
     init(_ text: String) { self.text = text }
 
     var body: some View {
         Text(text)
-            .font(.system(size: 9, weight: .bold, design: .monospaced))
-            .foregroundStyle(.black.opacity(0.38))
-            .kerning(2)
+            .font(.system(size: 10, weight: .bold))
+            .foregroundStyle(.white.opacity(0.5))
+            .kerning(1)
     }
 }
 
-/// Thin horizontal rule on light backgrounds.
 private struct DarkDivider: View {
     var body: some View {
         Rectangle()
-            .fill(Color.black.opacity(0.09))
+            .fill(Color.white.opacity(0.12))
             .frame(height: 1)
     }
 }
 
-/// TextField styled for light backgrounds.
 private struct DarkTextField: View {
     let placeholder: String
     @Binding var text: String
@@ -1317,16 +1280,16 @@ private struct DarkTextField: View {
             .keyboardType(keyboardType)
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled()
-            .font(.system(size: 14, weight: .medium, design: .monospaced))
-            .foregroundStyle(.black)
+            .font(.system(size: 14, weight: .medium))
+            .foregroundStyle(.white)
             .lineLimit(axis == .vertical ? 3...6 : 1...1)
             .padding(13)
-            .background(Color.black.opacity(0.04))
-            .overlay(Rectangle().strokeBorder(.black.opacity(0.12), lineWidth: 1))
+            .background(Color.white.opacity(0.1))
+            .cornerRadius(10)
+            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
     }
 }
 
-/// Card container — thin dark border, near-zero fill.
 private struct DarkCard<Content: View>: View {
     @ViewBuilder let content: Content
 
@@ -1334,13 +1297,17 @@ private struct DarkCard<Content: View>: View {
         content
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .overlay(Rectangle().strokeBorder(.black.opacity(0.1), lineWidth: 1))
+            .background(.ultraThinMaterial)
+            .background(Color.white.opacity(0.06))
+            .cornerRadius(16)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
+            )
     }
 }
 
 // MARK: - Intent & Rating Buttons
-// Extracted into separate structs to avoid SwiftUI type-check timeouts
-// when mixing FliqPrimaryButtonStyle / NothingGhostButtonStyle in a ternary.
 
 private struct IntentButton: View {
     let intent: TipIntentOption
@@ -1351,17 +1318,18 @@ private struct IntentButton: View {
         Button(action: onTap) {
             HStack {
                 Text(isSelected ? "✓ \(intent.label.uppercased())" : "\(intent.label.uppercased()): \(intent.summary)")
-                    .font(.system(size: 11, weight: .medium, design: .monospaced))
-                    .kerning(0.5)
+                    .font(.system(size: 12, weight: .medium))
+                    .kerning(0.3)
                     .multilineTextAlignment(.leading)
                 Spacer()
             }
-            .foregroundStyle(isSelected ? Color.nothingRed : Color.black.opacity(0.6))
+            .foregroundStyle(isSelected ? Color.fliqTeal : Color.white.opacity(0.65))
             .padding(.horizontal, 14)
             .padding(.vertical, 11)
-            .background(Color.nothingRed.opacity(isSelected ? 0.06 : 0.0))
-            .overlay(Rectangle().strokeBorder(
-                isSelected ? Color.nothingRed.opacity(0.5) : Color.black.opacity(0.13),
+            .background(Color.fliqTeal.opacity(isSelected ? 0.15 : 0.0))
+            .cornerRadius(8)
+            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(
+                isSelected ? Color.fliqTeal.opacity(0.5) : Color.white.opacity(0.15),
                 lineWidth: 1)
             )
         }
@@ -1377,13 +1345,14 @@ private struct RatingButton: View {
     var body: some View {
         Button(action: onTap) {
             Text(isSelected ? "★\(rating)" : "\(rating)")
-                .font(.system(size: 13, weight: .bold, design: .monospaced))
-                .foregroundStyle(isSelected ? Color.nothingRed : Color.black.opacity(0.5))
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(isSelected ? Color.fliqAmber : Color.white.opacity(0.5))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 11)
-                .background(Color.nothingRed.opacity(isSelected ? 0.06 : 0.0))
-                .overlay(Rectangle().strokeBorder(
-                    isSelected ? Color.nothingRed.opacity(0.5) : Color.black.opacity(0.13),
+                .background(Color.fliqAmber.opacity(isSelected ? 0.18 : 0.0))
+                .cornerRadius(8)
+                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(
+                    isSelected ? Color.fliqAmber.opacity(0.5) : Color.white.opacity(0.15),
                     lineWidth: 1)
                 )
         }
@@ -1400,12 +1369,12 @@ struct DetailLine: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(label)
-                .font(.system(size: 9, weight: .bold, design: .monospaced))
-                .foregroundStyle(.black.opacity(0.38))
-                .kerning(1.5)
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(.white.opacity(0.5))
+                .kerning(0.8)
             Text(value)
-                .font(.system(size: 14, weight: .semibold, design: .monospaced))
-                .foregroundStyle(.black.opacity(0.85))
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.9))
         }
     }
 }
@@ -1420,27 +1389,29 @@ struct StatusCard: View {
     var body: some View {
         HStack(spacing: 14) {
             Rectangle()
-                .fill(isError ? Color.nothingRed : Color.black.opacity(0.28))
-                .frame(width: 2)
+                .fill(isError ? Color.red.opacity(0.8) : Color.fliqTeal)
+                .frame(width: 3)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(isError ? "ERROR_" : "STATUS_")
-                    .font(.system(size: 9, weight: .bold, design: .monospaced))
-                    .foregroundStyle(isError ? Color.nothingRed : Color.black.opacity(0.4))
-                    .kerning(1.5)
+                Text(isError ? "Error" : "Status")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(isError ? Color.red.opacity(0.9) : Color.fliqTeal)
+                    .kerning(0.8)
                 Text(message)
-                    .font(.system(size: 12, weight: .medium, design: .monospaced))
-                    .foregroundStyle(isError ? Color.nothingRed.opacity(0.85) : .black.opacity(0.55))
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(isError ? Color.red.opacity(0.85) : .white.opacity(0.75))
                     .lineLimit(4)
             }
 
             Spacer()
         }
         .padding(14)
+        .background(Color.white.opacity(0.08))
+        .cornerRadius(12)
         .overlay(
-            Rectangle()
+            RoundedRectangle(cornerRadius: 12)
                 .strokeBorder(
-                    isError ? Color.nothingRed.opacity(0.28) : Color.black.opacity(0.1),
+                    isError ? Color.red.opacity(0.3) : Color.white.opacity(0.15),
                     lineWidth: 1
                 )
         )
@@ -1468,7 +1439,7 @@ struct DemoTipView: View {
 
     var body: some View {
         ZStack {
-            DotGridBackground()
+            GradientBackground()
 
             if showSuccess {
                 DemoSuccessView(amount: selectedAmount, onDismiss: { dismiss() })
@@ -1478,121 +1449,127 @@ struct DemoTipView: View {
 
                         // ── Header bar ─────────────────────────────────────
                         HStack {
-                            DotMatrixText(
-                                "DEMO",
-                                font: .system(size: 22, weight: .black, design: .monospaced),
-                                foreground: .black,
-                                dotSpacing: 3.0,
-                                dotSize: 1.9
-                            )
-                            Text("MODE")
-                                .font(.system(size: 9, weight: .bold, design: .monospaced))
-                                .foregroundStyle(Color.nothingRed)
-                                .kerning(2)
-                                .padding(.horizontal, 7)
-                                .padding(.vertical, 4)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 3)
-                                        .strokeBorder(Color.nothingRed.opacity(0.55), lineWidth: 1)
-                                )
+                            HStack(spacing: 8) {
+                                Text("DEMO")
+                                    .font(.system(size: 20, weight: .black))
+                                    .foregroundStyle(.white)
+                                Text("MODE")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundStyle(Color.fliqTeal)
+                                    .kerning(1.5)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.fliqTeal.opacity(0.15))
+                                    .cornerRadius(6)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .strokeBorder(Color.fliqTeal.opacity(0.4), lineWidth: 1)
+                                    )
+                            }
                             Spacer()
                             Button(action: { dismiss() }) {
                                 Image(systemName: "xmark")
                                     .font(.system(size: 14, weight: .semibold))
-                                    .foregroundStyle(.black.opacity(0.5))
+                                    .foregroundStyle(.white.opacity(0.6))
+                                    .padding(8)
+                                    .background(Color.white.opacity(0.1))
+                                    .cornerRadius(8)
                             }
                             .buttonStyle(.plain)
                         }
                         .padding(.bottom, 8)
 
                         Text("No sign-up needed. Experience the full tipping flow.")
-                            .font(.system(size: 13, weight: .regular, design: .monospaced))
-                            .foregroundStyle(.black.opacity(0.5))
+                            .font(.system(size: 14, weight: .regular))
+                            .foregroundStyle(.white.opacity(0.6))
                             .padding(.bottom, 28)
 
                         // ── Worker profile ─────────────────────────────────
                         HStack(alignment: .top, spacing: 16) {
                             ZStack {
-                                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                    .stroke(.black.opacity(0.2), lineWidth: 1)
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .fill(Color.white.opacity(0.12))
                                     .frame(width: 60, height: 60)
-                                DotMatrixText(
-                                    "DW",
-                                    font: .system(size: 18, weight: .black, design: .monospaced),
-                                    foreground: .black,
-                                    dotSpacing: 3.0,
-                                    dotSize: 1.8
-                                )
+                                Text("DW")
+                                    .font(.system(size: 17, weight: .black, design: .monospaced))
+                                    .foregroundStyle(.white)
                             }
 
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("DEMO WORKER")
-                                    .font(.system(size: 15, weight: .black, design: .monospaced))
-                                    .foregroundStyle(.black)
-                                    .kerning(1.5)
+                                Text("Demo Worker")
+                                    .font(.system(size: 16, weight: .black))
+                                    .foregroundStyle(.white)
 
                                 HStack(spacing: 8) {
-                                    Text("TRUST")
-                                        .font(.system(size: 8, weight: .bold, design: .monospaced))
-                                        .foregroundStyle(.black.opacity(0.38))
-                                        .kerning(1)
-                                    DotMatrixText(
-                                        "\(demoTrust)",
-                                        font: .system(size: 15, weight: .black, design: .monospaced),
-                                        foreground: Color.nothingRed,
-                                        dotSpacing: 2.9,
-                                        dotSize: 1.7
-                                    )
+                                    Text("Trust")
+                                        .font(.system(size: 10, weight: .semibold))
+                                        .foregroundStyle(.white.opacity(0.5))
+                                    Text("\(demoTrust)")
+                                        .font(.system(size: 16, weight: .black))
+                                        .foregroundStyle(
+                                            LinearGradient(
+                                                colors: [Color.fliqGreen, Color.fliqTeal],
+                                                startPoint: .leading,
+                                                endPoint: .trailing
+                                            )
+                                        )
                                     Text("/ 100")
-                                        .font(.system(size: 11, weight: .medium, design: .monospaced))
-                                        .foregroundStyle(.black.opacity(0.4))
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundStyle(.white.opacity(0.4))
                                 }
 
                                 Text("Delivery · 4 years on Fliq")
-                                    .font(.system(size: 12, weight: .regular, design: .monospaced))
-                                    .foregroundStyle(.black.opacity(0.5))
+                                    .font(.system(size: 13, weight: .regular))
+                                    .foregroundStyle(.white.opacity(0.55))
                             }
                             Spacer()
                         }
                         .padding(.bottom, 24)
 
                         Rectangle()
-                            .fill(.black.opacity(0.08))
+                            .fill(Color.white.opacity(0.12))
                             .frame(height: 1)
                             .padding(.bottom, 20)
 
                         // ── Dream goal ─────────────────────────────────────
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("ACTIVE_DREAM")
-                                .font(.system(size: 8, weight: .bold, design: .monospaced))
-                                .foregroundStyle(.black.opacity(0.38))
-                                .kerning(2)
+                            Text("Active Dream")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(.white.opacity(0.5))
+                                .kerning(0.5)
 
                             Text(demoGoal)
                                 .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(.black.opacity(0.85))
+                                .foregroundStyle(.white.opacity(0.9))
 
                             GeometryReader { geo in
                                 ZStack(alignment: .leading) {
                                     Rectangle()
-                                        .fill(.black.opacity(0.1))
-                                        .frame(height: 3)
+                                        .fill(Color.white.opacity(0.15))
+                                        .frame(height: 4)
+                                        .cornerRadius(2)
                                     Rectangle()
-                                        .fill(Color.nothingRed)
-                                        .frame(width: geo.size.width * progressFraction, height: 3)
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [Color.fliqGreen, Color.fliqTeal],
+                                                startPoint: .leading,
+                                                endPoint: .trailing
+                                            )
+                                        )
+                                        .frame(width: geo.size.width * progressFraction, height: 4)
+                                        .cornerRadius(2)
                                 }
                             }
-                            .frame(height: 3)
+                            .frame(height: 4)
 
                             HStack {
-                                Text("\(demoProgress)% FUNDED")
-                                    .font(.system(size: 8, weight: .bold, design: .monospaced))
-                                    .foregroundStyle(Color.nothingRed)
-                                    .kerning(1)
+                                Text("\(demoProgress)% funded")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundStyle(Color.fliqGreen)
                                 Spacer()
                                 Text("₹2,100 / ₹5,000")
-                                    .font(.system(size: 8, weight: .medium, design: .monospaced))
-                                    .foregroundStyle(.black.opacity(0.38))
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundStyle(.white.opacity(0.4))
                             }
                         }
                         .padding(.bottom, 28)
@@ -1603,15 +1580,15 @@ struct DemoTipView: View {
                         }
 
                         Rectangle()
-                            .fill(.black.opacity(0.08))
+                            .fill(Color.white.opacity(0.12))
                             .frame(height: 1)
                             .padding(.bottom, 20)
 
                         // ── Tip amount selector ────────────────────────────
-                        Text("TIP_AMOUNT")
-                            .font(.system(size: 8, weight: .bold, design: .monospaced))
-                            .foregroundStyle(.black.opacity(0.38))
-                            .kerning(2)
+                        Text("Tip Amount")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(.white.opacity(0.5))
+                            .kerning(0.5)
                             .padding(.bottom, 12)
 
                         HStack(spacing: 10) {
@@ -1619,21 +1596,21 @@ struct DemoTipView: View {
                                 Button(action: { selectedAmount = amount }) {
                                     VStack(spacing: 4) {
                                         Text("₹\(amount)")
-                                            .font(.system(size: 15, weight: .black, design: .monospaced))
+                                            .font(.system(size: 16, weight: .black))
                                         Text(amount == 50 ? "small" : amount == 100 ? "kind" : "generous")
-                                            .font(.system(size: 9, weight: .medium, design: .monospaced))
-                                            .kerning(0.5)
+                                            .font(.system(size: 10, weight: .medium))
                                     }
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
-                                    .foregroundStyle(selectedAmount == amount ? Color.nothingRed : .black.opacity(0.5))
-                                    .background(Color.nothingRed.opacity(selectedAmount == amount ? 0.05 : 0.0))
+                                    .foregroundStyle(selectedAmount == amount ? Color.fliqTeal : .white.opacity(0.5))
+                                    .background(Color.white.opacity(selectedAmount == amount ? 0.15 : 0.07))
+                                    .cornerRadius(12)
                                     .overlay(
-                                        Rectangle()
+                                        RoundedRectangle(cornerRadius: 12)
                                             .strokeBorder(
                                                 selectedAmount == amount
-                                                    ? Color.nothingRed.opacity(0.7)
-                                                    : Color.black.opacity(0.12),
+                                                    ? Color.fliqTeal.opacity(0.7)
+                                                    : Color.white.opacity(0.15),
                                                 lineWidth: selectedAmount == amount ? 1.5 : 1
                                             )
                                     )
@@ -1648,12 +1625,11 @@ struct DemoTipView: View {
                             HStack(spacing: 10) {
                                 Image(systemName: "bolt.fill")
                                     .font(.system(size: 13, weight: .bold))
-                                Text("TIP ₹\(selectedAmount) WITH KINDNESS")
-                                    .font(.system(size: 12, weight: .bold, design: .monospaced))
-                                    .kerning(0.5)
+                                Text("Tip ₹\(selectedAmount) with Kindness")
+                                    .font(.system(size: 14, weight: .bold))
                                 Spacer()
                                 Text("→")
-                                    .font(.system(size: 15, weight: .bold, design: .monospaced))
+                                    .font(.system(size: 16, weight: .bold))
                             }
                             .padding(.horizontal, 16)
                             .padding(.vertical, 16)
@@ -1662,8 +1638,8 @@ struct DemoTipView: View {
                         .padding(.bottom, 16)
 
                         Text("This is a demo — no real payment is made.")
-                            .font(.system(size: 11, design: .monospaced))
-                            .foregroundStyle(.black.opacity(0.35))
+                            .font(.system(size: 12))
+                            .foregroundStyle(.white.opacity(0.4))
                             .frame(maxWidth: .infinity, alignment: .center)
                     }
                     .padding(.horizontal, 24)
@@ -1686,17 +1662,22 @@ private struct DemoSuccessView: View {
         VStack(spacing: 0) {
             Spacer()
 
-            // Check mark animation
             ZStack {
                 Circle()
-                    .fill(Color.nothingRed.opacity(0.08))
-                    .frame(width: 100, height: 100)
+                    .fill(Color.fliqGreen.opacity(0.15))
+                    .frame(width: 110, height: 110)
                 Circle()
-                    .stroke(Color.nothingRed.opacity(0.3), lineWidth: 1.5)
-                    .frame(width: 100, height: 100)
+                    .stroke(Color.fliqGreen.opacity(0.4), lineWidth: 2)
+                    .frame(width: 110, height: 110)
                 Image(systemName: "checkmark")
-                    .font(.system(size: 38, weight: .black))
-                    .foregroundStyle(Color.nothingRed)
+                    .font(.system(size: 40, weight: .black))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color.fliqGreen, Color.fliqTeal],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
             }
             .scaleEffect(checkScale)
             .opacity(checkOpacity)
@@ -1708,35 +1689,36 @@ private struct DemoSuccessView: View {
                 }
             }
 
-            DotMatrixText(
-                "₹\(amount) SENT",
-                font: .system(size: 28, weight: .black, design: .monospaced),
-                foreground: Color.nothingRed,
-                dotSpacing: 3.2,
-                dotSize: 1.9
-            )
-            .padding(.bottom, 16)
+            Text("₹\(amount) Sent")
+                .font(.system(size: 36, weight: .black))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [Color.fliqGreen, Color.fliqTeal],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .padding(.bottom, 16)
 
             Text("Your kindness just moved Demo Worker closer to their dream.")
-                .font(.system(size: 15, weight: .regular))
-                .foregroundStyle(.black.opacity(0.6))
+                .font(.system(size: 16, weight: .regular))
+                .foregroundStyle(.white.opacity(0.7))
                 .multilineTextAlignment(.center)
                 .lineSpacing(5)
                 .padding(.horizontal, 32)
                 .padding(.bottom, 12)
 
             Text("Buy a bicycle for daily commute")
-                .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                .foregroundStyle(.black.opacity(0.5))
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.5))
                 .padding(.bottom, 48)
 
             Button(action: onDismiss) {
                 HStack(spacing: 10) {
                     Image(systemName: "arrow.left")
-                        .font(.system(size: 12, weight: .semibold))
-                    Text("BACK TO HOME")
-                        .font(.system(size: 12, weight: .bold, design: .monospaced))
-                        .kerning(1)
+                        .font(.system(size: 13, weight: .semibold))
+                    Text("Back to Home")
+                        .font(.system(size: 14, weight: .semibold))
                     Spacer()
                 }
                 .padding(.horizontal, 20)
