@@ -11,6 +11,8 @@ final class NativePushCoordinator: NSObject, ObservableObject {
     private let client = PushNotificationsClient()
     private let sessionStore = AuthSessionStore()
 
+    @Published var pendingNotificationUrl: URL?
+
     private override init() {
         super.init()
     }
@@ -124,7 +126,59 @@ extension NativePushCoordinator: MessagingDelegate {
     }
 }
 
-extension NativePushCoordinator: UNUserNotificationCenterDelegate {}
+extension NativePushCoordinator: UNUserNotificationCenterDelegate {
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .sound, .badge])
+    }
+
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        let userInfo = response.notification.request.content.userInfo
+        Task { @MainActor [weak self] in
+            self?.routeNotification(userInfo: userInfo)
+        }
+        completionHandler()
+    }
+
+    private func routeNotification(userInfo: [AnyHashable: Any]) {
+        // Direct URL in payload
+        if let urlString = userInfo["url"] as? String, let url = URL(string: urlString) {
+            pendingNotificationUrl = url
+            return
+        }
+        let type = userInfo["type"] as? String
+        switch type {
+        case "TIP_RECEIVED":
+            if let tipId = userInfo["tipId"] as? String {
+                pendingNotificationUrl = URL(string: "https://fliq.co.in/tip/\(tipId)")
+            }
+        case "PAYOUT_SETTLED", "PAYOUT_FAILED":
+            if let qrId = userInfo["qrId"] as? String {
+                pendingNotificationUrl = URL(string: "https://fliq.co.in/qr/\(qrId)")
+            }
+        case "BUSINESS_INVITE":
+            if let slug = userInfo["slug"] as? String {
+                pendingNotificationUrl = URL(string: "https://fliq.co.in/p/\(slug)")
+            }
+        default:
+            // Generic: try qrId, tipId, slug in order
+            if let qrId = userInfo["qrId"] as? String {
+                pendingNotificationUrl = URL(string: "https://fliq.co.in/qr/\(qrId)")
+            } else if let tipId = userInfo["tipId"] as? String {
+                pendingNotificationUrl = URL(string: "https://fliq.co.in/tip/\(tipId)")
+            } else if let slug = userInfo["slug"] as? String {
+                pendingNotificationUrl = URL(string: "https://fliq.co.in/p/\(slug)")
+            }
+        }
+    }
+}
 
 final class FliqPushAppDelegate: NSObject, UIApplicationDelegate {
     func application(

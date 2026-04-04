@@ -76,159 +76,179 @@ struct ProviderHomeView: View {
     private let providerClient = ProviderClient()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Provider home")
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color.fliqInk)
-
-                Spacer()
-
-                Button(action: {
-                    Task { await loadProviderHome() }
-                }) {
-                    Text(isLoading ? "Refreshing..." : "Refresh")
-                }
-                .buttonStyle(.bordered)
-                .disabled(isLoading)
-
-                Button("Log out", action: onLogout)
-                    .buttonStyle(.borderless)
-            }
-
-            StatusCard(
-                title: errorMessage == nil ? "Current status" : "Error",
-                message: errorMessage ?? statusMessage,
-                isError: errorMessage != nil
-            )
-
-            if isLoading {
-                ProgressView()
-                    .frame(maxWidth: .infinity, alignment: .center)
-            }
-
-            ProviderProfileSection(
-                hasProfile: profile != nil,
-                displayName: $displayName,
-                category: $category,
-                bio: $bio,
-                upiVpa: $upiVpa,
-                isSavingProfile: isSavingProfile,
-                profile: profile,
-                onSave: {
-                    Task { await saveProviderProfile() }
-                }
-            )
-
-            if !invitations.isEmpty {
-                RoleSectionContainer(title: "Business invitations") {
-                    ForEach(invitations) { invitation in
-                        RoleItemCard {
-                            DetailLine(label: "Business", value: invitation.businessName ?? "Business")
-                            DetailLine(label: "Role", value: invitation.role)
-                            if let expiresAt = invitation.expiresAt {
-                                DetailLine(label: "Expires", value: roleHistoryDateText(expiresAt) ?? expiresAt)
-                            }
-                            HStack(spacing: 12) {
-                                Button(action: {
-                                    Task { await respondToInvitation(invitationId: invitation.id, response: "ACCEPT") }
-                                }) {
-                                    Text("Accept")
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 12)
+        TabView {
+            // ── Tab 1: Dashboard ──────────────────────────────────────────
+            NavigationStack {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        StatusCard(
+                            title: errorMessage == nil ? "Current status" : "Error",
+                            message: errorMessage ?? statusMessage,
+                            isError: errorMessage != nil
+                        )
+                        if isLoading {
+                            ProgressView().frame(maxWidth: .infinity, alignment: .center)
+                        }
+                        ProviderProfileSection(
+                            hasProfile: profile != nil,
+                            displayName: $displayName,
+                            category: $category,
+                            bio: $bio,
+                            upiVpa: $upiVpa,
+                            isSavingProfile: isSavingProfile,
+                            profile: profile,
+                            onSave: { Task { await saveProviderProfile() } }
+                        )
+                        if profile != nil {
+                            ProviderAnalyticsView(tips: tips, payouts: payouts, recurringTips: recurringTips)
+                            ProviderAffiliationsView(affiliations: affiliations)
+                        }
+                        if !invitations.isEmpty {
+                            RoleSectionContainer(title: "Business invitations") {
+                                ForEach(invitations) { invitation in
+                                    RoleItemCard {
+                                        DetailLine(label: "Business", value: invitation.businessName ?? "Business")
+                                        DetailLine(label: "Role", value: invitation.role)
+                                        if let expiresAt = invitation.expiresAt {
+                                            DetailLine(label: "Expires", value: roleHistoryDateText(expiresAt) ?? expiresAt)
+                                        }
+                                        HStack(spacing: 12) {
+                                            Button(action: {
+                                                Task { await respondToInvitation(invitationId: invitation.id, response: "ACCEPT") }
+                                            }) {
+                                                Text("Accept").frame(maxWidth: .infinity).padding(.vertical, 12)
+                                            }
+                                            .buttonStyle(FliqPrimaryButtonStyle(accent: .fliqMint))
+                                            Button(action: {
+                                                Task { await respondToInvitation(invitationId: invitation.id, response: "DECLINE") }
+                                            }) {
+                                                Text("Decline").frame(maxWidth: .infinity).padding(.vertical, 12)
+                                            }
+                                            .buttonStyle(.bordered)
+                                        }
+                                    }
                                 }
-                                .buttonStyle(FliqPrimaryButtonStyle(accent: .fliqMint))
-
-                                Button(action: {
-                                    Task { await respondToInvitation(invitationId: invitation.id, response: "DECLINE") }
-                                }) {
-                                    Text("Decline")
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 12)
-                                }
-                                .buttonStyle(.bordered)
                             }
                         }
                     }
+                    .padding(16)
+                }
+                .navigationTitle("Dashboard")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: { Task { await loadProviderHome() } }) {
+                            Text(isLoading ? "Refreshing..." : "Refresh")
+                        }
+                        .disabled(isLoading)
+                    }
                 }
             }
+            .tabItem { Label("Dashboard", systemImage: "chart.bar.fill") }
 
-            if profile != nil {
-                ProviderAnalyticsView(
-                    tips: tips,
-                    payouts: payouts,
-                    recurringTips: recurringTips
-                )
-
-                ProviderAffiliationsView(affiliations: affiliations)
-
-                ProviderAvatarView(
-                    session: session,
-                    currentAvatarUrl: profile?.avatarUrl,
-                    onRefreshRequested: {
-                        Task { await loadProviderHome() }
+            // ── Tab 2: Tips ───────────────────────────────────────────────
+            NavigationStack {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        if profile != nil {
+                            ProviderTipsSection(tips: tips)
+                            ProviderRecurringSupportSection(recurringTips: recurringTips)
+                            ProviderCompletionView(
+                                session: session,
+                                currentUpiVpa: upiVpa,
+                                latestTips: tips,
+                                onRefreshRequested: { Task { await loadProviderHome() } }
+                            )
+                        } else {
+                            Text("Complete your profile in the Dashboard tab to start receiving tips.")
+                                .font(.system(size: 15, weight: .medium, design: .rounded))
+                                .foregroundStyle(Color.fliqMuted)
+                                .padding()
+                        }
                     }
-                )
-
-                ProviderQrSection(
-                    qrCodes: qrCodes,
-                    qrLocationLabel: $qrLocationLabel,
-                    isCreatingQR: isCreatingQR,
-                    onCreate: {
-                        Task { await createQRCode() }
-                    }
-                )
-
-                ProviderPaymentLinkSection(
-                    paymentLinks: paymentLinks,
-                    linkRole: $linkRole,
-                    linkWorkplace: $linkWorkplace,
-                    linkDescription: $linkDescription,
-                    linkSuggestedAmount: $linkSuggestedAmount,
-                    linkAllowCustomAmount: $linkAllowCustomAmount,
-                    isCreatingLink: isCreatingLink,
-                    onCreate: {
-                        Task { await createPaymentLink() }
-                    }
-                )
-
-                ProviderTipsSection(tips: tips)
-
-                ProviderDreamSection(
-                    dream: dream,
-                    dreamTitle: $dreamTitle,
-                    dreamDescription: $dreamDescription,
-                    dreamCategory: $dreamCategory,
-                    dreamGoalAmount: $dreamGoalAmount,
-                    isSavingDream: isSavingDream,
-                    onSave: {
-                        Task { await saveDream() }
-                    }
-                )
-
-                ProviderRecurringSupportSection(recurringTips: recurringTips)
-
-                ProviderPayoutSection(
-                    payouts: payouts,
-                    payoutAmountRupees: $payoutAmountRupees,
-                    isRequestingPayout: isRequestingPayout,
-                    onRequest: {
-                        Task { await requestPayout() }
-                    }
-                )
-
-                ProviderCompletionView(
-                    session: session,
-                    currentUpiVpa: upiVpa,
-                    latestTips: tips,
-                    onRefreshRequested: {
-                        Task { await loadProviderHome() }
-                    }
-                )
-
-                ProviderCollectionsView(session: session)
+                    .padding(16)
+                }
+                .navigationTitle("Tips")
+                .navigationBarTitleDisplayMode(.inline)
             }
+            .tabItem { Label("Tips", systemImage: "banknote.fill") }
+
+            // ── Tab 3: Collect ────────────────────────────────────────────
+            NavigationStack {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        if profile != nil {
+                            ProviderAvatarView(
+                                session: session,
+                                currentAvatarUrl: profile?.avatarUrl,
+                                onRefreshRequested: { Task { await loadProviderHome() } }
+                            )
+                            ProviderQrSection(
+                                qrCodes: qrCodes,
+                                qrLocationLabel: $qrLocationLabel,
+                                isCreatingQR: isCreatingQR,
+                                onCreate: { Task { await createQRCode() } }
+                            )
+                            ProviderPaymentLinkSection(
+                                paymentLinks: paymentLinks,
+                                linkRole: $linkRole,
+                                linkWorkplace: $linkWorkplace,
+                                linkDescription: $linkDescription,
+                                linkSuggestedAmount: $linkSuggestedAmount,
+                                linkAllowCustomAmount: $linkAllowCustomAmount,
+                                isCreatingLink: isCreatingLink,
+                                onCreate: { Task { await createPaymentLink() } }
+                            )
+                            ProviderCollectionsView(session: session)
+                        } else {
+                            Text("Complete your profile in the Dashboard tab to manage QR codes and payment links.")
+                                .font(.system(size: 15, weight: .medium, design: .rounded))
+                                .foregroundStyle(Color.fliqMuted)
+                                .padding()
+                        }
+                    }
+                    .padding(16)
+                }
+                .navigationTitle("Collect")
+                .navigationBarTitleDisplayMode(.inline)
+            }
+            .tabItem { Label("Collect", systemImage: "qrcode") }
+
+            // ── Tab 4: Profile ────────────────────────────────────────────
+            NavigationStack {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        if profile != nil {
+                            ProviderDreamSection(
+                                dream: dream,
+                                dreamTitle: $dreamTitle,
+                                dreamDescription: $dreamDescription,
+                                dreamCategory: $dreamCategory,
+                                dreamGoalAmount: $dreamGoalAmount,
+                                isSavingDream: isSavingDream,
+                                onSave: { Task { await saveDream() } }
+                            )
+                            ProviderPayoutSection(
+                                payouts: payouts,
+                                payoutAmountRupees: $payoutAmountRupees,
+                                isRequestingPayout: isRequestingPayout,
+                                onRequest: { Task { await requestPayout() } }
+                            )
+                        }
+                        Button("Log Out", action: onLogout)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .buttonStyle(.borderless)
+                            .foregroundStyle(Color.fliqMuted)
+                    }
+                    .padding(16)
+                }
+                .navigationTitle("Profile")
+                .navigationBarTitleDisplayMode(.inline)
+            }
+            .tabItem { Label("Profile", systemImage: "person.fill") }
         }
+        .tint(Color.fliqMint)
         .task(id: session.user.id) {
             await loadProviderHome()
         }
@@ -579,163 +599,181 @@ struct BusinessHomeView: View {
     private let businessClient = BusinessClient()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Business home")
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color.fliqInk)
-
-                Spacer()
-
-                Button(action: {
-                    Task { await loadBusinessHome() }
-                }) {
-                    Text(isLoading ? "Refreshing..." : "Refresh")
-                }
-                .buttonStyle(.bordered)
-                .disabled(isLoading)
-
-                Button("Log out", action: onLogout)
-                    .buttonStyle(.borderless)
-            }
-
-            StatusCard(
-                title: errorMessage == nil ? "Current status" : "Error",
-                message: errorMessage ?? statusMessage,
-                isError: errorMessage != nil
-            )
-
-            if isLoading {
-                ProgressView()
-                    .frame(maxWidth: .infinity, alignment: .center)
-            }
-
-            BusinessEditorSection(
-                isRegistered: business != nil,
-                businessName: $businessName,
-                businessType: $businessType,
-                businessAddress: $businessAddress,
-                businessContactPhone: $businessContactPhone,
-                businessContactEmail: $businessContactEmail,
-                businessGstin: $businessGstin,
-                isSavingBusiness: isSavingBusiness,
-                onSave: {
-                    Task { await saveBusiness() }
-                }
-            )
-
-            if business != nil {
-                if let dashboard {
-                    RoleSectionContainer(title: "Dashboard") {
-                        DetailLine(label: "Total tips", value: roleAmountText(dashboard.totalAmountPaise))
-                        DetailLine(label: "Transactions", value: String(dashboard.totalTipsCount))
-                        DetailLine(label: "Average rating", value: roleScoreText(dashboard.averageRating))
-                        DetailLine(label: "Staff count", value: String(dashboard.staffCount))
+        TabView {
+            // ── Tab 1: Dashboard ──────────────────────────────────────────
+            NavigationStack {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        StatusCard(
+                            title: errorMessage == nil ? "Current status" : "Error",
+                            message: errorMessage ?? statusMessage,
+                            isError: errorMessage != nil
+                        )
+                        if isLoading { ProgressView().frame(maxWidth: .infinity, alignment: .center) }
+                        BusinessEditorSection(
+                            isRegistered: business != nil,
+                            businessName: $businessName,
+                            businessType: $businessType,
+                            businessAddress: $businessAddress,
+                            businessContactPhone: $businessContactPhone,
+                            businessContactEmail: $businessContactEmail,
+                            businessGstin: $businessGstin,
+                            isSavingBusiness: isSavingBusiness,
+                            onSave: { Task { await saveBusiness() } }
+                        )
+                        if business != nil, let dashboard {
+                            RoleSectionContainer(title: "Dashboard") {
+                                DetailLine(label: "Total tips", value: roleAmountText(dashboard.totalAmountPaise))
+                                DetailLine(label: "Transactions", value: String(dashboard.totalTipsCount))
+                                DetailLine(label: "Average rating", value: roleScoreText(dashboard.averageRating))
+                                DetailLine(label: "Staff count", value: String(dashboard.staffCount))
+                            }
+                            BusinessReportingView(dashboard: dashboard, staff: staff)
+                        }
                     }
-
-                    BusinessReportingView(
-                        dashboard: dashboard,
-                        staff: staff
-                    )
+                    .padding(16)
                 }
-
-                BusinessInviteSection(
-                    invitePhone: $invitePhone,
-                    inviteRole: $inviteRole,
-                    isInvitingMember: isInvitingMember,
-                    onInvite: {
-                        Task { await inviteMember() }
+                .navigationTitle("Dashboard")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: { Task { await loadBusinessHome() } }) {
+                            Text(isLoading ? "Refreshing..." : "Refresh")
+                        }
+                        .disabled(isLoading)
                     }
-                )
+                }
+            }
+            .tabItem { Label("Dashboard", systemImage: "chart.bar.fill") }
 
-                RoleSectionContainer(title: "Staff") {
-                    if staff.isEmpty {
-                        Text("No staff members yet.")
-                            .font(.system(size: 15, weight: .medium, design: .rounded))
-                            .foregroundStyle(Color.fliqMuted)
-                    } else {
-                        ForEach(staff) { member in
-                            RoleItemCard {
-                                Text(member.displayName)
-                                    .font(.system(size: 17, weight: .bold, design: .rounded))
-                                    .foregroundStyle(Color.fliqInk)
-                                DetailLine(label: "Role", value: member.role)
-                                if let contact = member.contact {
-                                    DetailLine(label: "Contact", value: contact)
+            // ── Tab 2: Staff ──────────────────────────────────────────────
+            NavigationStack {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        if business != nil {
+                            BusinessInviteSection(
+                                invitePhone: $invitePhone,
+                                inviteRole: $inviteRole,
+                                isInvitingMember: isInvitingMember,
+                                onInvite: { Task { await inviteMember() } }
+                            )
+                            RoleSectionContainer(title: "Staff") {
+                                if staff.isEmpty {
+                                    Text("No staff members yet.")
+                                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                                        .foregroundStyle(Color.fliqMuted)
+                                } else {
+                                    ForEach(staff) { member in
+                                        RoleItemCard {
+                                            Text(member.displayName)
+                                                .font(.system(size: 17, weight: .bold, design: .rounded))
+                                                .foregroundStyle(Color.fliqInk)
+                                            DetailLine(label: "Role", value: member.role)
+                                            if let contact = member.contact {
+                                                DetailLine(label: "Contact", value: contact)
+                                            }
+                                            if let category = member.category {
+                                                DetailLine(label: "Category", value: category)
+                                            }
+                                            DetailLine(label: "Tips", value: String(member.tips.count))
+                                            DetailLine(label: "Total tipped", value: roleAmountText(member.tips.totalAmountPaise))
+                                            if let rating = member.tips.averageRating {
+                                                DetailLine(label: "Average rating", value: roleScoreText(rating))
+                                            }
+                                            Button(action: { Task { await removeMember(member.id) } }) {
+                                                Text("Remove member").frame(maxWidth: .infinity).padding(.vertical, 12)
+                                            }
+                                            .buttonStyle(.bordered)
+                                        }
+                                    }
                                 }
-                                if let category = member.category {
-                                    DetailLine(label: "Category", value: category)
+                            }
+                        } else {
+                            Text("Register your business in the Dashboard tab first.")
+                                .font(.system(size: 15, weight: .medium, design: .rounded))
+                                .foregroundStyle(Color.fliqMuted).padding()
+                        }
+                    }
+                    .padding(16)
+                }
+                .navigationTitle("Staff")
+                .navigationBarTitleDisplayMode(.inline)
+            }
+            .tabItem { Label("Staff", systemImage: "person.2.fill") }
+
+            // ── Tab 3: Analytics ──────────────────────────────────────────
+            NavigationStack {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        RoleSectionContainer(title: "Satisfaction") {
+                            if let satisfaction, !satisfaction.tips.isEmpty {
+                                ForEach(Array(satisfaction.tips.prefix(20))) { review in
+                                    RoleItemCard {
+                                        Text(review.providerName)
+                                            .font(.system(size: 17, weight: .bold, design: .rounded))
+                                            .foregroundStyle(Color.fliqInk)
+                                        if let rating = review.rating { DetailLine(label: "Rating", value: "\(rating)/5") }
+                                        if let message = review.message { DetailLine(label: "Message", value: message) }
+                                        DetailLine(label: "Amount", value: roleAmountText(review.amountPaise))
+                                        if let createdAt = review.createdAt {
+                                            DetailLine(label: "Created", value: roleHistoryDateText(createdAt) ?? createdAt)
+                                        }
+                                    }
                                 }
-                                DetailLine(label: "Tips", value: String(member.tips.count))
-                                DetailLine(label: "Total tipped", value: roleAmountText(member.tips.totalAmountPaise))
-                                if let rating = member.tips.averageRating {
-                                    DetailLine(label: "Average rating", value: roleScoreText(rating))
-                                }
-                                Button(action: {
-                                    Task { await removeMember(member.id) }
-                                }) {
-                                    Text("Remove member")
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 12)
-                                }
-                                .buttonStyle(.bordered)
+                            } else {
+                                Text("No review data yet.")
+                                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                                    .foregroundStyle(Color.fliqMuted)
                             }
                         }
                     }
+                    .padding(16)
                 }
-
-                RoleSectionContainer(title: "Satisfaction") {
-                    if let satisfaction, !satisfaction.tips.isEmpty {
-                        ForEach(Array(satisfaction.tips.prefix(20))) { review in
-                            RoleItemCard {
-                                Text(review.providerName)
-                                    .font(.system(size: 17, weight: .bold, design: .rounded))
-                                    .foregroundStyle(Color.fliqInk)
-                                if let rating = review.rating {
-                                    DetailLine(label: "Rating", value: "\(rating)/5")
-                                }
-                                if let message = review.message {
-                                    DetailLine(label: "Message", value: message)
-                                }
-                                DetailLine(label: "Amount", value: roleAmountText(review.amountPaise))
-                                if let createdAt = review.createdAt {
-                                    DetailLine(label: "Created", value: roleHistoryDateText(createdAt) ?? createdAt)
-                                }
-                            }
-                        }
-                    } else {
-                        Text("No review data yet.")
-                            .font(.system(size: 15, weight: .medium, design: .rounded))
-                            .foregroundStyle(Color.fliqMuted)
-                    }
-                }
-
-                RoleSectionContainer(title: "Staff QR groups") {
-                    if qrGroups.isEmpty {
-                        Text("No staff QR codes yet.")
-                            .font(.system(size: 15, weight: .medium, design: .rounded))
-                            .foregroundStyle(Color.fliqMuted)
-                    } else {
-                        ForEach(qrGroups) { group in
-                            RoleItemCard {
-                                Text(group.displayName)
-                                    .font(.system(size: 17, weight: .bold, design: .rounded))
-                                    .foregroundStyle(Color.fliqInk)
-                                DetailLine(label: "QR codes", value: String(group.qrCodes.count))
-                                ForEach(group.qrCodes) { qrCode in
-                                    DetailLine(label: "QR", value: qrCode.locationLabel ?? qrCode.id)
-                                }
-                            }
-                        }
-                    }
-                }
-
-                BusinessExportView(
-                    session: session,
-                    businessId: business?.id
-                )
+                .navigationTitle("Analytics")
+                .navigationBarTitleDisplayMode(.inline)
             }
+            .tabItem { Label("Analytics", systemImage: "chart.pie.fill") }
+
+            // ── Tab 4: Settings ───────────────────────────────────────────
+            NavigationStack {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        if business != nil {
+                            RoleSectionContainer(title: "Staff QR groups") {
+                                if qrGroups.isEmpty {
+                                    Text("No staff QR codes yet.")
+                                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                                        .foregroundStyle(Color.fliqMuted)
+                                } else {
+                                    ForEach(qrGroups) { group in
+                                        RoleItemCard {
+                                            Text(group.displayName)
+                                                .font(.system(size: 17, weight: .bold, design: .rounded))
+                                                .foregroundStyle(Color.fliqInk)
+                                            DetailLine(label: "QR codes", value: String(group.qrCodes.count))
+                                            ForEach(group.qrCodes) { qrCode in
+                                                DetailLine(label: "QR", value: qrCode.locationLabel ?? qrCode.id)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            BusinessExportView(session: session, businessId: business?.id)
+                        }
+                        Button("Log Out", action: onLogout)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .buttonStyle(.borderless)
+                            .foregroundStyle(Color.fliqMuted)
+                    }
+                    .padding(16)
+                }
+                .navigationTitle("Settings")
+                .navigationBarTitleDisplayMode(.inline)
+            }
+            .tabItem { Label("Settings", systemImage: "gear") }
         }
+        .tint(Color.fliqLilac)
         .task(id: session.user.id) {
             await loadBusinessHome()
         }
@@ -955,6 +993,30 @@ private struct ProviderQrSection: View {
             } else {
                 ForEach(qrCodes) { qrCode in
                     RoleItemCard {
+                        if let qrImageUrl = qrCode.qrImageUrl, let imageUrl = URL(string: qrImageUrl) {
+                            AsyncImage(url: imageUrl) { phase in
+                                switch phase {
+                                case .success(let image):
+                                    image
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(maxWidth: .infinity)
+                                        .frame(height: 200)
+                                        .cornerRadius(12)
+                                case .failure:
+                                    Label("QR image unavailable", systemImage: "qrcode")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundStyle(Color.fliqMuted)
+                                        .frame(maxWidth: .infinity, minHeight: 60)
+                                case .empty:
+                                    ProgressView()
+                                        .tint(Color.fliqMint)
+                                        .frame(maxWidth: .infinity, minHeight: 60)
+                                @unknown default:
+                                    EmptyView()
+                                }
+                            }
+                        }
                         DetailLine(label: "Label", value: qrCode.locationLabel ?? "QR code")
                         DetailLine(label: "Scans", value: String(qrCode.scanCount ?? 0))
                         if let upiUrl = qrCode.upiUrl {

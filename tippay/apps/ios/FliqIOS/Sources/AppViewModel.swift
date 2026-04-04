@@ -54,6 +54,8 @@ final class AppViewModel: ObservableObject {
     @Published var isSyncingPendingTips = false
     @Published var isScannerPresented = false
     @Published var isResolvingScannedCode = false
+    @Published var customerHistoryCurrentPage = 1
+    @Published var customerHistoryHasMore = false
 
     private let client = AuthClient()
     private let customerClient = CustomerClient()
@@ -529,6 +531,8 @@ final class AppViewModel: ObservableObject {
         do {
             let response = try await customerClient.getCustomerTipHistory(accessToken: session.accessToken)
             customerTipHistory = response.tips
+            customerHistoryCurrentPage = 1
+            customerHistoryHasMore = response.tips.count >= response.limit
             statusMessage = response.tips.isEmpty
                 ? "Customer history is live, but no tips have been sent yet."
                 : "Loaded \(response.tips.count) recent tips from the shared backend."
@@ -537,6 +541,36 @@ final class AppViewModel: ObservableObject {
         }
 
         isLoadingCustomerHistory = false
+    }
+
+    func loadMoreCustomerHistory() async {
+        guard !isLoadingCustomerHistory, customerHistoryHasMore, let session else { return }
+        let nextPage = customerHistoryCurrentPage + 1
+        isLoadingCustomerHistory = true
+        do {
+            let response = try await customerClient.getCustomerTipHistory(
+                accessToken: session.accessToken,
+                page: nextPage
+            )
+            customerTipHistory.append(contentsOf: response.tips)
+            customerHistoryCurrentPage = nextPage
+            customerHistoryHasMore = response.tips.count >= response.limit
+        } catch {
+            // Non-blocking — existing history stays visible
+        }
+        isLoadingCustomerHistory = false
+    }
+
+    func handleDeepLink(url: URL) async {
+        guard stage == .home else { return }
+        let path = url.path
+        resolutionInput = url.absoluteString
+        errorMessage = nil
+        if path.contains("/qr/") {
+            await resolveQr()
+        } else if path.contains("/tip/") || path.contains("/p/") {
+            await resolvePaymentLink()
+        }
     }
 
     func refreshTipImpact() async {
@@ -620,6 +654,8 @@ final class AppViewModel: ObservableObject {
         isSyncingPendingTips = false
         isScannerPresented = false
         isResolvingScannedCode = false
+        customerHistoryCurrentPage = 1
+        customerHistoryHasMore = false
         hasLoadedCustomerHomeData = false
     }
 
@@ -698,6 +734,8 @@ final class AppViewModel: ObservableObject {
         do {
             let response = try await customerClient.getCustomerTipHistory(accessToken: session.accessToken)
             customerTipHistory = response.tips
+            customerHistoryCurrentPage = 1
+            customerHistoryHasMore = response.tips.count >= response.limit
         } catch {
             // History is non-blocking for the rest of the customer flow.
         }

@@ -339,11 +339,33 @@ struct ProviderAvatarView: View {
                 isError: errorMessage != nil
             )
 
-            if let currentAvatarUrl {
-                DetailLine(label: "Current avatar", value: currentAvatarUrl.count > 48 ? "\(currentAvatarUrl.prefix(48))..." : currentAvatarUrl)
+            if let currentAvatarUrl, let imageUrl = URL(string: currentAvatarUrl) {
+                AsyncImage(url: imageUrl) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 80, height: 80)
+                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    case .failure:
+                        Image(systemName: "person.crop.square.fill")
+                            .font(.system(size: 36))
+                            .foregroundStyle(Color.fliqMuted)
+                            .frame(width: 80, height: 80)
+                    case .empty:
+                        ProgressView()
+                            .tint(Color.fliqMint)
+                            .frame(width: 80, height: 80)
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
             } else {
-                Text("No provider avatar uploaded yet.")
+                Image(systemName: "person.crop.square.badge.plus")
+                    .font(.system(size: 36))
                     .foregroundStyle(Color.fliqMuted)
+                    .frame(width: 80, height: 80)
             }
 
             Text("The backend accepts a compact image, so the app compresses uploads automatically.")

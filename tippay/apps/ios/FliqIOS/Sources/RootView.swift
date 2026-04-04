@@ -18,6 +18,8 @@ private struct RoleCard: Identifiable {
 struct RootView: View {
     @StateObject private var viewModel = AppViewModel()
     @State private var showDemo = false
+    @State private var showWhatsNew = false
+    @ObservedObject private var pushCoordinator = NativePushCoordinator.shared
 
     private let roles: [RoleCard] = [
         RoleCard(
@@ -59,12 +61,14 @@ struct RootView: View {
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(.white.opacity(0.65))
                 }
+            } else if viewModel.stage == .home, let session = viewModel.session {
+                homeContent(session: session)
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
                         switch viewModel.stage {
                         case .rolePicker:
-                            HeroSection(showDemo: $showDemo)
+                            HeroSection(showDemo: $showDemo, showWhatsNew: $showWhatsNew)
                                 .padding(.top, 8)
 
                             RoleSectionHeader()
@@ -99,28 +103,7 @@ struct RootView: View {
                             }
 
                         case .home:
-                            if let session = viewModel.session {
-                                let effectiveRole: NativeRole = {
-                                    if session.user.type.hasPrefix("BUSINESS") { return .business }
-                                    if session.user.type == NativeRole.provider.rawValue ||
-                                        (viewModel.selectedRole == .provider &&
-                                         session.user.type == NativeRole.customer.rawValue) {
-                                        return .provider
-                                    }
-                                    return .customer
-                                }()
-
-                                if effectiveRole == .customer {
-                                    CustomerHomeCard(session: session, viewModel: viewModel)
-                                        .task(id: session.user.id) {
-                                            await viewModel.loadCustomerHomeDataIfNeeded()
-                                        }
-                                } else if effectiveRole == .business {
-                                    BusinessHomeView(session: session) { viewModel.logout() }
-                                } else {
-                                    ProviderHomeView(session: session) { viewModel.logout() }
-                                }
-                            }
+                            EmptyView()
                         }
 
                         if viewModel.errorMessage != nil ||
@@ -136,8 +119,261 @@ struct RootView: View {
                 }
             }
         }
+        .onOpenURL { url in
+            Task { await viewModel.handleDeepLink(url: url) }
+        }
+        .onChange(of: pushCoordinator.pendingNotificationUrl) { url in
+            guard let url else { return }
+            pushCoordinator.pendingNotificationUrl = nil
+            Task { await viewModel.handleDeepLink(url: url) }
+        }
         .sheet(isPresented: $showDemo) {
             DemoTipView()
+        }
+        .sheet(isPresented: $showWhatsNew) {
+            WhatsNewView()
+        }
+    }
+
+    private func effectiveRole(for session: AuthSession) -> NativeRole {
+        if session.user.type.hasPrefix("BUSINESS") { return .business }
+        if session.user.type == NativeRole.provider.rawValue { return .provider }
+        return .customer
+    }
+
+    @ViewBuilder
+    private func homeContent(session: AuthSession) -> some View {
+        switch effectiveRole(for: session) {
+        case .customer:
+            CustomerTabView(session: session, viewModel: viewModel)
+                .task(id: session.user.id) {
+                    await viewModel.loadCustomerHomeDataIfNeeded()
+                }
+        case .provider:
+            ProviderHomeView(session: session) { viewModel.logout() }
+        case .business:
+            BusinessHomeView(session: session) { viewModel.logout() }
+        }
+    }
+}
+
+// MARK: - Customer Tab View
+
+private struct CustomerTabView: View {
+    let session: AuthSession
+    @ObservedObject var viewModel: AppViewModel
+
+    var body: some View {
+        TabView {
+            // ── Tab 1: Tip ────────────────────────────────────────────────
+            NavigationStack {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        DarkSectionHeader(label: "CUSTOMER HOME", title: "Welcome back")
+                        if let name = session.user.name {
+                            DetailLine(label: "SIGNED IN AS", value: name)
+                        }
+                        Button("Log Out →") { viewModel.logout() }
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.5))
+                            .buttonStyle(.plain)
+                        DarkDivider()
+                        DarkSectionHeader(label: "RESOLVE", title: "QR or payment link")
+                        DarkTextField(placeholder: "Paste /qr/… or /tip/… or raw ID",
+                                      text: $viewModel.resolutionInput)
+                        HStack(spacing: 8) {
+                            Button(action: { viewModel.openScanner() }) {
+                                labelMono(viewModel.isResolvingScannedCode ? "Resolving…" : "Scan QR")
+                            }
+                            .buttonStyle(NothingGhostButtonStyle())
+                            .disabled(viewModel.isScannerPresented || viewModel.isResolvingScannedCode)
+                            Button(action: { Task { await viewModel.resolveQr() } }) {
+                                labelMono(viewModel.isResolvingQr ? "Resolving…" : "Resolve QR")
+                            }
+                            .buttonStyle(NothingGhostButtonStyle())
+                            .disabled(
+                                viewModel.resolutionInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                                viewModel.isResolvingQr || viewModel.isResolvingScannedCode
+                            )
+                            Button(action: { Task { await viewModel.resolvePaymentLink() } }) {
+                                labelMono(viewModel.isResolvingPaymentLink ? "Resolving…" : "Resolve Link")
+                            }
+                            .buttonStyle(NothingGhostButtonStyle())
+                            .disabled(
+                                viewModel.resolutionInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                                viewModel.isResolvingPaymentLink || viewModel.isResolvingScannedCode
+                            )
+                        }
+                        DarkSectionHeader(label: "SEARCH", title: "Find a provider")
+                        DarkTextField(placeholder: "Name or phone number",
+                                      text: $viewModel.providerQuery)
+                        Button(action: { Task { await viewModel.searchProviders() } }) {
+                            HStack {
+                                Image(systemName: "magnifyingglass")
+                                    .font(.system(size: 12, weight: .medium))
+                                labelMono(viewModel.isSearchingProviders ? "Searching…" : "Search Providers")
+                                Spacer()
+                                Text("→").font(.system(size: 13))
+                            }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 13)
+                        }
+                        .buttonStyle(FliqPrimaryButtonStyle())
+                        .disabled(
+                            viewModel.providerQuery.trimmingCharacters(in: .whitespacesAndNewlines).count < 2 ||
+                            viewModel.isSearchingProviders
+                        )
+                        ProviderResultsSection(viewModel: viewModel)
+                        ProviderTipFlowSection(viewModel: viewModel)
+                        TipOrderSection(viewModel: viewModel)
+                        CustomerTipSuccessSection(viewModel: viewModel)
+                        if viewModel.errorMessage != nil || !viewModel.statusMessage.isEmpty {
+                            StatusCard(
+                                message: viewModel.errorMessage ?? viewModel.statusMessage,
+                                isError: viewModel.errorMessage != nil
+                            )
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 16)
+                }
+                .background(Color.clear)
+                .navigationTitle("Tip")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
+            }
+            .tabItem { Label("Tip", systemImage: "heart.fill") }
+            .sheet(isPresented: $viewModel.isScannerPresented) {
+                QRScannerSheet(
+                    onCode: { code in Task { await viewModel.handleScannedCode(code) } },
+                    onCancel: { viewModel.dismissScanner() },
+                    onError: { message in
+                        viewModel.dismissScanner()
+                        viewModel.errorMessage = message
+                    }
+                )
+            }
+
+            // ── Tab 2: Activity ───────────────────────────────────────────
+            NavigationStack {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        PendingTipQueueSection(viewModel: viewModel)
+                        CustomerHistorySection(viewModel: viewModel)
+                        CustomerRetentionView(
+                            session: session,
+                            selectedProvider: viewModel.selectedProvider,
+                            amountRupees: viewModel.amountRupees,
+                            message: viewModel.tipMessage,
+                            rating: viewModel.selectedRating
+                        )
+                        CustomerJarView(session: session)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 16)
+                }
+                .background(Color.clear)
+                .navigationTitle("Activity")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
+            }
+            .tabItem { Label("Activity", systemImage: "clock.fill") }
+
+            // ── Tab 3: Profile ────────────────────────────────────────────
+            NavigationStack {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        CustomerProfileEditorCard(viewModel: viewModel)
+                        Button("Log Out →") { viewModel.logout() }
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.5))
+                            .buttonStyle(.plain)
+                            .padding(.top, 8)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 16)
+                }
+                .background(Color.clear)
+                .navigationTitle("Profile")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
+            }
+            .tabItem { Label("Profile", systemImage: "person.fill") }
+        }
+        .tint(Color.fliqTeal)
+        .toolbarBackground(.ultraThinMaterial, for: .tabBar)
+    }
+}
+
+// MARK: - What's New View
+
+private struct WhatsNewView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    private let updates: [(String, String, String)] = [
+        ("sparkles", "Native iOS app", "Full tipping flow, QR scanning, provider search, and payment via Razorpay — all native."),
+        ("qrcode.viewfinder", "QR & Deep Links", "Scan provider QR codes or open fliq.co.in links directly in the app."),
+        ("bell.badge", "Push Notifications", "Tap a notification to jump straight to the relevant tip or payout."),
+        ("person.crop.square.fill", "Avatar Uploads", "Providers can upload a profile photo directly from their camera roll."),
+        ("tablecells", "Tab Navigation", "Three-tab layout for Tippers, four-tab layout for Workers and Businesses."),
+        ("clock.arrow.circlepath", "Tip History Pagination", "Scroll through your full tip history with load-more support."),
+    ]
+
+    var body: some View {
+        ZStack {
+            GradientBackground()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("WHAT'S NEW")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(Color.fliqTeal)
+                                .kerning(1.5)
+                            Text("Recent updates")
+                                .font(.system(size: 26, weight: .black))
+                                .foregroundStyle(.white)
+                        }
+                        Spacer()
+                        Button(action: { dismiss() }) {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(.white.opacity(0.6))
+                                .padding(8)
+                                .background(Color.white.opacity(0.1))
+                                .cornerRadius(8)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.bottom, 28)
+
+                    ForEach(updates, id: \.0) { icon, title, desc in
+                        HStack(alignment: .top, spacing: 16) {
+                            Image(systemName: icon)
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundStyle(Color.fliqTeal)
+                                .frame(width: 36, height: 36)
+                                .background(Color.fliqTeal.opacity(0.12))
+                                .cornerRadius(10)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(title)
+                                    .font(.system(size: 15, weight: .bold))
+                                    .foregroundStyle(.white)
+                                Text(desc)
+                                    .font(.system(size: 13, weight: .regular))
+                                    .foregroundStyle(.white.opacity(0.6))
+                                    .lineSpacing(3)
+                            }
+                        }
+                        .padding(.bottom, 20)
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 32)
+            }
         }
     }
 }
@@ -178,6 +414,7 @@ private struct BackBar: View {
 
 private struct HeroSection: View {
     @Binding var showDemo: Bool
+    @Binding var showWhatsNew: Bool
     @State private var phoneFloat: CGFloat = 0
 
     var body: some View {
@@ -253,7 +490,7 @@ private struct HeroSection: View {
                 }
                 .buttonStyle(NothingGhostButtonStyle())
 
-                Button(action: {}) {
+                Button(action: { showWhatsNew = true }) {
                     Text("See What's New")
                         .font(.system(size: 15, weight: .semibold))
                         .padding(.horizontal, 20)
@@ -898,7 +1135,30 @@ private struct ProviderTipFlowSection: View {
         if let provider = viewModel.selectedProvider {
             DarkCard {
                 VStack(alignment: .leading, spacing: 14) {
-                    DarkSectionHeader(label: "SELECTED PROVIDER", title: provider.displayName)
+                    HStack(alignment: .top, spacing: 14) {
+                        if let avatarUrl = provider.avatarUrl, let imageUrl = URL(string: avatarUrl) {
+                            AsyncImage(url: imageUrl) { phase in
+                                switch phase {
+                                case .success(let image):
+                                    image.resizable().scaledToFill()
+                                        .frame(width: 52, height: 52)
+                                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                case .failure:
+                                    Image(systemName: "person.fill")
+                                        .font(.system(size: 24))
+                                        .foregroundStyle(.white.opacity(0.4))
+                                        .frame(width: 52, height: 52)
+                                        .background(Color.white.opacity(0.1))
+                                        .cornerRadius(12)
+                                case .empty:
+                                    ProgressView().tint(Color.fliqTeal)
+                                        .frame(width: 52, height: 52)
+                                @unknown default: EmptyView()
+                                }
+                            }
+                        }
+                        DarkSectionHeader(label: "SELECTED PROVIDER", title: provider.displayName)
+                    }
                     if let cat = provider.category { DetailLine(label: "CATEGORY", value: cat) }
                     if let bio = provider.bio { DetailLine(label: "BIO", value: bio) }
                     DetailLine(label: "RATING", value: scoreText(provider.ratingAverage))
@@ -1217,6 +1477,22 @@ private struct CustomerHistorySection: View {
                         Rectangle()
                             .fill(Color.white.opacity(0.1))
                             .frame(height: 1)
+                    }
+
+                    if viewModel.customerHistoryHasMore {
+                        Button(action: { Task { await viewModel.loadMoreCustomerHistory() } }) {
+                            HStack {
+                                if viewModel.isLoadingCustomerHistory {
+                                    ProgressView().tint(Color.fliqTeal).controlSize(.small)
+                                }
+                                labelMono(viewModel.isLoadingCustomerHistory ? "Loading…" : "Load More")
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                        }
+                        .buttonStyle(NothingGhostButtonStyle())
+                        .disabled(viewModel.isLoadingCustomerHistory)
+                        .padding(.top, 4)
                     }
                 }
             }
