@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AA00000000000000000000AA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000AB /* Assets.xcassets */; };
+		AA00000000000000000000AC /* Icon-60@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000AD /* Icon-60@2x.png */; };
+		AA00000000000000000000AE /* Icon-60@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000AF /* Icon-60@3x.png */; };
+		AA00000000000000000000B0 /* Icon-76@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B1 /* Icon-76@2x.png */; };
+		AA00000000000000000000B2 /* Icon-83.5@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000B3 /* Icon-83.5@2x.png */; };
 		1455DBE34CB0908D04801B18 /* RazorpayCheckout in Frameworks */ = {isa = PBXBuildFile; productRef = 3318B7BE986BB89272B233A7 /* RazorpayCheckout */; };
 		2D0A124C52ABBCFA5B43B3E6 /* PushNotificationsClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9F8C4A3ADFA06B0F467558 /* PushNotificationsClient.swift */; };
 		3B38732B66D6E371B14226B6 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 94B14C861B3A55DE13533E44 /* FirebaseCore */; };
@@ -36,6 +41,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		AA00000000000000000000AB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AA00000000000000000000AD /* Icon-60@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon-60@2x.png"; sourceTree = "<group>"; };
+		AA00000000000000000000AF /* Icon-60@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon-60@3x.png"; sourceTree = "<group>"; };
+		AA00000000000000000000B1 /* Icon-76@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon-76@2x.png"; sourceTree = "<group>"; };
+		AA00000000000000000000B3 /* Icon-83.5@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon-83.5@2x.png"; sourceTree = "<group>"; };
 		1E8A9ADE13FF591EDCF92D09 /* ProviderModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderModels.swift; sourceTree = "<group>"; };
 		25D9AEF752EF7EF4E8EF746E /* BusinessClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessClient.swift; sourceTree = "<group>"; };
 		295D49FE219EABBC6CEA7165 /* FliqIOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FliqIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -80,8 +90,21 @@
 			isa = PBXGroup;
 			children = (
 				55EFAA1DCAABD292335F9C32 /* Sources */,
+				AA00000000000000000000C0 /* Resources */,
 			);
 			path = FliqIOS;
+			sourceTree = "<group>";
+		};
+		AA00000000000000000000C0 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				AA00000000000000000000AB /* Assets.xcassets */,
+				AA00000000000000000000AD /* Icon-60@2x.png */,
+				AA00000000000000000000AF /* Icon-60@3x.png */,
+				AA00000000000000000000B1 /* Icon-76@2x.png */,
+				AA00000000000000000000B3 /* Icon-83.5@2x.png */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		55EFAA1DCAABD292335F9C32 /* Sources */ = {
@@ -137,6 +160,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1E732B1C77E10B88A1B272D8 /* Build configuration list for PBXNativeTarget "FliqIOS" */;
 			buildPhases = (
+				AA00000000000000000000D0 /* Resources */,
 				6E7201D9952E94013923ED89 /* Sources */,
 				31C34CA49D55A458D8777A77 /* Frameworks */,
 			);
@@ -192,6 +216,21 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		AA00000000000000000000D0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA00000000000000000000AA /* Assets.xcassets in Resources */,
+				AA00000000000000000000AC /* Icon-60@2x.png in Resources */,
+				AA00000000000000000000AE /* Icon-60@3x.png in Resources */,
+				AA00000000000000000000B0 /* Icon-76@2x.png in Resources */,
+				AA00000000000000000000B2 /* Icon-83.5@2x.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		6E7201D9952E94013923ED89 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -231,7 +270,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = FliqIOS/FliqIOS.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"FliqIOS/Preview Content\"";
 				GENERATE_INFOPLIST_FILE = NO;
