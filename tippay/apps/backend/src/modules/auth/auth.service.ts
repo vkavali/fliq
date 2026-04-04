@@ -86,11 +86,14 @@ export class AuthService {
     if (this.isBypassEnabled() && BYPASS_TEST_PHONES.includes(phone) && code === BYPASS_TEST_OTP) {
       this.logger.warn(`[DEV BYPASS] Accepting magic OTP for ${phone}`);
       let user = await this.prisma.user.findUnique({ where: { phone } });
+      let isNewUser = false;
       if (!user) {
         user = await this.prisma.user.create({
           data: { phone, type: 'CUSTOMER' as any, status: 'ACTIVE' },
         });
+        isNewUser = true;
       }
+      if (isNewUser) await this.logSignupConsents(user.id, 'app');
       const accessToken = this.generateAccessToken(user.id, user.type as UserType);
       const refreshToken = this.generateRefreshToken(user.id);
       return {
@@ -133,6 +136,7 @@ export class AuthService {
 
     // Find or create user
     let user = await this.prisma.user.findUnique({ where: { phone } });
+    let isNewUser = false;
     if (!user) {
       user = await this.prisma.user.create({
         data: {
@@ -141,7 +145,9 @@ export class AuthService {
           status: 'ACTIVE',
         },
       });
+      isNewUser = true;
     }
+    if (isNewUser) await this.logSignupConsents(user.id, 'app');
 
     const accessToken = this.generateAccessToken(user.id, user.type as UserType);
     const refreshToken = this.generateRefreshToken(user.id);
@@ -323,6 +329,29 @@ export class AuthService {
       if (error instanceof BadRequestException) throw error;
       throw new BadRequestException('Invalid or expired refresh token');
     }
+  }
+
+  /**
+   * DPDP Act: Log consent records when a new user signs up.
+   * Records consent for all data processing purposes.
+   */
+  private async logSignupConsents(userId: string, channel: string): Promise<void> {
+    const purposes = [
+      'account_creation',
+      'transaction_processing',
+      'push_notifications',
+      'communication',
+    ];
+    await this.prisma.consentRecord.createMany({
+      data: purposes.map((purpose) => ({
+        userId,
+        purpose,
+        granted: true,
+        channel,
+        policyVersion: '1.0',
+      })),
+    });
+    this.logger.log(`[DPDP CONSENT] Logged ${purposes.length} consents for new user ${userId}`);
   }
 
   private async checkOtpRateLimit(phone: string): Promise<void> {
