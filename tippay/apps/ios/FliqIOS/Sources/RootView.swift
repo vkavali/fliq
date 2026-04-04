@@ -190,6 +190,7 @@ private struct CredentialCard: View {
     @Binding var credential: String
     let onBack: () -> Void
     let onSubmit: () -> Void
+    @State private var selectedCountryCode = "+91"
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -201,11 +202,34 @@ private struct CredentialCard: View {
                 RoleBadge(accent: role.accent)
             }
 
-            Text(role.role.usesEmail ? "Enter the business email used for dashboard access." : "Enter the phone number used for \(role.title.lowercased()) access.")
+            Text(role.role.usesEmail ? "Enter the business email used for dashboard access." : "Enter your phone number with country code.")
                 .font(.system(size: 15, weight: .medium, design: .rounded))
                 .foregroundStyle(Color.fliqMuted)
 
-            TextField(role.role.usesEmail ? "Email" : "Phone number", text: $credential)
+            if !role.role.usesEmail {
+                HStack(spacing: 8) {
+                    ForEach([("🇮🇳 +91", "+91"), ("🇺🇸 +1", "+1")], id: \.1) { label, code in
+                        Button {
+                            let oldPrefix = selectedCountryCode
+                            selectedCountryCode = code
+                            let rawNumber = credential.hasPrefix(oldPrefix) ? String(credential.dropFirst(oldPrefix.count)) : credential
+                            credential = code + rawNumber
+                        } label: {
+                            Text(selectedCountryCode == code ? "✓ \(label)" : label)
+                                .font(.system(size: 14, weight: selectedCountryCode == code ? .bold : .medium, design: .rounded))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .stroke(selectedCountryCode == code ? role.accent : Color.black.opacity(0.12), lineWidth: selectedCountryCode == code ? 2 : 1)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+
+            TextField(role.role.usesEmail ? "Email" : "Phone number (e.g. \(selectedCountryCode)9876543210)", text: $credential)
                 .keyboardType(role.role.usesEmail ? .emailAddress : .phonePad)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()

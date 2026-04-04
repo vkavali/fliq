@@ -32,7 +32,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -358,6 +361,8 @@ private fun CredentialCard(
     onSubmit: () -> Unit,
 ) {
     val isBusiness = role.role == NativeRole.BUSINESS
+    var selectedCountryCode by remember { mutableStateOf("+91") }
+
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -376,15 +381,49 @@ private fun CredentialCard(
             }
             Text(
                 text = if (isBusiness) "Enter the business email used for dashboard access."
-                else "Enter the phone number used for ${role.title.lowercase()} access.",
+                else "Enter your phone number with country code.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+
+            if (!isBusiness) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("🇮🇳 +91" to "+91", "🇺🇸 +1" to "+1").forEach { (label, code) ->
+                        OutlinedButton(
+                            onClick = {
+                                val oldPrefix = selectedCountryCode
+                                selectedCountryCode = code
+                                val rawNumber = credential.removePrefix(oldPrefix)
+                                onCredentialChange(code + rawNumber)
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                        ) {
+                            Text(
+                                text = if (selectedCountryCode == code) "✓ $label" else label,
+                                fontWeight = if (selectedCountryCode == code) FontWeight.Bold else FontWeight.Normal,
+                            )
+                        }
+                    }
+                }
+            }
+
             OutlinedTextField(
                 value = credential,
-                onValueChange = onCredentialChange,
+                onValueChange = { input ->
+                    if (isBusiness) {
+                        onCredentialChange(input)
+                    } else {
+                        val digits = input.filter { it.isDigit() || it == '+' }
+                        if (!digits.startsWith("+")) {
+                            onCredentialChange(selectedCountryCode + digits)
+                        } else {
+                            onCredentialChange(digits)
+                        }
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                label = { Text(if (isBusiness) "Email" else "Phone number") },
+                label = { Text(if (isBusiness) "Email" else "Phone number (e.g. ${selectedCountryCode}9876543210)") },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = if (isBusiness) KeyboardType.Email else KeyboardType.Phone,
                 ),
