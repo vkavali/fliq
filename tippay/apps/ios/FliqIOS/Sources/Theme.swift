@@ -3,11 +3,11 @@ import SwiftUI
 // MARK: - Colours
 
 extension Color {
-    // ── Nothing Phone palette ──────────────────────────────────────────────
+    // ── Nothing Phone palette (light-mode) ────────────────────────────────────
     static let nothingRed    = Color(red: 217 / 255, green: 45 / 255,  blue: 32 / 255)  // #D92D20
-    static let nothingBorder = Color.white.opacity(0.14)
-    static let nothingMuted  = Color.white.opacity(0.45)
-    static let nothingSubtle = Color.white.opacity(0.05)
+    static let nothingBorder = Color.black.opacity(0.12)
+    static let nothingMuted  = Color.black.opacity(0.45)
+    static let nothingSubtle = Color.black.opacity(0.04)
 
     // ── Legacy palette (kept for compatibility with provider/business views) ──
     static let fliqBlue   = Color(red: 34 / 255,  green: 103 / 255, blue: 242 / 255)
@@ -31,11 +31,11 @@ extension Color {
 
 // MARK: - Background
 
-/// Full-screen black background with a subtle ambient dot grid.
+/// Full-screen white background with a subtle ambient dot grid.
 struct DotGridBackground: View {
     var body: some View {
         ZStack {
-            Color.black
+            Color.white
             Canvas { context, size in
                 let spacing: CGFloat = 22
                 let dotSize: CGFloat = 1.4
@@ -45,7 +45,7 @@ struct DotGridBackground: View {
                     while x < size.width + spacing {
                         context.fill(
                             Path(ellipseIn: CGRect(x: x, y: y, width: dotSize, height: dotSize)),
-                            with: .color(.white.opacity(0.055))
+                            with: .color(.black.opacity(0.065))
                         )
                         x += spacing
                     }
@@ -68,7 +68,7 @@ struct DotGridBackground: View {
 struct DotMatrixText: View {
     let text: String
     var font: Font = .system(size: 36, weight: .black, design: .monospaced)
-    var foreground: Color = .white
+    var foreground: Color = .black
     /// Centre-to-centre spacing between dots (lower = denser)
     var dotSpacing: CGFloat = 3.6
     /// Diameter of each dot
@@ -77,7 +77,7 @@ struct DotMatrixText: View {
     // Allows call-site sugar: DotMatrixText("FLIQ", font: ..., ...)
     init(_ text: String,
          font: Font = .system(size: 36, weight: .black, design: .monospaced),
-         foreground: Color = .white,
+         foreground: Color = .black,
          dotSpacing: CGFloat = 3.6,
          dotSize: CGFloat = 2.2) {
         self.text = text
@@ -138,17 +138,17 @@ struct FliqPrimaryButtonStyle: ButtonStyle {
     }
 }
 
-/// Ghost button — thin white border, white text. For secondary actions on dark bg.
+/// Ghost button — thin dark border, dark text. For secondary actions on light bg.
 struct NothingGhostButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .foregroundStyle(Color.white.opacity(configuration.isPressed ? 1.0 : 0.65))
+            .foregroundStyle(Color.black.opacity(configuration.isPressed ? 0.9 : 0.55))
             .background(
                 RoundedRectangle(cornerRadius: 5, style: .continuous)
-                    .fill(Color.white.opacity(configuration.isPressed ? 0.07 : 0.02))
+                    .fill(Color.black.opacity(configuration.isPressed ? 0.06 : 0.02))
                     .overlay(
                         RoundedRectangle(cornerRadius: 5, style: .continuous)
-                            .strokeBorder(Color.white.opacity(configuration.isPressed ? 0.45 : 0.18), lineWidth: 1)
+                            .strokeBorder(Color.black.opacity(configuration.isPressed ? 0.35 : 0.18), lineWidth: 1)
                     )
             )
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
@@ -156,14 +156,14 @@ struct NothingGhostButtonStyle: ButtonStyle {
     }
 }
 
-/// Solid white fill, black text — highest-contrast action (e.g. final tip CTA).
+/// Solid black fill, white text — highest-contrast action (e.g. final tip CTA).
 struct NothingFilledButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .foregroundStyle(.black)
+            .foregroundStyle(.white)
             .background(
                 RoundedRectangle(cornerRadius: 5, style: .continuous)
-                    .fill(Color.white.opacity(configuration.isPressed ? 0.88 : 1.0))
+                    .fill(Color.black.opacity(configuration.isPressed ? 0.75 : 0.88))
             )
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
             .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
