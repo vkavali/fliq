@@ -65,6 +65,10 @@ final class AppViewModel: ObservableObject {
     private var hasLoadedCustomerHomeData = false
 
     init() {
+        if let saved = UserDefaults.standard.string(forKey: "selectedRole"),
+           let role = NativeRole(rawValue: saved) {
+            selectedRole = role
+        }
         Task { await restoreSession() }
     }
 
@@ -84,6 +88,7 @@ final class AppViewModel: ObservableObject {
 
     func selectRole(_ role: NativeRole) {
         selectedRole = role
+        UserDefaults.standard.set(role.rawValue, forKey: "selectedRole")
         credential = ""
         code = ""
         resetCustomerFlow()
@@ -144,6 +149,7 @@ final class AppViewModel: ObservableObject {
         client.logout()
         session = nil
         selectedRole = nil
+        UserDefaults.standard.removeObject(forKey: "selectedRole")
         credential = ""
         code = ""
         resetCustomerFlow()

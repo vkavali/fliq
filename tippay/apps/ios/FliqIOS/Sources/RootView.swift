@@ -143,7 +143,7 @@ struct RootView: View {
 
     @ViewBuilder
     private func homeContent(session: AuthSession) -> some View {
-        switch viewModel.selectedRole ?? effectiveRole(for: session) {
+        switch viewModel.selectedRole ?? .customer {
         case .customer:
             CustomerTabView(session: session, viewModel: viewModel)
                 .task(id: session.user.id) {
