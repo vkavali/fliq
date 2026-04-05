@@ -322,69 +322,81 @@ struct CustomerJarView: View {
 struct ProviderAvatarView: View {
     let session: AuthSession
     let currentAvatarUrl: String?
+    let displayName: String?
     let onRefreshRequested: () -> Void
 
     @State private var selectedPhoto: PhotosPickerItem?
-    @State private var statusMessage = "Native provider avatar upload is now available on iOS."
     @State private var errorMessage: String?
     @State private var isUploading = false
 
     private let providerClient = ProviderClient()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Avatar")
-                .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
+        FliqCard {
+            VStack(spacing: DS.Spacing.md) {
+                // Avatar circle with upload overlay
+                ZStack {
+                    if let currentAvatarUrl, let imageUrl = URL(string: currentAvatarUrl) {
+                        AsyncImage(url: imageUrl) { phase in
+                            switch phase {
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 88, height: 88)
+                                    .clipShape(Circle())
+                            default:
+                                avatarInitialsCircle
+                            }
+                        }
+                    } else {
+                        avatarInitialsCircle
+                    }
 
-            StatusCard(
-                title: errorMessage == nil ? "Current status" : "Error",
-                message: errorMessage ?? statusMessage,
-                isError: errorMessage != nil
-            )
-
-            if let currentAvatarUrl, let imageUrl = URL(string: currentAvatarUrl) {
-                AsyncImage(url: imageUrl) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 80, height: 80)
-                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    case .failure:
-                        Image(systemName: "person.crop.square.fill")
-                            .font(.system(size: 36))
-                            .foregroundStyle(Color.fliqMuted)
-                            .frame(width: 80, height: 80)
-                    case .empty:
-                        ProgressView()
-                            .tint(Color.fliqMint)
-                            .frame(width: 80, height: 80)
-                    @unknown default:
-                        EmptyView()
+                    if isUploading {
+                        Circle()
+                            .fill(Color.black.opacity(0.45))
+                            .frame(width: 88, height: 88)
+                        ProgressView().tint(.white)
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .center)
+
+                PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                    Text(isUploading ? "Uploading..." : "Change photo")
+                        .font(DS.Typography.bodyMedium)
+                        .foregroundStyle(isUploading ? Color.dsTertiary : Color.dsAccent)
+                }
+                .buttonStyle(.plain)
+                .disabled(isUploading)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .onChange(of: selectedPhoto) { newValue in
+                    guard let newValue else { return }
+                    Task { await uploadAvatar(from: newValue) }
+                }
+
+                if let errorMessage {
+                    FliqErrorBanner(message: errorMessage)
+                }
+            }
+            .padding(.vertical, DS.Spacing.sm)
+        }
+    }
+
+    @ViewBuilder
+    private var avatarInitialsCircle: some View {
+        ZStack {
+            Circle()
+                .fill(Color.dsAccentTint)
+                .frame(width: 88, height: 88)
+            if let name = displayName, !name.isEmpty {
+                Text(String(name.prefix(2)).uppercased())
+                    .font(.system(size: 30, weight: .bold))
+                    .foregroundStyle(Color.dsAccent)
             } else {
-                Image(systemName: "person.crop.square.badge.plus")
+                Image(systemName: "person.fill")
                     .font(.system(size: 36))
-                    .foregroundStyle(Color.fliqMuted)
-                    .frame(width: 80, height: 80)
-            }
-
-            Text("The backend accepts a compact image, so the app compresses uploads automatically.")
-                .foregroundStyle(Color.fliqMuted)
-
-            PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                Text(isUploading ? "Uploading..." : "Choose avatar image")
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-            }
-            .buttonStyle(FliqPrimaryButtonStyle(accent: .fliqMint))
-            .disabled(isUploading)
-            .onChange(of: selectedPhoto) { newValue in
-                guard let newValue else { return }
-                Task { await uploadAvatar(from: newValue) }
+                    .foregroundStyle(Color.dsAccent)
             }
         }
     }
@@ -392,19 +404,18 @@ struct ProviderAvatarView: View {
     @MainActor
     private func uploadAvatar(from item: PhotosPickerItem) async {
         isUploading = true
+        errorMessage = nil
         do {
             guard let data = try await item.loadTransferable(type: Data.self),
                   let compressed = compressAvatarData(data) else {
-                errorMessage = "Unable to prepare that image for upload."
+                errorMessage = "Couldn't prepare that photo. Please try a different one."
                 isUploading = false
                 return
             }
             _ = try await providerClient.uploadAvatar(accessToken: session.accessToken, imageData: compressed)
-            statusMessage = "Provider avatar uploaded to the shared backend."
-            errorMessage = nil
             onRefreshRequested()
         } catch {
-            errorMessage = (error as? LocalizedError)?.errorDescription ?? "Unable to upload the provider avatar right now."
+            errorMessage = "Couldn't upload your photo. Please try again."
         }
         isUploading = false
         selectedPhoto = nil

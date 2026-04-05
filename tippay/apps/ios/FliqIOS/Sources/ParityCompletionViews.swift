@@ -535,167 +535,87 @@ struct CustomerRetentionView: View {
 
 struct ProviderCompletionView: View {
     let session: AuthSession
-    let currentUpiVpa: String?
     let latestTips: [ProviderTipItem]
     let onRefreshRequested: () -> Void
 
-    @State private var bankUpiVpa = ""
-    @State private var bankAccountNumber = ""
-    @State private var bankIfscCode = ""
-    @State private var bankPan = ""
-    @State private var aadhaarOrVid = ""
-    @State private var ekycOtp = ""
-    @State private var ekycInitiation: NativeEkycInitiation?
-    @State private var ekycProfile: NativeEkycProfile?
-    @State private var ekycStatus: NativeEkycStatus?
-    @State private var responseEmoji = "🙏"
     @State private var responseState: [String: String] = [:]
-    @State private var isSavingBank = false
-    @State private var isInitiatingEkyc = false
-    @State private var isVerifyingEkyc = false
     @State private var responseSubmittingTipId: String?
-    @State private var statusMessage = "Bank details, Aadhaar eKYC, and thank-you responses are now wired natively."
     @State private var errorMessage: String?
 
     private let parityClient = ParityCompletionClient()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Provider completion")
-                .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
+        let paidTips = Array(latestTips.filter { ["PAID", "SETTLED"].contains($0.status.uppercased()) }.prefix(5))
 
-            StatusCard(
-                title: errorMessage == nil ? "Current status" : "Error",
-                message: errorMessage ?? statusMessage,
-                isError: errorMessage != nil
-            )
-
-            ParitySectionCard(title: "Bank details") {
-                TextField("UPI VPA", text: $bankUpiVpa)
-                    .padding(14)
-                    .foregroundStyle(.white)
-                    .background(parityFieldBackground)
-                TextField("Bank account number", text: $bankAccountNumber)
-                    .keyboardType(.numberPad)
-                    .padding(14)
-                    .foregroundStyle(.white)
-                    .background(parityFieldBackground)
-                TextField("IFSC code", text: $bankIfscCode)
-                    .textInputAutocapitalization(.characters)
-                    .autocorrectionDisabled()
-                    .padding(14)
-                    .foregroundStyle(.white)
-                    .background(parityFieldBackground)
-                TextField("PAN", text: $bankPan)
-                    .textInputAutocapitalization(.characters)
-                    .autocorrectionDisabled()
-                    .padding(14)
-                    .foregroundStyle(.white)
-                    .background(parityFieldBackground)
-
-                Button(action: {
-                    Task { await saveBankDetails() }
-                }) {
-                    Text(isSavingBank ? "Saving..." : "Save bank details")
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                }
-                .buttonStyle(FliqPrimaryButtonStyle(accent: .fliqBlue))
-                .disabled(isSavingBank)
-            }
-
-            ParitySectionCard(title: "Aadhaar eKYC") {
-                if let ekycStatus {
-                    DetailLine(label: "KYC status", value: ekycStatus.kycStatus)
-                    DetailLine(label: "Verified", value: ekycStatus.kycVerified ? "Yes" : "No")
-                    if let kycMethod = ekycStatus.kycMethod {
-                        DetailLine(label: "Method", value: kycMethod)
-                    }
-                    if let kycCompletedAt = ekycStatus.kycCompletedAt {
-                        DetailLine(label: "Completed", value: parityDateText(kycCompletedAt) ?? kycCompletedAt)
-                    }
-                }
-
-                TextField("Aadhaar or VID", text: $aadhaarOrVid)
-                    .keyboardType(.numberPad)
-                    .padding(14)
-                    .foregroundStyle(.white)
-                    .background(parityFieldBackground)
-
-                Button(action: {
-                    Task { await initiateEkyc() }
-                }) {
-                    Text(isInitiatingEkyc ? "Sending OTP..." : "Initiate eKYC")
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                }
-                .buttonStyle(FliqPrimaryButtonStyle(accent: .fliqMint))
-                .disabled(isInitiatingEkyc)
-
-                if let ekycInitiation {
-                    DetailLine(label: "Session token", value: ekycInitiation.sessionToken)
-                    DetailLine(label: "Masked phone", value: ekycInitiation.maskedPhone)
-
-                    TextField("OTP", text: $ekycOtp)
-                        .keyboardType(.numberPad)
-                        .padding(14)
-                        .foregroundStyle(.white)
-                    .background(parityFieldBackground)
-
-                    Button(action: {
-                        Task { await verifyEkyc() }
-                    }) {
-                        Text(isVerifyingEkyc ? "Verifying..." : "Verify eKYC OTP")
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                    }
-                    .buttonStyle(FliqPrimaryButtonStyle(accent: .fliqGold))
-                    .disabled(isVerifyingEkyc)
-                }
-
-                if let ekycProfile {
-                    ParityListCard {
-                        Text("Verified profile")
-                            .font(.system(size: 17, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
-                        DetailLine(label: "Name", value: ekycProfile.name)
-                        DetailLine(label: "DOB", value: ekycProfile.dob)
-                        DetailLine(label: "Gender", value: ekycProfile.gender)
-                        DetailLine(label: "Address", value: ekycProfile.address)
-                    }
-                }
-            }
-
-            ParitySectionCard(title: "Thank-you responses") {
-                if latestTips.isEmpty {
-                    Text("Paid tips will appear here for emoji responses.")
-                        .foregroundStyle(Color.fliqMuted)
-                } else {
-                    ForEach(Array(latestTips.prefix(5))) { tip in
-                        ParityListCard {
-                            Text("\(parityAmountText(tip.amountPaise))\(tip.customerName.map { " from \($0)" } ?? "")")
-                                .font(.system(size: 17, weight: .bold, design: .rounded))
-                                .foregroundStyle(.white)
-                            DetailLine(label: "Status", value: tip.status)
-                            if let existingResponse = responseState[tip.id] {
-                                DetailLine(label: "Existing response", value: existingResponse)
+        Group {
+            if !paidTips.isEmpty {
+                FliqCard {
+                    VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                        HStack(spacing: DS.Spacing.sm) {
+                            Image(systemName: "heart.fill")
+                                .foregroundStyle(Color.dsError)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Say Thank You")
+                                    .font(DS.Typography.headline)
+                                    .foregroundStyle(Color.dsPrimary)
+                                Text("Send a \u{1F64F} to your recent tippers")
+                                    .font(DS.Typography.caption)
+                                    .foregroundStyle(Color.dsSecondary)
                             }
-                            HStack(spacing: 12) {
-                                TextField("Emoji", text: $responseEmoji)
-                                    .padding(14)
-                                    .foregroundStyle(.white)
-                    .background(parityFieldBackground)
+                            Spacer()
+                        }
 
-                                Button(action: {
-                                    Task { await sendResponse(for: tip.id, status: tip.status) }
-                                }) {
-                                    Text(responseSubmittingTipId == tip.id ? "Sending..." : "Send")
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 12)
+                        if let errorMessage {
+                            FliqErrorBanner(message: errorMessage)
+                        }
+
+                        ForEach(Array(paidTips.enumerated()), id: \.element.id) { index, tip in
+                            HStack(spacing: DS.Spacing.sm) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.dsSuccessTint)
+                                        .frame(width: 36, height: 36)
+                                    Text(String((tip.customerName ?? "A").prefix(1)).uppercased())
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundStyle(Color.dsSuccess)
                                 }
-                                .buttonStyle(FliqPrimaryButtonStyle(accent: .fliqMint))
-                                .disabled(responseSubmittingTipId == tip.id || tip.status == "INITIATED" || tip.status == "FAILED" || responseState[tip.id] != nil)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(tip.customerName ?? "Anonymous")
+                                        .font(DS.Typography.bodyMedium)
+                                        .foregroundStyle(Color.dsPrimary)
+                                    Text(parityAmountText(tip.amountPaise))
+                                        .font(DS.Typography.caption)
+                                        .foregroundStyle(Color.dsSecondary)
+                                }
+                                Spacer()
+                                if let existingResponse = responseState[tip.id] {
+                                    Text(existingResponse)
+                                        .font(.system(size: 22))
+                                } else {
+                                    Button(action: {
+                                        Task { await sendResponse(for: tip.id, status: tip.status) }
+                                    }) {
+                                        HStack(spacing: 4) {
+                                            if responseSubmittingTipId == tip.id {
+                                                ProgressView().scaleEffect(0.7).tint(Color.dsAccent)
+                                            } else {
+                                                Text("\u{1F64F}")
+                                            }
+                                            Text("Thank")
+                                                .font(DS.Typography.caption)
+                                                .foregroundStyle(Color.dsAccent)
+                                        }
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 6)
+                                        .background(Color.dsAccentTint)
+                                        .cornerRadius(20)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .disabled(responseSubmittingTipId == tip.id)
+                                }
+                            }
+                            if index < paidTips.count - 1 {
+                                FliqDivider()
                             }
                         }
                     }
@@ -703,107 +623,33 @@ struct ProviderCompletionView: View {
             }
         }
         .task(id: session.user.id) {
-            bankUpiVpa = currentUpiVpa ?? ""
             await loadProviderCompletionData()
         }
     }
 
     @MainActor
     private func loadProviderCompletionData() async {
-        do {
-            ekycStatus = try await parityClient.getEkycStatus(accessToken: session.accessToken)
-            for tip in latestTips.prefix(5) {
-                if let response = try? await parityClient.getTipResponse(tipId: tip.id), let emoji = response.emoji {
-                    responseState[tip.id] = emoji
-                }
+        for tip in latestTips.prefix(5) {
+            if let response = try? await parityClient.getTipResponse(tipId: tip.id), let emoji = response.emoji {
+                responseState[tip.id] = emoji
             }
-        } catch {
-            // Completion hydration is non-blocking.
         }
-    }
-
-    @MainActor
-    private func saveBankDetails() async {
-        isSavingBank = true
-        do {
-            try await parityClient.saveBankDetails(
-                accessToken: session.accessToken,
-                upiVpa: bankUpiVpa.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : bankUpiVpa.trimmingCharacters(in: .whitespacesAndNewlines),
-                bankAccountNumber: bankAccountNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : bankAccountNumber.trimmingCharacters(in: .whitespacesAndNewlines),
-                ifscCode: bankIfscCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : bankIfscCode.trimmingCharacters(in: .whitespacesAndNewlines),
-                pan: bankPan.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : bankPan.trimmingCharacters(in: .whitespacesAndNewlines)
-            )
-            statusMessage = "Bank details saved to the shared backend."
-            errorMessage = nil
-            onRefreshRequested()
-        } catch {
-            errorMessage = (error as? LocalizedError)?.errorDescription ?? "Unable to save bank details right now."
-        }
-        isSavingBank = false
-    }
-
-    @MainActor
-    private func initiateEkyc() async {
-        guard aadhaarOrVid.trimmingCharacters(in: .whitespacesAndNewlines).count >= 12 else {
-            errorMessage = "Enter a valid Aadhaar or VID."
-            return
-        }
-
-        isInitiatingEkyc = true
-        do {
-            ekycInitiation = try await parityClient.initiateEkyc(
-                accessToken: session.accessToken,
-                aadhaarOrVid: aadhaarOrVid.trimmingCharacters(in: .whitespacesAndNewlines)
-            )
-            statusMessage = "OTP sent to \(ekycInitiation?.maskedPhone ?? "the Aadhaar-linked mobile")."
-            errorMessage = nil
-        } catch {
-            errorMessage = (error as? LocalizedError)?.errorDescription ?? "Unable to initiate eKYC right now."
-        }
-        isInitiatingEkyc = false
-    }
-
-    @MainActor
-    private func verifyEkyc() async {
-        guard let ekycInitiation else { return }
-        guard ekycOtp.trimmingCharacters(in: .whitespacesAndNewlines).count >= 4 else {
-            errorMessage = "Enter the OTP received on the Aadhaar-linked mobile."
-            return
-        }
-
-        isVerifyingEkyc = true
-        do {
-            ekycProfile = try await parityClient.verifyEkycOtp(
-                accessToken: session.accessToken,
-                sessionToken: ekycInitiation.sessionToken,
-                otp: ekycOtp.trimmingCharacters(in: .whitespacesAndNewlines)
-            )
-            ekycStatus = try await parityClient.getEkycStatus(accessToken: session.accessToken)
-            statusMessage = "Aadhaar eKYC completed."
-            errorMessage = nil
-            onRefreshRequested()
-        } catch {
-            errorMessage = (error as? LocalizedError)?.errorDescription ?? "Unable to verify the eKYC OTP right now."
-        }
-        isVerifyingEkyc = false
     }
 
     @MainActor
     private func sendResponse(for tipId: String, status: String) async {
-        guard status != "INITIATED", status != "FAILED" else { return }
-
+        guard ["PAID", "SETTLED"].contains(status.uppercased()) else { return }
         responseSubmittingTipId = tipId
+        errorMessage = nil
         do {
             let response = try await parityClient.createEmojiResponse(
                 accessToken: session.accessToken,
                 tipId: tipId,
-                emoji: responseEmoji.isEmpty ? "🙏" : responseEmoji
+                emoji: "🙏"
             )
             responseState[tipId] = response.emoji ?? "🙏"
-            statusMessage = "Thank-you response sent."
-            errorMessage = nil
         } catch {
-            errorMessage = (error as? LocalizedError)?.errorDescription ?? "Unable to send the thank-you response right now."
+            errorMessage = "Couldn't send your thank-you. Please try again."
         }
         responseSubmittingTipId = nil
     }

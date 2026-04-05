@@ -56,6 +56,8 @@ struct ProviderHomeView: View {
     @State private var isSavingDream = false
     @State private var statusMessage = ""
     @State private var errorMessage: String?
+    @State private var profileMessage: String?
+    @State private var profileIsError = false
 
     @State private var displayName = ""
     @State private var category = providerCategories.first ?? "OTHER"
@@ -93,6 +95,16 @@ struct ProviderHomeView: View {
         }.reduce(0) { $0 + $1.amountPaise }
     }
 
+    private var thisWeekTipsAmount: Int {
+        let calendar = Calendar.current
+        let weekStart = calendar.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
+        return tips.filter { tip in
+            guard let str = tip.createdAt,
+                  let date = ISO8601DateFormatter().date(from: str) else { return false }
+            return date >= weekStart && ["PAID", "SETTLED"].contains(tip.status.uppercased())
+        }.reduce(0) { $0 + $1.amountPaise }
+    }
+
     @ViewBuilder
     private func providerInitialsCircle(name: String, size: CGFloat) -> some View {
         ZStack {
@@ -118,6 +130,31 @@ struct ProviderHomeView: View {
         .frame(maxWidth: .infinity)
     }
 
+    @ViewBuilder
+    private func tipsEarningsStat(title: String, value: String) -> some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(Color.dsPrimary)
+            Text(title)
+                .font(DS.Typography.micro)
+                .foregroundStyle(Color.dsSecondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    @ViewBuilder
+    private func providerInfoInitialsCircle(name: String) -> some View {
+        ZStack {
+            Circle()
+                .fill(Color.dsAccentTint)
+                .frame(width: 64, height: 64)
+            Text(String(name.prefix(2)).uppercased())
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(Color.dsAccent)
+        }
+    }
+
     var body: some View {
         TabView {
             // ── Tab 1: Home ──────────────────────────────────────────
@@ -127,9 +164,26 @@ struct ProviderHomeView: View {
                     ScrollView {
                         VStack(alignment: .leading, spacing: DS.Spacing.lg) {
 
-                            // Error banner
+                            // Error banner — tappable to retry
                             if let error = errorMessage {
-                                FliqErrorBanner(message: error)
+                                Button(action: { Task { await loadProviderHome() } }) {
+                                    HStack(spacing: DS.Spacing.sm) {
+                                        Image(systemName: "exclamationmark.circle.fill")
+                                            .foregroundStyle(Color.dsError)
+                                        Text(error)
+                                            .font(DS.Typography.footnote)
+                                            .foregroundStyle(Color.dsError)
+                                            .lineLimit(2)
+                                        Spacer()
+                                        Text("Retry")
+                                            .font(DS.Typography.caption)
+                                            .foregroundStyle(Color.dsError)
+                                    }
+                                    .padding(DS.Spacing.md)
+                                    .background(Color.dsErrorTint)
+                                    .cornerRadius(DS.CornerRadius.sm)
+                                }
+                                .buttonStyle(.plain)
                             }
 
                             if isLoading && profile == nil {
@@ -349,30 +403,96 @@ struct ProviderHomeView: View {
                     ScrollView {
                         VStack(alignment: .leading, spacing: DS.Spacing.md) {
                             if profile != nil {
-                                ProviderTipsSection(tips: tips)
-                                ProviderRecurringSupportSection(recurringTips: recurringTips)
-                                ProviderCompletionView(
-                                    session: session,
-                                    currentUpiVpa: upiVpa,
-                                    latestTips: tips,
-                                    onRefreshRequested: { Task { await loadProviderHome() } }
-                                )
+                                // Earnings summary
+                                FliqCard {
+                                    HStack(spacing: 0) {
+                                        tipsEarningsStat(title: "Today", value: roleAmountText(todayTipsAmount))
+                                        Rectangle().fill(Color.dsBorder).frame(width: 1, height: 44)
+                                        tipsEarningsStat(title: "This week", value: roleAmountText(thisWeekTipsAmount))
+                                        Rectangle().fill(Color.dsBorder).frame(width: 1, height: 44)
+                                        tipsEarningsStat(title: "All time", value: roleAmountText(allTimeTipsAmount))
+                                    }
+                                }
+
+                                // UPI nudge
+                                if upiVpa.isEmpty {
+                                    HStack(spacing: DS.Spacing.sm) {
+                                        Image(systemName: "banknote")
+                                            .font(.system(size: 14, weight: .medium))
+                                            .foregroundStyle(Color.dsWarning)
+                                        Text("Add your UPI ID in Profile to withdraw earnings")
+                                            .font(DS.Typography.footnote)
+                                            .foregroundStyle(Color.dsPrimary)
+                                        Spacer()
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 11, weight: .semibold))
+                                            .foregroundStyle(Color.dsTertiary)
+                                    }
+                                    .padding(DS.Spacing.md)
+                                    .background(Color(hex: "FFF8E7"))
+                                    .cornerRadius(DS.CornerRadius.sm)
+                                    .overlay(RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                                        .strokeBorder(Color.dsWarning.opacity(0.4), lineWidth: 1))
+                                }
+
+                                Text("Recent tips")
+                                    .font(DS.Typography.title2)
+                                    .foregroundStyle(.white)
+
+                                if tips.isEmpty {
+                                    FliqCard {
+                                        VStack(spacing: DS.Spacing.md) {
+                                            Image(systemName: "qrcode")
+                                                .font(.system(size: 40))
+                                                .foregroundStyle(Color.dsTertiary)
+                                            Text("No tips yet")
+                                                .font(DS.Typography.bodyMedium)
+                                                .foregroundStyle(Color.dsSecondary)
+                                            Text("Share your QR code or payment link to start receiving tips")
+                                                .font(DS.Typography.caption)
+                                                .foregroundStyle(Color.dsTertiary)
+                                                .multilineTextAlignment(.center)
+                                        }
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, DS.Spacing.lg)
+                                    }
+                                } else {
+                                    ForEach(tips) { tip in
+                                        ProviderTipCard(tip: tip)
+                                    }
+                                }
+
+                                if !recurringTips.isEmpty {
+                                    ProviderRecurringSupportSection(recurringTips: recurringTips)
+                                }
                             } else {
                                 FliqCard {
-                                    Text("Complete your profile in the Home tab to start receiving tips.")
+                                    Text("Complete your profile to start receiving tips.")
                                         .font(DS.Typography.body)
                                         .foregroundStyle(Color.dsSecondary)
                                         .padding(.vertical, DS.Spacing.sm)
                                 }
                             }
+
+                            Spacer(minLength: DS.Spacing.xxl)
                         }
-                        .padding(DS.Spacing.md)
+                        .padding(.horizontal, DS.Spacing.md)
+                        .padding(.top, DS.Spacing.sm)
+                        .padding(.bottom, DS.Spacing.lg)
                     }
                 }
                 .navigationTitle("Tips")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
                 .toolbarColorScheme(.dark, for: .navigationBar)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: { Task { await loadProviderHome() } }) {
+                            Image(systemName: "arrow.clockwise").foregroundStyle(.white)
+                        }
+                        .disabled(isLoading)
+                    }
+                }
             }
             .tabItem { Label("Tips", systemImage: "banknote.fill") }
 
@@ -386,6 +506,7 @@ struct ProviderHomeView: View {
                                 ProviderAvatarView(
                                     session: session,
                                     currentAvatarUrl: profile?.avatarUrl,
+                                    displayName: profile?.displayName,
                                     onRefreshRequested: { Task { await loadProviderHome() } }
                                 )
                                 ProviderQrSection(
@@ -430,8 +551,141 @@ struct ProviderHomeView: View {
                     LightBackground()
                     ScrollView {
                         VStack(alignment: .leading, spacing: DS.Spacing.md) {
-                            if profile != nil {
-                                // Account status card
+                            // Profile-level feedback banner
+                            if let msg = profileMessage {
+                                if profileIsError {
+                                    FliqErrorBanner(message: msg)
+                                } else {
+                                    FliqSuccessBanner(message: msg)
+                                }
+                            }
+
+                            if let profile = profile {
+                                // Provider info card (read-only)
+                                FliqCard {
+                                    HStack(spacing: DS.Spacing.md) {
+                                        if let avatarUrl = profile.avatarUrl, let url = URL(string: avatarUrl) {
+                                            AsyncImage(url: url) { phase in
+                                                switch phase {
+                                                case .success(let img):
+                                                    img.resizable().scaledToFill()
+                                                        .frame(width: 64, height: 64)
+                                                        .clipShape(Circle())
+                                                default:
+                                                    providerInfoInitialsCircle(name: profile.displayName)
+                                                }
+                                            }
+                                        } else {
+                                            providerInfoInitialsCircle(name: profile.displayName)
+                                        }
+                                        VStack(alignment: .leading, spacing: 5) {
+                                            Text(profile.displayName)
+                                                .font(DS.Typography.title2)
+                                                .foregroundStyle(Color.dsPrimary)
+                                            if let phone = profile.user?.phone {
+                                                Text(phone)
+                                                    .font(DS.Typography.caption)
+                                                    .foregroundStyle(Color.dsSecondary)
+                                            }
+                                            if let cat = profile.category {
+                                                Text(cat.replacingOccurrences(of: "_", with: " ").capitalized)
+                                                    .font(DS.Typography.caption)
+                                                    .foregroundStyle(Color.dsAccent)
+                                                    .fontWeight(.medium)
+                                            }
+                                            if let rating = profile.ratingAverage {
+                                                HStack(spacing: 4) {
+                                                    Image(systemName: "star.fill")
+                                                        .font(.system(size: 11))
+                                                        .foregroundStyle(Color.dsWarning)
+                                                    Text(String(format: "%.1f", rating))
+                                                        .font(DS.Typography.caption)
+                                                        .foregroundStyle(Color.dsSecondary)
+                                                }
+                                            }
+                                        }
+                                        Spacer()
+                                    }
+                                }
+
+                                // Dream section
+                                ProviderDreamSection(
+                                    dream: dream,
+                                    dreamTitle: $dreamTitle,
+                                    dreamDescription: $dreamDescription,
+                                    dreamCategory: $dreamCategory,
+                                    dreamGoalAmount: $dreamGoalAmount,
+                                    isSavingDream: isSavingDream,
+                                    onSave: { Task { await saveDream() } }
+                                )
+
+                                // Payout Setup card
+                                FliqCard {
+                                    VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text("Payout Setup")
+                                                    .font(DS.Typography.headline)
+                                                    .foregroundStyle(Color.dsPrimary)
+                                                if upiVpa.isEmpty {
+                                                    Text("Set up your UPI to withdraw earnings")
+                                                        .font(DS.Typography.caption)
+                                                        .foregroundStyle(Color.dsSecondary)
+                                                } else {
+                                                    HStack(spacing: DS.Spacing.xs) {
+                                                        Image(systemName: "checkmark.circle.fill")
+                                                            .font(.system(size: 13))
+                                                            .foregroundStyle(Color.dsSuccess)
+                                                        Text("Ready to receive")
+                                                            .font(DS.Typography.caption)
+                                                            .foregroundStyle(Color.dsSuccess)
+                                                    }
+                                                }
+                                            }
+                                            Spacer()
+                                            Image(systemName: "indianrupeesign.circle.fill")
+                                                .font(.system(size: 28))
+                                                .foregroundStyle(upiVpa.isEmpty ? Color.dsTertiary : Color.dsSuccess)
+                                        }
+
+                                        VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                                            Text("UPI ID")
+                                                .font(DS.Typography.caption)
+                                                .foregroundStyle(Color.dsSecondary)
+                                            TextField("e.g., yourname@paytm", text: $upiVpa)
+                                                .textInputAutocapitalization(.never)
+                                                .autocorrectionDisabled()
+                                                .keyboardType(.emailAddress)
+                                                .font(DS.Typography.bodyMedium)
+                                                .foregroundStyle(Color.dsPrimary)
+                                                .padding(13)
+                                                .background(Color.dsBorderLight)
+                                                .cornerRadius(DS.CornerRadius.sm)
+                                                .overlay(RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                                                    .strokeBorder(Color.dsBorder, lineWidth: 1))
+                                        }
+
+                                        Button(action: { Task { await saveUpiVpa() } }) {
+                                            HStack {
+                                                if isSavingProfile {
+                                                    ProgressView().tint(.white).scaleEffect(0.8)
+                                                }
+                                                Text(isSavingProfile ? "Saving..." : "Save")
+                                            }
+                                        }
+                                        .buttonStyle(DSPrimaryButtonStyle(disabled: isSavingProfile))
+                                        .disabled(isSavingProfile)
+                                    }
+                                }
+
+                                // Thank-you messages
+                                ProviderCompletionView(
+                                    session: session,
+                                    latestTips: tips,
+                                    onRefreshRequested: { Task { await loadProviderHome() } }
+                                )
+
+                                // Account status
                                 FliqCard {
                                     VStack(spacing: 0) {
                                         HStack {
@@ -443,7 +697,7 @@ struct ProviderHomeView: View {
                                                 .font(DS.Typography.body)
                                                 .foregroundStyle(Color.dsPrimary)
                                             Spacer()
-                                            let kycStatus = profile?.user?.kycStatus ?? ""
+                                            let kycStatus = profile.user?.kycStatus ?? ""
                                             Text(kycStatus.isEmpty ? "Not verified" : kycStatus.capitalized)
                                                 .font(DS.Typography.footnote)
                                                 .foregroundStyle(kycStatus.uppercased() == "VERIFIED" ? Color.dsSuccess : Color.dsSecondary)
@@ -455,28 +709,20 @@ struct ProviderHomeView: View {
                                                 .font(.system(size: 14, weight: .medium))
                                                 .foregroundStyle(Color.dsAccent)
                                                 .frame(width: 22)
-                                            Text("UPI / Bank")
+                                            Text("UPI")
                                                 .font(DS.Typography.body)
                                                 .foregroundStyle(Color.dsPrimary)
                                             Spacer()
-                                            Text(upiVpa.isEmpty ? "Not linked" : upiVpa)
+                                            Text(upiVpa.isEmpty ? "Not connected" : upiVpa)
                                                 .font(DS.Typography.footnote)
-                                                .foregroundStyle(upiVpa.isEmpty ? Color.dsSecondary : Color.dsPrimary)
+                                                .foregroundStyle(upiVpa.isEmpty ? Color.dsSecondary : Color.dsSuccess)
                                                 .lineLimit(1)
                                         }
                                         .padding(.vertical, DS.Spacing.sm + 2)
                                     }
                                 }
 
-                                ProviderDreamSection(
-                                    dream: dream,
-                                    dreamTitle: $dreamTitle,
-                                    dreamDescription: $dreamDescription,
-                                    dreamCategory: $dreamCategory,
-                                    dreamGoalAmount: $dreamGoalAmount,
-                                    isSavingDream: isSavingDream,
-                                    onSave: { Task { await saveDream() } }
-                                )
+                                // Payouts
                                 ProviderPayoutSection(
                                     payouts: payouts,
                                     payoutAmountRupees: $payoutAmountRupees,
@@ -484,9 +730,18 @@ struct ProviderHomeView: View {
                                     onRequest: { Task { await requestPayout() } }
                                 )
                             }
-                            Button("Sign Out", action: onLogout)
-                                .font(DS.Typography.bodyMedium)
-                                .foregroundStyle(Color.dsError)
+
+                            // Sign out
+                            Button(action: onLogout) {
+                                Text("Sign Out")
+                                    .font(DS.Typography.bodyMedium)
+                                    .foregroundStyle(Color.dsError)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                            }
+                            .buttonStyle(.plain)
+
+                            Spacer(minLength: DS.Spacing.xxl)
                         }
                         .padding(DS.Spacing.md)
                     }
@@ -545,7 +800,12 @@ struct ProviderHomeView: View {
                 statusMessage = ""
             }
         } catch {
-            errorMessage = (error as? LocalizedError)?.errorDescription ?? "Unable to load the provider home right now."
+            let raw = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            if raw.lowercased().contains("internal server") || raw.lowercased().contains("server error") {
+                errorMessage = "Something went wrong. Tap to retry."
+            } else {
+                errorMessage = raw
+            }
         }
 
         isLoading = false
@@ -638,17 +898,46 @@ struct ProviderHomeView: View {
     }
 
     @MainActor
+    private func saveUpiVpa() async {
+        let trimmed = upiVpa.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            profileMessage = "Please enter your UPI ID."
+            profileIsError = true
+            return
+        }
+        isSavingProfile = true
+        profileMessage = nil
+        do {
+            profile = try await providerClient.updateProfile(
+                accessToken: session.accessToken,
+                displayName: nil,
+                category: nil,
+                bio: nil,
+                upiVpa: trimmed
+            )
+            upiVpa = trimmed
+            profileMessage = "UPI ID saved! You're ready to receive payouts."
+            profileIsError = false
+        } catch {
+            profileMessage = "Couldn't save your UPI ID. Check the format and try again."
+            profileIsError = true
+        }
+        isSavingProfile = false
+    }
+
+    @MainActor
     private func saveDream() async {
         guard !dreamTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               !dreamDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               let goalAmount = Int(dreamGoalAmount),
               goalAmount > 0 else {
-            errorMessage = "Dream title, description, and goal amount are required."
+            profileMessage = "Please fill in dream title, story, and goal amount."
+            profileIsError = true
             return
         }
 
         isSavingDream = true
-        errorMessage = nil
+        profileMessage = nil
 
         do {
             dream = try await providerClient.saveDream(
@@ -659,9 +948,12 @@ struct ProviderHomeView: View {
                 category: dreamCategory,
                 goalAmountPaise: goalAmount * 100
             )
-            statusMessage = "Dream saved."
+            profileMessage = dream != nil ? "Dream updated." : "Dream created!"
+            profileIsError = false
         } catch {
-            errorMessage = (error as? LocalizedError)?.errorDescription ?? "Unable to save the dream right now."
+            let raw = (error as? LocalizedError)?.errorDescription ?? ""
+            profileMessage = raw.isEmpty ? "Couldn't save your dream. Please try again." : raw
+            profileIsError = true
         }
 
         isSavingDream = false
@@ -1296,58 +1588,113 @@ private struct ProviderQrSection: View {
     let onCreate: () -> Void
 
     var body: some View {
-        RoleSectionContainer(title: "QR codes") {
-            TextField("Location label", text: $qrLocationLabel)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.white)
-                .padding(13)
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(10)
-                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
-
-            Button(action: onCreate) {
-                Text(isCreatingQR ? "Creating..." : "Create QR code")
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
+        VStack(alignment: .leading, spacing: DS.Spacing.md) {
+            HStack {
+                Text("QR Codes")
+                    .font(DS.Typography.title2)
+                    .foregroundStyle(.white)
+                Spacer()
+                Button(action: onCreate) {
+                    HStack(spacing: DS.Spacing.xs) {
+                        if isCreatingQR {
+                            ProgressView().tint(Color.dsAccent).scaleEffect(0.75)
+                        } else {
+                            Image(systemName: "plus")
+                                .font(.system(size: 12, weight: .bold))
+                        }
+                        Text(isCreatingQR ? "Creating..." : "New QR")
+                            .font(DS.Typography.caption)
+                    }
+                    .foregroundStyle(Color.dsAccent)
+                    .padding(.horizontal, DS.Spacing.md)
+                    .padding(.vertical, DS.Spacing.sm)
+                    .background(Color.dsSurface)
+                    .cornerRadius(DS.CornerRadius.sm)
+                }
+                .buttonStyle(.plain)
+                .disabled(isCreatingQR)
             }
-            .buttonStyle(FliqPrimaryButtonStyle(accent: .fliqMint))
-            .disabled(isCreatingQR)
+
+            FliqCard {
+                VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                    Text("Label for new QR (optional)")
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(Color.dsSecondary)
+                    TextField("e.g., Delivery bag, Reception desk, Table 5", text: $qrLocationLabel)
+                        .font(DS.Typography.bodyMedium)
+                        .foregroundStyle(Color.dsPrimary)
+                        .padding(13)
+                        .background(Color.dsBorderLight)
+                        .cornerRadius(DS.CornerRadius.sm)
+                        .overlay(RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                            .strokeBorder(Color.dsBorder, lineWidth: 1))
+                }
+            }
 
             if qrCodes.isEmpty {
-                Text("No QR codes yet.")
-                    .font(.system(size: 15, weight: .medium, design: .rounded))
-                    .foregroundStyle(Color.fliqMuted)
+                FliqCard {
+                    VStack(spacing: DS.Spacing.sm) {
+                        Image(systemName: "qrcode")
+                            .font(.system(size: 36))
+                            .foregroundStyle(Color.dsTertiary)
+                        Text("No QR codes yet")
+                            .font(DS.Typography.bodyMedium)
+                            .foregroundStyle(Color.dsSecondary)
+                        Text("Create a QR code and print it. Customers scan it to tip you.")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(Color.dsTertiary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, DS.Spacing.lg)
+                }
             } else {
                 ForEach(qrCodes) { qrCode in
-                    RoleItemCard {
-                        if let qrImageUrl = qrCode.qrImageUrl, let imageUrl = URL(string: qrImageUrl) {
-                            AsyncImage(url: imageUrl) { phase in
-                                switch phase {
-                                case .success(let image):
-                                    image
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(maxWidth: .infinity)
-                                        .frame(height: 200)
-                                        .cornerRadius(12)
-                                case .failure:
-                                    Label("QR image unavailable", systemImage: "qrcode")
-                                        .font(.system(size: 14, weight: .medium))
-                                        .foregroundStyle(Color.fliqMuted)
-                                        .frame(maxWidth: .infinity, minHeight: 60)
-                                case .empty:
-                                    ProgressView()
-                                        .tint(Color.fliqMint)
-                                        .frame(maxWidth: .infinity, minHeight: 60)
-                                @unknown default:
-                                    EmptyView()
+                    FliqCard {
+                        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                            if let qrImageUrl = qrCode.qrImageUrl, let imageUrl = URL(string: qrImageUrl) {
+                                AsyncImage(url: imageUrl) { phase in
+                                    switch phase {
+                                    case .success(let image):
+                                        image.resizable().scaledToFit()
+                                            .frame(maxWidth: .infinity).frame(height: 180)
+                                            .cornerRadius(DS.CornerRadius.md)
+                                    case .failure:
+                                        RoundedRectangle(cornerRadius: DS.CornerRadius.md)
+                                            .fill(Color.dsBorderLight).frame(maxWidth: .infinity, minHeight: 80)
+                                            .overlay(Image(systemName: "qrcode").font(.system(size: 32)).foregroundStyle(Color.dsTertiary))
+                                    case .empty:
+                                        RoundedRectangle(cornerRadius: DS.CornerRadius.md)
+                                            .fill(Color.dsBorderLight).frame(maxWidth: .infinity, minHeight: 80)
+                                            .overlay(ProgressView().tint(Color.dsAccent))
+                                    @unknown default: EmptyView()
+                                    }
                                 }
                             }
-                        }
-                        DetailLine(label: "Label", value: qrCode.locationLabel ?? "QR code")
-                        DetailLine(label: "Scans", value: String(qrCode.scanCount ?? 0))
-                        if let upiUrl = qrCode.upiUrl {
-                            DetailLine(label: "UPI URL", value: upiUrl)
+
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(qrCode.locationLabel ?? "My QR Code")
+                                        .font(DS.Typography.headline)
+                                        .foregroundStyle(Color.dsPrimary)
+                                    HStack(spacing: DS.Spacing.xs) {
+                                        Image(systemName: "eye").font(.system(size: 11)).foregroundStyle(Color.dsTertiary)
+                                        Text("\(qrCode.scanCount ?? 0) scans")
+                                            .font(DS.Typography.caption).foregroundStyle(Color.dsSecondary)
+                                    }
+                                }
+                                Spacer()
+                                if let upiUrl = qrCode.upiUrl {
+                                    ShareLink(item: upiUrl) {
+                                        Image(systemName: "square.and.arrow.up")
+                                            .font(.system(size: 16, weight: .medium))
+                                            .foregroundStyle(Color.dsAccent)
+                                            .frame(width: 40, height: 40)
+                                            .background(Color.dsAccentTint)
+                                            .cornerRadius(DS.CornerRadius.sm)
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -1367,79 +1714,106 @@ private struct ProviderPaymentLinkSection: View {
     let onCreate: () -> Void
 
     var body: some View {
-        RoleSectionContainer(title: "Payment links") {
-            TextField("Role", text: $linkRole)
-                .font(.system(size: 14, weight: .medium))
+        VStack(alignment: .leading, spacing: DS.Spacing.md) {
+            Text("Payment Links")
+                .font(DS.Typography.title2)
                 .foregroundStyle(.white)
-                .padding(13)
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(10)
-                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
 
-            TextField("Workplace", text: $linkWorkplace)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.white)
-                .padding(13)
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(10)
-                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
-
-            TextField("Description", text: $linkDescription, axis: .vertical)
-                .lineLimit(2...4)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.white)
-                .padding(13)
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(10)
-                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
-
-            TextField("Suggested amount in rupees", text: $linkSuggestedAmount)
-                .keyboardType(.numberPad)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.white)
-                .padding(13)
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(10)
-                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
-
-            Button(action: {
-                linkAllowCustomAmount.toggle()
-            }) {
-                Text(linkAllowCustomAmount ? "Custom amount allowed" : "Amount locked to suggested value")
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-            }
-            .buttonStyle(NothingGhostButtonStyle())
-
-            Button(action: onCreate) {
-                Text(isCreatingLink ? "Creating..." : "Create payment link")
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-            }
-            .buttonStyle(FliqPrimaryButtonStyle(accent: .fliqMint))
-            .disabled(isCreatingLink)
-
-            if paymentLinks.isEmpty {
-                Text("No payment links yet.")
-                    .font(.system(size: 15, weight: .medium, design: .rounded))
-                    .foregroundStyle(Color.fliqMuted)
-            } else {
-                ForEach(paymentLinks) { link in
-                    RoleItemCard {
-                        DetailLine(label: "Short code", value: link.shortCode)
-                        if let role = link.role {
-                            DetailLine(label: "Role", value: role)
+            // Show existing links
+            ForEach(paymentLinks) { link in
+                FliqCard {
+                    VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                if let role = link.role {
+                                    Text(role)
+                                        .font(DS.Typography.headline)
+                                        .foregroundStyle(Color.dsPrimary)
+                                }
+                                if let workplace = link.workplace {
+                                    Text(workplace)
+                                        .font(DS.Typography.caption)
+                                        .foregroundStyle(Color.dsSecondary)
+                                }
+                                HStack(spacing: DS.Spacing.xs) {
+                                    Image(systemName: "cursorarrow.click")
+                                        .font(.system(size: 11))
+                                        .foregroundStyle(Color.dsTertiary)
+                                    Text("\(link.clickCount ?? 0) clicks")
+                                        .font(DS.Typography.caption)
+                                        .foregroundStyle(Color.dsSecondary)
+                                }
+                            }
+                            Spacer()
                         }
-                        if let workplace = link.workplace {
-                            DetailLine(label: "Workplace", value: workplace)
-                        }
+
                         if let shareableUrl = link.shareableUrl {
-                            DetailLine(label: "Shareable URL", value: shareableUrl)
+                            FliqDivider()
+                            HStack(spacing: DS.Spacing.sm) {
+                                Text(shareableUrl)
+                                    .font(DS.Typography.footnote)
+                                    .foregroundStyle(Color.dsSecondary)
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                                Spacer()
+                                Button(action: { UIPasteboard.general.string = shareableUrl }) {
+                                    Image(systemName: "doc.on.doc")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundStyle(Color.dsAccent)
+                                }
+                                .buttonStyle(.plain)
+                                ShareLink(item: shareableUrl) {
+                                    Image(systemName: "square.and.arrow.up")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundStyle(Color.dsAccent)
+                                }
+                            }
                         }
-                        DetailLine(label: "Clicks", value: String(link.clickCount ?? 0))
                     }
                 }
             }
+
+            // Create new link
+            FliqCard {
+                VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                    Text(paymentLinks.isEmpty ? "Create your tip link" : "Create another link")
+                        .font(DS.Typography.headline)
+                        .foregroundStyle(Color.dsPrimary)
+
+                    linkField(label: "Your role", placeholder: "e.g., Delivery Partner, Waiter", text: $linkRole)
+                    linkField(label: "Workplace", placeholder: "e.g., Swiggy, Hotel Taj", text: $linkWorkplace)
+                    linkField(label: "About you (optional)", placeholder: "Tell tippers a bit about yourself", text: $linkDescription, axis: .vertical)
+                    linkField(label: "Suggested tip (₹, optional)", placeholder: "e.g., 50", text: $linkSuggestedAmount, keyboard: .numberPad)
+
+                    Button(action: onCreate) {
+                        HStack {
+                            if isCreatingLink { ProgressView().tint(.white).scaleEffect(0.8) }
+                            Text(isCreatingLink ? "Creating..." : "Create tip link")
+                        }
+                    }
+                    .buttonStyle(DSPrimaryButtonStyle(disabled: isCreatingLink))
+                    .disabled(isCreatingLink)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func linkField(label: String, placeholder: String, text: Binding<String>, axis: Axis = .horizontal, keyboard: UIKeyboardType = .default) -> some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+            Text(label)
+                .font(DS.Typography.caption)
+                .foregroundStyle(Color.dsSecondary)
+            TextField(placeholder, text: text, axis: axis)
+                .keyboardType(keyboard)
+                .lineLimit(axis == .vertical ? 2...4 : 1...1)
+                .font(DS.Typography.bodyMedium)
+                .foregroundStyle(Color.dsPrimary)
+                .padding(13)
+                .background(Color.dsBorderLight)
+                .cornerRadius(DS.CornerRadius.sm)
+                .overlay(RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                    .strokeBorder(Color.dsBorder, lineWidth: 1))
         }
     }
 }
@@ -1489,47 +1863,107 @@ private struct ProviderDreamSection: View {
     let onSave: () -> Void
 
     var body: some View {
-        RoleSectionContainer(title: "Dream") {
-            if let dream {
-                DetailLine(label: "Current dream", value: dream.title)
-                DetailLine(label: "Progress", value: "\(dream.percentage)% funded")
+        FliqCard {
+            VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Your Dream")
+                            .font(DS.Typography.headline)
+                            .foregroundStyle(Color.dsPrimary)
+                        Text("What are you working toward?")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(Color.dsSecondary)
+                    }
+                    Spacer()
+                    Text("✨")
+                        .font(.system(size: 26))
+                }
+
+                if let dream {
+                    VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                        HStack {
+                            Text(dream.title)
+                                .font(DS.Typography.bodyMedium)
+                                .foregroundStyle(Color.dsPrimary)
+                                .lineLimit(2)
+                            Spacer()
+                            Text("\(dream.percentage)%")
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(dream.percentage >= 100 ? Color.dsSuccess : Color.dsAccent)
+                                .fontWeight(.semibold)
+                        }
+                        ProgressView(value: Double(min(dream.percentage, 100)), total: 100)
+                            .tint(dream.percentage >= 100 ? Color.dsSuccess : Color.dsAccent)
+                        HStack {
+                            Text("₹\(dream.currentAmount / 100) raised")
+                                .font(DS.Typography.micro)
+                                .foregroundStyle(Color.dsSecondary)
+                            Spacer()
+                            Text("of ₹\(dream.goalAmount / 100)")
+                                .font(DS.Typography.micro)
+                                .foregroundStyle(Color.dsSecondary)
+                        }
+                    }
+
+                    Text("Your tippers can see this dream and contribute towards it")
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(Color.dsTertiary)
+                        .italic()
+
+                    FliqDivider()
+                }
+
+                dreamField(label: "Dream title", placeholder: "e.g., Daughter's school fees", text: $dreamTitle)
+                dreamField(label: "Your story", placeholder: "Tell your tippers why this matters to you...", text: $dreamDescription, axis: .vertical)
+
+                VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                    Text("Category")
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(Color.dsSecondary)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: DS.Spacing.xs) {
+                            ForEach(dreamCategories, id: \.self) { cat in
+                                DSChoiceChip(
+                                    label: cat.capitalized,
+                                    isSelected: dreamCategory == cat,
+                                    action: { dreamCategory = cat }
+                                )
+                            }
+                        }
+                        .padding(.vertical, 2)
+                    }
+                }
+
+                dreamField(label: "Goal amount (₹)", placeholder: "e.g., 10000", text: $dreamGoalAmount, keyboard: .numberPad)
+
+                Button(action: onSave) {
+                    HStack {
+                        if isSavingDream { ProgressView().tint(.white).scaleEffect(0.8) }
+                        Text(isSavingDream ? "Saving..." : (dream == nil ? "Create dream" : "Update dream"))
+                    }
+                }
+                .buttonStyle(DSPrimaryButtonStyle(disabled: isSavingDream))
+                .disabled(isSavingDream)
             }
+        }
+    }
 
-            TextField("Dream title", text: $dreamTitle)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.white)
+    @ViewBuilder
+    private func dreamField(label: String, placeholder: String, text: Binding<String>, axis: Axis = .horizontal, keyboard: UIKeyboardType = .default) -> some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+            Text(label)
+                .font(DS.Typography.caption)
+                .foregroundStyle(Color.dsSecondary)
+            TextField(placeholder, text: text, axis: axis)
+                .keyboardType(keyboard)
+                .lineLimit(axis == .vertical ? 3...6 : 1...1)
+                .font(DS.Typography.bodyMedium)
+                .foregroundStyle(Color.dsPrimary)
                 .padding(13)
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(10)
-                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
-
-            TextField("Dream description", text: $dreamDescription, axis: .vertical)
-                .lineLimit(3...5)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.white)
-                .padding(13)
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(10)
-                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
-
-            RoleChoiceSection(label: "Dream category", options: dreamCategories, selected: $dreamCategory)
-
-            TextField("Goal amount in rupees", text: $dreamGoalAmount)
-                .keyboardType(.numberPad)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.white)
-                .padding(13)
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(10)
-                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
-
-            Button(action: onSave) {
-                Text(isSavingDream ? "Saving..." : "Save dream")
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-            }
-            .buttonStyle(FliqPrimaryButtonStyle(accent: .fliqMint))
-            .disabled(isSavingDream)
+                .background(Color.dsBorderLight)
+                .cornerRadius(DS.CornerRadius.sm)
+                .overlay(RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                    .strokeBorder(Color.dsBorder, lineWidth: 1))
         }
     }
 }
