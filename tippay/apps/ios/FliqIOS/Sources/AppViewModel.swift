@@ -16,7 +16,7 @@ final class AppViewModel: ObservableObject {
     @Published var credential = ""
     @Published var code = ""
     @Published var session: AuthSession?
-    @Published var statusMessage = "Native iOS foundation is live. OTP auth and session restore are now wired into this app shell."
+    @Published var statusMessage = ""
     @Published var errorMessage: String?
     @Published var isLoading = true
     @Published var providerQuery = ""
@@ -99,9 +99,7 @@ final class AppViewModel: ObservableObject {
         code = ""
         resetCustomerFlow()
         errorMessage = nil
-        statusMessage = role.usesEmail
-            ? "Business login uses email OTP from the shared backend."
-            : "\(role.title) login uses phone OTP from the shared backend."
+        statusMessage = ""
         stage = .credential
     }
 
@@ -161,7 +159,7 @@ final class AppViewModel: ObservableObject {
         code = ""
         resetCustomerFlow()
         errorMessage = nil
-        statusMessage = "Session cleared on this device."
+        statusMessage = ""
         stage = .rolePicker
         Task {
             await pushCoordinator.removeTokenIfPossible(accessToken: previousAccessToken)
@@ -193,9 +191,7 @@ final class AppViewModel: ObservableObject {
 
         do {
             providerResults = try await customerClient.searchProviders(query: trimmedQuery)
-            statusMessage = providerResults.isEmpty
-                ? "No providers matched that search."
-                : "Loaded \(providerResults.count) provider matches."
+            statusMessage = ""
         } catch {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? "Unable to search providers right now."
         }
@@ -219,7 +215,7 @@ final class AppViewModel: ObservableObject {
                     category: selectedProvider.category
                 )
             }
-            statusMessage = "Loaded \(selectedProvider?.displayName ?? "provider") details for tipping."
+            statusMessage = ""
         } catch {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? "Unable to load provider details right now."
         }
@@ -265,9 +261,7 @@ final class AppViewModel: ObservableObject {
             createdTipOrder = order
             tipStatus = TipStatusSnapshot(tipId: order.tipId, status: "INITIATED", updatedAt: nil)
             tipImpact = nil
-            statusMessage = order.isMockOrder
-                ? "Mock tip order created for \(selectedProvider.displayName). You can complete dev-bypass verification from this screen."
-                : "Tip order created for \(selectedProvider.displayName). Open native Razorpay checkout to continue."
+            statusMessage = ""
             await refreshCustomerHistorySilently()
         } catch let error as CustomerClientError {
             errorMessage = error.errorDescription ?? "Unable to create the tip order right now."
@@ -287,7 +281,7 @@ final class AppViewModel: ObservableObject {
             )
             pendingTipQueueStore.enqueue(draft, userId: session.user.id)
             pendingTipDrafts = pendingTipQueueStore.load(userId: session.user.id)
-            statusMessage = "You appear to be offline. This tip was saved locally and can be synced later without losing its idempotency key."
+            statusMessage = ""
         }
 
         isSubmittingTip = false
@@ -309,7 +303,7 @@ final class AppViewModel: ObservableObject {
         do {
             let entry = try await customerClient.resolveQrCode(rawInput: trimmedInput)
             try await loadResolvedEntry(entry)
-            statusMessage = "Resolved QR entry for \(selectedProvider?.displayName ?? entry.providerName)."
+            statusMessage = ""
         } catch {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? "Unable to resolve that QR code right now."
         }
@@ -336,7 +330,7 @@ final class AppViewModel: ObservableObject {
             if let suggestedAmountPaise = entry.suggestedAmountPaise {
                 amountRupees = String(suggestedAmountPaise / 100)
             }
-            statusMessage = "Resolved payment link for \(selectedProvider?.displayName ?? entry.providerName)."
+            statusMessage = ""
         } catch {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? "Unable to resolve that payment link right now."
         }
@@ -374,9 +368,7 @@ final class AppViewModel: ObservableObject {
             if let suggestedAmountPaise = entry.suggestedAmountPaise {
                 amountRupees = String(suggestedAmountPaise / 100)
             }
-            statusMessage = entry.source == .paymentLink
-                ? "Resolved payment link for \(selectedProvider?.displayName ?? entry.providerName)."
-                : "Resolved QR entry for \(selectedProvider?.displayName ?? entry.providerName)."
+            statusMessage = ""
         } catch {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? "Unable to resolve that scanned code right now."
         }
@@ -402,7 +394,7 @@ final class AppViewModel: ObservableObject {
                     surfaceErrors: false
                 )
             } else {
-                statusMessage = "Fetched backend status for tip \(createdTipOrder.tipId)."
+                statusMessage = ""
             }
             await refreshCustomerHistorySilently()
         } catch {
@@ -507,9 +499,7 @@ final class AppViewModel: ObservableObject {
         guard let session else { return }
         pendingTipQueueStore.remove(draftId: draftId, userId: session.user.id)
         pendingTipDrafts = pendingTipQueueStore.load(userId: session.user.id)
-        statusMessage = pendingTipDrafts.isEmpty
-            ? "Removed the pending offline tip. The queue is now clear."
-            : "Removed the pending offline tip from this device queue."
+        statusMessage = ""
     }
 
     func refreshCustomerProfile() async {
@@ -524,7 +514,7 @@ final class AppViewModel: ObservableObject {
         do {
             let profile = try await customerClient.getCurrentUserProfile(accessToken: session.accessToken)
             applyCustomerProfile(profile)
-            statusMessage = "Loaded customer profile from the shared backend."
+            statusMessage = ""
         } catch {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? "Unable to load the customer profile right now."
         }
@@ -546,9 +536,7 @@ final class AppViewModel: ObservableObject {
             customerTipHistory = response.tips
             customerHistoryCurrentPage = 1
             customerHistoryHasMore = response.tips.count >= response.limit
-            statusMessage = response.tips.isEmpty
-                ? "Customer history is live, but no tips have been sent yet."
-                : "Loaded \(response.tips.count) recent tips from the shared backend."
+            statusMessage = ""
         } catch {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? "Unable to load tip history right now."
         }
@@ -623,7 +611,7 @@ final class AppViewModel: ObservableObject {
                 languagePreference: trimmedLanguage.isEmpty ? nil : trimmedLanguage
             )
             applyCustomerProfile(profile)
-            statusMessage = "Saved customer profile to the shared backend."
+            statusMessage = ""
         } catch {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? "Unable to save the customer profile right now."
         }

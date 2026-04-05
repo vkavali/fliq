@@ -27,6 +27,7 @@
 		773D13C7A05FFAE2DD0BB1E1 /* ParityCompletionClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE73B83721423A8CC08B87D /* ParityCompletionClient.swift */; };
 		8BFBB08076111C9634ABE075 /* AdvancedNativeViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C5038D5963D23C05481DF1 /* AdvancedNativeViews.swift */; };
 		939E1D92300E521C9FBCB536 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CCADC50E7F5ECEB039AB150 /* Theme.swift */; };
+		AA11BB22CC33DD44EE55FF66 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF77 /* DesignSystem.swift */; };
 		9835E8015426717BF4282693 /* NativePushCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79AAF405C4523F6D41F0F09C /* NativePushCoordinator.swift */; };
 		9A853B96D43089DF5732F28F /* FliqIOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D340548FCFAF615FAD50C033 /* FliqIOSApp.swift */; };
 		AB7C62D7EAB5FB336C8ADBA8 /* BusinessModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B35DD7AED1781DAACEB447DF /* BusinessModels.swift */; };
@@ -53,6 +54,7 @@
 		47F397E871F1F4AC1743EA41 /* AuthSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthSessionStore.swift; sourceTree = "<group>"; };
 		4A9F8C4A3ADFA06B0F467558 /* PushNotificationsClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationsClient.swift; sourceTree = "<group>"; };
 		4CCADC50E7F5ECEB039AB150 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		AA11BB22CC33DD44EE55FF77 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		6E64C39C2C6A38AD1E480806 /* ParityCompletionViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParityCompletionViews.swift; sourceTree = "<group>"; };
 		76F09DDB2823A2434799AD95 /* AppViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppViewModel.swift; sourceTree = "<group>"; };
 		79AAF405C4523F6D41F0F09C /* NativePushCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativePushCoordinator.swift; sourceTree = "<group>"; };
@@ -110,6 +112,7 @@
 		55EFAA1DCAABD292335F9C32 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				AA11BB22CC33DD44EE55FF77 /* DesignSystem.swift */,
 				A38D50F0527D5AEE40FFD9F6 /* AdvancedCollectionsClient.swift */,
 				E7C5038D5963D23C05481DF1 /* AdvancedNativeViews.swift */,
 				76F09DDB2823A2434799AD95 /* AppViewModel.swift */,
@@ -236,6 +239,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AA11BB22CC33DD44EE55FF66 /* DesignSystem.swift in Sources */,
 				3DCA61F2DD666F0EFFDC6944 /* AdvancedCollectionsClient.swift in Sources */,
 				8BFBB08076111C9634ABE075 /* AdvancedNativeViews.swift in Sources */,
 				ECE91A8CF7CE52A72151C9C4 /* AppViewModel.swift in Sources */,
@@ -342,7 +346,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 13;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 722J78K2H6;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -410,7 +414,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 13;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 722J78K2H6;
 				ENABLE_NS_ASSERTIONS = NO;

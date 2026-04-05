@@ -1,84 +1,60 @@
 import SwiftUI
 
-// MARK: - Brand Colors
+// MARK: - Brand Colors (legacy palette — kept for any remaining call sites)
 
 extension Color {
-    // ── Web app palette — indigo/purple gradient theme ───────────────────────
-    static let fliqIndigo   = Color(red: 79 / 255,  green: 70 / 255,  blue: 229 / 255)  // #4F46E5
-    static let fliqPurple   = Color(red: 124 / 255, green: 58 / 255,  blue: 237 / 255)  // #7C3AED
-    static let fliqTeal     = Color(red: 6 / 255,   green: 182 / 255, blue: 212 / 255)  // #06B6D4
-    static let fliqAmber    = Color(red: 245 / 255, green: 158 / 255, blue: 11 / 255)   // #F59E0B
-    static let fliqGreen    = Color(red: 16 / 255,  green: 185 / 255, blue: 129 / 255)  // #10B981
-    static let fliqLilac    = Color(red: 162 / 255, green: 155 / 255, blue: 254 / 255)
-    static let fliqDark     = Color(red: 15 / 255,  green: 12 / 255,  blue: 41 / 255)   // #0F0C29
-    static let fliqDarkMid  = Color(red: 48 / 255,  green: 43 / 255,  blue: 99 / 255)   // #302b63
+    static let fliqIndigo   = Color(hex: "6C5CE7")   // mapped to brand accent
+    static let fliqPurple   = Color(hex: "5A4BD1")
+    static let fliqTeal     = Color(hex: "00B894")   // mapped to success
+    static let fliqAmber    = Color(hex: "FDCB6E")
+    static let fliqGreen    = Color(hex: "00B894")
+    static let fliqLilac    = Color(hex: "A29BFE")
+    static let fliqDark     = Color(hex: "2D3436")
+    static let fliqDarkMid  = Color(hex: "636E72")
 
-    // ── Aliases for legacy references in provider/business/customer views ────
-    // nothingRed → primary indigo accent
-    static let nothingRed    = Color(red: 79 / 255, green: 70 / 255, blue: 229 / 255)
-    static let nothingBorder = Color.white.opacity(0.18)
-    static let nothingMuted  = Color.white.opacity(0.55)
-    static let nothingSubtle = Color.white.opacity(0.08)
+    // Legacy aliases — all map to the new light-theme palette
+    static let nothingRed    = Color.dsAccent
+    static let nothingBorder = Color.dsBorder
+    static let nothingMuted  = Color.dsSecondary
+    static let nothingSubtle = Color.dsAccentTint
 
-    // Kept for any remaining legacy call sites
-    static let fliqBlue    = Color(red: 79 / 255,  green: 70 / 255,  blue: 229 / 255)
-    static let fliqMint    = Color(red: 16 / 255,  green: 185 / 255, blue: 129 / 255)
-    static let fliqGold    = Color(red: 245 / 255, green: 158 / 255, blue: 11 / 255)
-    static let fliqInk     = Color(red: 15 / 255,  green: 12 / 255,  blue: 41 / 255)
-    static let fliqMuted   = Color.white.opacity(0.55)
-    static let fliqSky     = Color.white.opacity(0.1)
-    static let fliqYellow  = Color(red: 245 / 255, green: 158 / 255, blue: 11 / 255)
+    static let fliqBlue   = Color.dsAccent
+    static let fliqMint   = Color(hex: "00B894")
+    static let fliqGold   = Color(hex: "FDCB6E")
+    static let fliqInk    = Color(hex: "2D3436")
+    static let fliqMuted  = Color.dsSecondary
+    static let fliqSky    = Color.dsAccentTint
+    static let fliqYellow = Color(hex: "FDCB6E")
 }
 
 // MARK: - Background
 
-/// Full-screen indigo → purple gradient with ambient glows — matches web app.
+/// App background — light gray matching fliq.co.in.
 struct GradientBackground: View {
     var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [Color.fliqIndigo, Color.fliqPurple],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            RadialGradient(
-                colors: [Color.fliqIndigo.opacity(0.55), .clear],
-                center: UnitPoint(x: 0.15, y: 0.5),
-                startRadius: 0,
-                endRadius: 260
-            )
-            RadialGradient(
-                colors: [Color.fliqTeal.opacity(0.18), .clear],
-                center: UnitPoint(x: 0.85, y: 0.28),
-                startRadius: 0,
-                endRadius: 200
-            )
-        }
-        .ignoresSafeArea()
+        Color.dsBackground.ignoresSafeArea()
     }
 }
 
-/// Legacy name still used across all view files — now renders the gradient.
+/// Legacy alias — same as GradientBackground.
 struct DotGridBackground: View {
     var body: some View {
         GradientBackground()
     }
 }
 
-// MARK: - Dot-Matrix Text
+// MARK: - Dot-Matrix Text (kept for hero landing screen)
 
-/// Dot-matrix / LED-panel effect — kept for hero accent text.
-/// Default foreground is now white to suit the gradient background.
 struct DotMatrixText: View {
     let text: String
     var font: Font = .system(size: 36, weight: .black, design: .monospaced)
-    var foreground: Color = .white
+    var foreground: Color = .dsAccent
     var dotSpacing: CGFloat = 3.6
     var dotSize: CGFloat = 2.2
 
     init(_ text: String,
          font: Font = .system(size: 36, weight: .black, design: .monospaced),
-         foreground: Color = .white,
+         foreground: Color = .dsAccent,
          dotSpacing: CGFloat = 3.6,
          dotSize: CGFloat = 2.2) {
         self.text = text
@@ -116,49 +92,37 @@ struct DotMatrixText: View {
     }
 }
 
-// MARK: - Button Styles
+// MARK: - Button Styles (light theme)
 
-/// Primary CTA — indigo → teal gradient fill, white text.
+/// Primary CTA — solid accent fill, white text.
 struct FliqPrimaryButtonStyle: ButtonStyle {
-    var accent: Color = .fliqIndigo
+    var accent: Color = .dsAccent
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundStyle(.white)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [accent, Color.fliqTeal],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .opacity(configuration.isPressed ? 0.75 : 1.0)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .strokeBorder(Color.white.opacity(0.25), lineWidth: 1)
-                    )
+                    .fill(configuration.isPressed ? accent.opacity(0.85) : accent)
             )
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
             .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }
 
-/// Ghost button — semi-transparent white fill + white border.
-/// Used for secondary actions on the gradient background.
+/// Outline/ghost button — accent border and text, transparent fill.
 struct NothingGhostButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .foregroundStyle(Color.white.opacity(configuration.isPressed ? 1.0 : 0.88))
+            .foregroundStyle(configuration.isPressed ? Color.dsAccentDark : Color.dsAccent)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.white.opacity(configuration.isPressed ? 0.18 : 0.1))
+                    .fill(configuration.isPressed ? Color.dsAccentTint : Color.clear)
                     .overlay(
                         RoundedRectangle(cornerRadius: 10, style: .continuous)
                             .strokeBorder(
-                                Color.white.opacity(configuration.isPressed ? 0.5 : 0.3),
-                                lineWidth: 1
+                                configuration.isPressed ? Color.dsAccentDark : Color.dsAccent,
+                                lineWidth: 1.5
                             )
                     )
             )
@@ -167,21 +131,14 @@ struct NothingGhostButtonStyle: ButtonStyle {
     }
 }
 
-/// Highest-emphasis action — opaque indigo fill, white text.
+/// Filled button — same as primary.
 struct NothingFilledButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundStyle(.white)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.fliqIndigo, Color.fliqTeal],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .opacity(configuration.isPressed ? 0.75 : 1.0)
+                    .fill(configuration.isPressed ? Color.dsAccentDark : Color.dsAccent)
             )
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
             .animation(.easeOut(duration: 0.12), value: configuration.isPressed)

@@ -27,7 +27,7 @@ struct RootView: View {
             title: "Tipper",
             subtitle: "Scan QR codes, tip with intent, and see your impact on someone's dream.",
             sfSymbol: "heart",
-            accent: Color.fliqTeal,
+            accent: Color.dsAccent,
             actionLabel: "Enter as Tipper"
         ),
         RoleCard(
@@ -35,7 +35,7 @@ struct RootView: View {
             title: "Worker",
             subtitle: "Receive tips, share your dream, and build portable trust on UPI.",
             sfSymbol: "sparkles",
-            accent: Color.fliqGreen,
+            accent: Color.dsSuccess,
             actionLabel: "Enter as Worker"
         ),
         RoleCard(
@@ -43,45 +43,41 @@ struct RootView: View {
             title: "Business",
             subtitle: "Manage staff, track satisfaction scores, and export QR codes at scale.",
             sfSymbol: "building.2",
-            accent: Color.fliqLilac,
+            accent: Color.dsAccentLight,
             actionLabel: "Enter as Business"
         )
     ]
 
     var body: some View {
         ZStack {
-            GradientBackground()
+            Color.dsBackground.ignoresSafeArea()
 
             if viewModel.isLoading && viewModel.stage != .home {
-                VStack(spacing: 16) {
+                VStack(spacing: 14) {
                     ProgressView()
-                        .tint(.white)
-                        .controlSize(.regular)
-                    Text("Authenticating…")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.65))
+                        .tint(Color.dsAccent)
+                    Text("Loading…")
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(Color.dsSecondary)
                 }
             } else if viewModel.stage == .home, let session = viewModel.session {
                 homeContent(session: session)
             } else {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
+                    VStack(alignment: .leading, spacing: DS.Spacing.lg) {
                         switch viewModel.stage {
                         case .rolePicker:
                             HeroSection(showDemo: $showDemo, showWhatsNew: $showWhatsNew)
-                                .padding(.top, 8)
-
+                                .padding(.top, DS.Spacing.sm)
                             RoleSectionHeader()
                             ForEach(roles) { role in
-                                RoleEntryCard(role: role) {
-                                    viewModel.selectRole(role.role)
-                                }
+                                RoleEntryCard(role: role) { viewModel.selectRole(role.role) }
                             }
 
                         case .credential:
                             if let selectedRole = viewModel.selectedRole,
                                let role = roles.first(where: { $0.role == selectedRole }) {
-                                BackBar(title: "Sign In", onBack: { viewModel.backToRolePicker() })
+                                BackBar(title: "Sign In") { viewModel.backToRolePicker() }
                                 AuthCard(
                                     role: role,
                                     credential: $viewModel.credential,
@@ -92,7 +88,7 @@ struct RootView: View {
                         case .otp:
                             if let selectedRole = viewModel.selectedRole,
                                let role = roles.first(where: { $0.role == selectedRole }) {
-                                BackBar(title: "Verify", onBack: { viewModel.backToCredential() })
+                                BackBar(title: "Verify") { viewModel.backToCredential() }
                                 OTPCard(
                                     role: role,
                                     credential: viewModel.credential,
@@ -106,16 +102,12 @@ struct RootView: View {
                             EmptyView()
                         }
 
-                        if viewModel.errorMessage != nil ||
-                            !viewModel.statusMessage.isEmpty {
-                            StatusCard(
-                                message: viewModel.errorMessage ?? viewModel.statusMessage,
-                                isError: viewModel.errorMessage != nil
-                            )
+                        if let error = viewModel.errorMessage {
+                            FliqErrorBanner(message: error)
                         }
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 28)
+                    .padding(.horizontal, DS.Spacing.md)
+                    .padding(.vertical, DS.Spacing.xl)
                 }
             }
         }
@@ -133,12 +125,6 @@ struct RootView: View {
         .sheet(isPresented: $showWhatsNew) {
             WhatsNewView()
         }
-    }
-
-    private func effectiveRole(for session: AuthSession) -> NativeRole {
-        if session.user.type.hasPrefix("BUSINESS") { return .business }
-        if session.user.type == NativeRole.provider.rawValue { return .provider }
-        return .customer
     }
 
     @ViewBuilder
@@ -163,81 +149,139 @@ private struct CustomerTabView: View {
     let session: AuthSession
     @ObservedObject var viewModel: AppViewModel
 
+    var greeting: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        if hour < 12 { return "Good morning" }
+        if hour < 17 { return "Good afternoon" }
+        return "Good evening"
+    }
+
+    var displayName: String {
+        let name = viewModel.profileName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return name.isEmpty ? "" : name
+    }
+
     var body: some View {
         TabView {
             // ── Tab 1: Tip ────────────────────────────────────────────────
             NavigationStack {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        Button("Log Out →") { viewModel.logout() }
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.5))
-                            .buttonStyle(.plain)
-                        DarkDivider()
-                        DarkSectionHeader(label: "RESOLVE", title: "QR or payment link")
-                        DarkTextField(placeholder: "Paste /qr/… or /tip/… or raw ID",
-                                      text: $viewModel.resolutionInput)
-                        HStack(spacing: 8) {
-                            Button(action: { viewModel.openScanner() }) {
-                                labelMono(viewModel.isResolvingScannedCode ? "Resolving…" : "Scan QR")
-                            }
-                            .buttonStyle(NothingGhostButtonStyle())
-                            .disabled(viewModel.isScannerPresented || viewModel.isResolvingScannedCode)
-                            Button(action: { Task { await viewModel.resolveQr() } }) {
-                                labelMono(viewModel.isResolvingQr ? "Resolving…" : "Resolve QR")
-                            }
-                            .buttonStyle(NothingGhostButtonStyle())
-                            .disabled(
-                                viewModel.resolutionInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
-                                viewModel.isResolvingQr || viewModel.isResolvingScannedCode
-                            )
-                            Button(action: { Task { await viewModel.resolvePaymentLink() } }) {
-                                labelMono(viewModel.isResolvingPaymentLink ? "Resolving…" : "Resolve Link")
-                            }
-                            .buttonStyle(NothingGhostButtonStyle())
-                            .disabled(
-                                viewModel.resolutionInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
-                                viewModel.isResolvingPaymentLink || viewModel.isResolvingScannedCode
-                            )
+                    VStack(alignment: .leading, spacing: DS.Spacing.lg) {
+
+                        // Greeting header
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(displayName.isEmpty ? greeting : "\(greeting), \(displayName.components(separatedBy: " ").first ?? displayName)")
+                                .font(DS.Typography.title)
+                                .foregroundStyle(Color.dsPrimary)
+                            Text("Tip someone who made your day")
+                                .font(DS.Typography.body)
+                                .foregroundStyle(Color.dsSecondary)
                         }
-                        DarkSectionHeader(label: "SEARCH", title: "Find a provider")
-                        DarkTextField(placeholder: "Name or phone number",
-                                      text: $viewModel.providerQuery)
-                        Button(action: { Task { await viewModel.searchProviders() } }) {
-                            HStack {
-                                Image(systemName: "magnifyingglass")
-                                    .font(.system(size: 12, weight: .medium))
-                                labelMono(viewModel.isSearchingProviders ? "Searching…" : "Search Providers")
+                        .padding(.top, DS.Spacing.sm)
+
+                        // Primary action — Scan QR
+                        Button(action: { viewModel.openScanner() }) {
+                            HStack(spacing: DS.Spacing.md) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.white.opacity(0.2))
+                                        .frame(width: 56, height: 56)
+                                    Image(systemName: "qrcode.viewfinder")
+                                        .font(.system(size: 26, weight: .medium))
+                                        .foregroundStyle(.white)
+                                }
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Scan QR to Tip")
+                                        .font(DS.Typography.headline)
+                                        .foregroundStyle(.white)
+                                    Text("Point camera at worker's QR code")
+                                        .font(DS.Typography.caption)
+                                        .foregroundStyle(.white.opacity(0.8))
+                                }
                                 Spacer()
-                                Text("→").font(.system(size: 13))
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(.white.opacity(0.7))
                             }
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 13)
+                            .padding(DS.Spacing.lg)
+                            .background(Color.dsAccent)
+                            .cornerRadius(DS.CornerRadius.card)
                         }
-                        .buttonStyle(FliqPrimaryButtonStyle())
-                        .disabled(
-                            viewModel.providerQuery.trimmingCharacters(in: .whitespacesAndNewlines).count < 2 ||
-                            viewModel.isSearchingProviders
-                        )
+                        .buttonStyle(.plain)
+                        .disabled(viewModel.isScannerPresented || viewModel.isResolvingScannedCode)
+
+                        // Search providers
+                        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                            Text("Find a provider")
+                                .font(DS.Typography.title2)
+                                .foregroundStyle(Color.dsPrimary)
+
+                            HStack(spacing: DS.Spacing.sm) {
+                                FliqTextField(
+                                    placeholder: "Name or phone number",
+                                    text: $viewModel.providerQuery
+                                )
+                                Button(action: { Task { await viewModel.searchProviders() } }) {
+                                    Group {
+                                        if viewModel.isSearchingProviders {
+                                            ProgressView().tint(.white).controlSize(.small)
+                                        } else {
+                                            Image(systemName: "magnifyingglass")
+                                                .font(.system(size: 16, weight: .semibold))
+                                        }
+                                    }
+                                    .frame(width: 48, height: 48)
+                                    .foregroundStyle(.white)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                                            .fill(viewModel.providerQuery.trimmingCharacters(in: .whitespacesAndNewlines).count >= 2 ? Color.dsAccent : Color.dsTertiary)
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                .disabled(
+                                    viewModel.providerQuery.trimmingCharacters(in: .whitespacesAndNewlines).count < 2 ||
+                                    viewModel.isSearchingProviders
+                                )
+                            }
+                        }
+
+                        // Provider results + tip flow
                         ProviderResultsSection(viewModel: viewModel)
                         ProviderTipFlowSection(viewModel: viewModel)
                         TipOrderSection(viewModel: viewModel)
                         CustomerTipSuccessSection(viewModel: viewModel)
-                        if viewModel.errorMessage != nil || !viewModel.statusMessage.isEmpty {
-                            StatusCard(
-                                message: viewModel.errorMessage ?? viewModel.statusMessage,
-                                isError: viewModel.errorMessage != nil
-                            )
+
+                        // Recent activity preview (last 3)
+                        if !viewModel.customerTipHistory.isEmpty && viewModel.selectedProvider == nil {
+                            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                                HStack {
+                                    Text("Recent tips")
+                                        .font(DS.Typography.title2)
+                                        .foregroundStyle(Color.dsPrimary)
+                                    Spacer()
+                                }
+                                ForEach(Array(viewModel.customerTipHistory.prefix(3))) { tip in
+                                    TipHistoryRow(tip: tip)
+                                }
+                            }
                         }
+
+                        // Error only
+                        if let error = viewModel.errorMessage {
+                            FliqErrorBanner(message: error)
+                        }
+
+                        Spacer(minLength: DS.Spacing.xxl)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 16)
+                    .padding(.horizontal, DS.Spacing.md)
+                    .padding(.top, DS.Spacing.md)
+                    .padding(.bottom, DS.Spacing.lg)
                 }
-                .background(Color.clear)
-                .navigationTitle("Tip")
+                .background(Color.dsBackground)
+                .navigationTitle("Fliq")
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-                .toolbarColorScheme(.dark, for: .navigationBar)
+                .toolbarBackground(Color.dsSurface, for: .navigationBar)
+                .toolbarColorScheme(.light, for: .navigationBar)
             }
             .tabItem { Label("Tip", systemImage: "heart.fill") }
             .sheet(isPresented: $viewModel.isScannerPresented) {
@@ -254,819 +298,64 @@ private struct CustomerTabView: View {
             // ── Tab 2: Activity ───────────────────────────────────────────
             NavigationStack {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        PendingTipQueueSection(viewModel: viewModel)
+                    VStack(alignment: .leading, spacing: DS.Spacing.lg) {
+
+                        // Offline queue — only shown if there are pending tips
+                        if !viewModel.pendingTipDrafts.isEmpty {
+                            PendingTipQueueSection(viewModel: viewModel)
+                        }
+
+                        // Tip history
                         CustomerHistorySection(viewModel: viewModel)
-                        CustomerRetentionView(
-                            session: session,
-                            selectedProvider: viewModel.selectedProvider,
-                            amountRupees: viewModel.amountRupees,
-                            message: viewModel.tipMessage,
-                            rating: viewModel.selectedRating
-                        )
-                        CustomerJarView(session: session)
+
+                        Spacer(minLength: DS.Spacing.xxl)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 16)
+                    .padding(.horizontal, DS.Spacing.md)
+                    .padding(.top, DS.Spacing.md)
+                    .padding(.bottom, DS.Spacing.lg)
                 }
-                .background(Color.clear)
+                .background(Color.dsBackground)
                 .navigationTitle("Activity")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-                .toolbarColorScheme(.dark, for: .navigationBar)
+                .navigationBarTitleDisplayMode(.large)
+                .toolbarBackground(Color.dsSurface, for: .navigationBar)
+                .toolbarColorScheme(.light, for: .navigationBar)
             }
             .tabItem { Label("Activity", systemImage: "clock.fill") }
 
             // ── Tab 3: Profile ────────────────────────────────────────────
             NavigationStack {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
+                    VStack(alignment: .leading, spacing: DS.Spacing.lg) {
                         CustomerProfileEditorCard(viewModel: viewModel)
-                        Button("Log Out →") { viewModel.logout() }
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.5))
-                            .buttonStyle(.plain)
-                            .padding(.top, 8)
+
+                        Button(action: { viewModel.logout() }) {
+                            Text("Sign Out")
+                                .font(DS.Typography.bodyMedium)
+                                .foregroundStyle(Color.dsError)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 15)
+                                .background(Color.dsErrorTint)
+                                .cornerRadius(DS.CornerRadius.sm)
+                        }
+                        .buttonStyle(.plain)
+
+                        Spacer(minLength: DS.Spacing.xxl)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 16)
+                    .padding(.horizontal, DS.Spacing.md)
+                    .padding(.top, DS.Spacing.md)
+                    .padding(.bottom, DS.Spacing.lg)
                 }
-                .background(Color.clear)
+                .background(Color.dsBackground)
                 .navigationTitle("Profile")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-                .toolbarColorScheme(.dark, for: .navigationBar)
+                .navigationBarTitleDisplayMode(.large)
+                .toolbarBackground(Color.dsSurface, for: .navigationBar)
+                .toolbarColorScheme(.light, for: .navigationBar)
             }
             .tabItem { Label("Profile", systemImage: "person.fill") }
         }
-        .tint(Color.fliqTeal)
-        .toolbarBackground(.ultraThinMaterial, for: .tabBar)
-        .toolbarColorScheme(.dark, for: .tabBar)
-    }
-}
-
-// MARK: - What's New View
-
-private struct WhatsNewView: View {
-    @Environment(\.dismiss) private var dismiss
-
-    private let updates: [(String, String, String)] = [
-        ("sparkles", "Native iOS app", "Full tipping flow, QR scanning, provider search, and payment via Razorpay — all native."),
-        ("qrcode.viewfinder", "QR & Deep Links", "Scan provider QR codes or open fliq.co.in links directly in the app."),
-        ("bell.badge", "Push Notifications", "Tap a notification to jump straight to the relevant tip or payout."),
-        ("person.crop.square.fill", "Avatar Uploads", "Providers can upload a profile photo directly from their camera roll."),
-        ("tablecells", "Tab Navigation", "Three-tab layout for Tippers, four-tab layout for Workers and Businesses."),
-        ("clock.arrow.circlepath", "Tip History Pagination", "Scroll through your full tip history with load-more support."),
-    ]
-
-    var body: some View {
-        ZStack {
-            GradientBackground()
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("WHAT'S NEW")
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundStyle(Color.fliqTeal)
-                                .kerning(1.5)
-                            Text("Recent updates")
-                                .font(.system(size: 26, weight: .black))
-                                .foregroundStyle(.white)
-                        }
-                        Spacer()
-                        Button(action: { dismiss() }) {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(.white.opacity(0.6))
-                                .padding(8)
-                                .background(Color.white.opacity(0.1))
-                                .cornerRadius(8)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    .padding(.bottom, 28)
-
-                    ForEach(updates, id: \.0) { icon, title, desc in
-                        HStack(alignment: .top, spacing: 16) {
-                            Image(systemName: icon)
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundStyle(Color.fliqTeal)
-                                .frame(width: 36, height: 36)
-                                .background(Color.fliqTeal.opacity(0.12))
-                                .cornerRadius(10)
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(title)
-                                    .font(.system(size: 15, weight: .bold))
-                                    .foregroundStyle(.white)
-                                Text(desc)
-                                    .font(.system(size: 13, weight: .regular))
-                                    .foregroundStyle(.white.opacity(0.6))
-                                    .lineSpacing(3)
-                            }
-                        }
-                        .padding(.bottom, 20)
-                    }
-                }
-                .padding(.horizontal, 24)
-                .padding(.vertical, 32)
-            }
-        }
-    }
-}
-
-// MARK: - Back Bar
-
-private struct BackBar: View {
-    let title: String
-    let onBack: () -> Void
-
-    var body: some View {
-        HStack {
-            Button(action: onBack) {
-                HStack(spacing: 7) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 12, weight: .semibold))
-                    Text("Back")
-                        .font(.system(size: 13, weight: .medium))
-                }
-                .foregroundStyle(.white.opacity(0.75))
-            }
-            .buttonStyle(.plain)
-
-            Spacer()
-
-            Text(title)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.6))
-
-            Text("Fliq")
-                .font(.system(size: 11, weight: .bold))
-                .foregroundStyle(Color.fliqTeal.opacity(0.9))
-        }
-    }
-}
-
-// MARK: - Hero Section
-
-private struct HeroSection: View {
-    @Binding var showDemo: Bool
-    @Binding var showWhatsNew: Bool
-    @State private var phoneFloat: CGFloat = 0
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-
-            // ── Brand bar ──────────────────────────────────────────────────
-            HStack {
-                // "Human Value Infrastructure" pill badge
-                HStack(spacing: 8) {
-                    Circle()
-                        .fill(Color.fliqGreen)
-                        .frame(width: 6, height: 6)
-                    Text("Human Value Infrastructure")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.9))
-                }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 7)
-                .background(Color.white.opacity(0.12))
-                .cornerRadius(20)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .strokeBorder(Color.white.opacity(0.22), lineWidth: 1)
-                )
-
-                Spacer()
-
-                Text("Fliq")
-                    .font(.system(size: 22, weight: .black))
-                    .foregroundStyle(.white)
-            }
-            .padding(.bottom, 40)
-
-            // ── Hero title ─────────────────────────────────────────────────
-            VStack(alignment: .leading, spacing: 0) {
-                Text("Every tip tells a")
-                    .font(.system(size: 42, weight: .black))
-                    .foregroundStyle(.white)
-                    .lineSpacing(2)
-
-                // "story" in green gradient
-                Text("story.")
-                    .font(.system(size: 52, weight: .black))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [Color.fliqGreen, Color.fliqTeal],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-            }
-            .padding(.bottom, 20)
-
-            // ── Subtitle ───────────────────────────────────────────────────
-            Text("Fliq transforms tipping into meaningful appreciation. Workers define dreams, tippers see impact — all on UPI, zero friction.")
-                .font(.system(size: 16, weight: .regular))
-                .foregroundStyle(.white.opacity(0.7))
-                .lineSpacing(6)
-                .padding(.bottom, 32)
-
-            // ── CTA buttons ────────────────────────────────────────────────
-            HStack(spacing: 12) {
-                Button(action: { showDemo = true }) {
-                    HStack(spacing: 8) {
-                        Text("Try Demo")
-                            .font(.system(size: 15, weight: .semibold))
-                        Text("→")
-                            .font(.system(size: 15, weight: .semibold))
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 13)
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(NothingGhostButtonStyle())
-
-                Button(action: { showWhatsNew = true }) {
-                    Text("See What's New")
-                        .font(.system(size: 15, weight: .semibold))
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 13)
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(NothingGhostButtonStyle())
-            }
-            .padding(.bottom, 36)
-
-            // ── Phone mockup card ──────────────────────────────────────────
-            PhoneWidget()
-                .offset(y: phoneFloat)
-                .onAppear {
-                    withAnimation(.easeInOut(duration: 5).repeatForever(autoreverses: true)) {
-                        phoneFloat = -9
-                    }
-                }
-        }
-    }
-}
-
-// MARK: - Phone Widget (glassmorphism tipping mockup)
-
-private struct PhoneWidget: View {
-    @State private var progressFraction: CGFloat = 0.18
-    @State private var selectedAmount = 100
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-
-            // Widget header
-            HStack {
-                Text("Provider Profile")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.55))
-                Spacer()
-                HStack(spacing: 5) {
-                    Circle()
-                        .fill(Color.fliqGreen)
-                        .frame(width: 6, height: 6)
-                    Text("UPI Live")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(Color.fliqGreen)
-                }
-            }
-            .padding(.bottom, 16)
-
-            Rectangle()
-                .fill(Color.white.opacity(0.12))
-                .frame(height: 1)
-                .padding(.bottom, 18)
-
-            // Provider row
-            HStack(alignment: .top, spacing: 16) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Color.white.opacity(0.12))
-                        .frame(width: 54, height: 54)
-                    Text("RK")
-                        .font(.system(size: 16, weight: .black, design: .monospaced))
-                        .foregroundStyle(.white)
-                }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Ravi Kumar")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(.white)
-
-                    HStack(spacing: 8) {
-                        Text("Trust")
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.5))
-                        HStack(spacing: 2) {
-                            Text("82")
-                                .font(.system(size: 15, weight: .black))
-                                .foregroundStyle(
-                                    LinearGradient(
-                                        colors: [Color.fliqGreen, Color.fliqTeal],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                            Text("/ 100")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundStyle(.white.opacity(0.4))
-                        }
-                    }
-                }
-                Spacer()
-            }
-            .padding(.bottom, 20)
-
-            // Dream section
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Active Dream")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.5))
-                    .kerning(0.5)
-
-                Text("Daughter's School Books")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.9))
-
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        Rectangle()
-                            .fill(Color.white.opacity(0.15))
-                            .frame(height: 3)
-                            .cornerRadius(2)
-                        Rectangle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color.fliqGreen, Color.fliqTeal],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .frame(width: geo.size.width * progressFraction, height: 3)
-                            .cornerRadius(2)
-                    }
-                }
-                .frame(height: 3)
-
-                HStack {
-                    Text("65% funded")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(Color.fliqGreen)
-                    Spacer()
-                    Text("₹3,250 / ₹5,000")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.4))
-                }
-            }
-            .padding(.bottom, 20)
-
-            Rectangle()
-                .fill(Color.white.opacity(0.12))
-                .frame(height: 1)
-                .padding(.bottom, 16)
-
-            // Tip presets
-            HStack(spacing: 8) {
-                ForEach([50, 100, 200], id: \.self) { amount in
-                    Text("₹\(amount)")
-                        .font(.system(size: 13, weight: .bold))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 11)
-                        .foregroundStyle(selectedAmount == amount ? Color.fliqTeal : .white.opacity(0.5))
-                        .background(Color.white.opacity(selectedAmount == amount ? 0.15 : 0.06))
-                        .cornerRadius(8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .strokeBorder(
-                                    selectedAmount == amount
-                                        ? Color.fliqTeal.opacity(0.8)
-                                        : Color.white.opacity(0.15),
-                                    lineWidth: 1
-                                )
-                        )
-                        .onTapGesture { selectedAmount = amount }
-                }
-            }
-            .padding(.bottom, 14)
-
-            // CTA
-            HStack {
-                Image(systemName: "bolt.fill")
-                    .font(.system(size: 12, weight: .bold))
-                Text("Tip ₹100 with Kindness")
-                    .font(.system(size: 13, weight: .bold))
-                Spacer()
-                Text("→")
-                    .font(.system(size: 15, weight: .bold))
-            }
-            .foregroundStyle(.white)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 13)
-            .background(
-                LinearGradient(
-                    colors: [Color.fliqIndigo, Color.fliqTeal],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
-            .cornerRadius(10)
-        }
-        .padding(20)
-        .background(.ultraThinMaterial)
-        .background(Color.white.opacity(0.07))
-        .cornerRadius(20)
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
-        )
-        .onAppear {
-            withAnimation(.easeOut(duration: 2.8).delay(0.5)) {
-                progressFraction = 0.65
-            }
-        }
-    }
-}
-
-// MARK: - Role Section Header
-
-private struct RoleSectionHeader: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 12) {
-                Rectangle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.fliqGreen, Color.fliqTeal],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .frame(width: 3, height: 18)
-                Text("Choose your role")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.55))
-                    .kerning(0.5)
-            }
-            Text("How would you like to use Fliq?")
-                .font(.system(size: 20, weight: .bold))
-                .foregroundStyle(.white)
-        }
-    }
-}
-
-// MARK: - Role Entry Card
-
-private struct RoleEntryCard: View {
-    let role: RoleCard
-    let action: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Header
-            HStack(alignment: .top, spacing: 14) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(role.accent.opacity(0.18))
-                        .frame(width: 48, height: 48)
-                    Image(systemName: role.sfSymbol)
-                        .font(.system(size: 20, weight: .medium))
-                        .foregroundStyle(role.accent)
-                }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(role.title)
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(.white)
-
-                    Text(role.subtitle)
-                        .font(.system(size: 13, weight: .regular))
-                        .foregroundStyle(.white.opacity(0.6))
-                        .lineLimit(3)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Spacer(minLength: 4)
-            }
-            .padding(18)
-
-            Rectangle()
-                .fill(Color.white.opacity(0.1))
-                .frame(height: 1)
-
-            // Action row
-            Button(action: action) {
-                HStack(spacing: 8) {
-                    Image(systemName: role.sfSymbol)
-                        .font(.system(size: 12, weight: .medium))
-                    Text(role.actionLabel)
-                        .font(.system(size: 13, weight: .semibold))
-                    Spacer()
-                    Image(systemName: "arrow.right")
-                        .font(.system(size: 12, weight: .semibold))
-                }
-                .foregroundStyle(role.accent)
-                .padding(.horizontal, 18)
-                .padding(.vertical, 14)
-                .background(role.accent.opacity(0.08))
-            }
-            .buttonStyle(.plain)
-        }
-        .background(.ultraThinMaterial)
-        .background(Color.white.opacity(0.06))
-        .cornerRadius(16)
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .strokeBorder(Color.white.opacity(0.16), lineWidth: 1)
-        )
-    }
-}
-
-// MARK: - Auth Card (Credential)
-
-private struct AuthCard: View {
-    let role: RoleCard
-    @Binding var credential: String
-    let onSubmit: () -> Void
-    @State private var selectedCountryCode = "+91"
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            // Header
-            HStack(spacing: 12) {
-                Rectangle()
-                    .fill(role.accent)
-                    .frame(width: 3, height: 36)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(role.title.uppercased())
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(role.accent)
-                        .kerning(1.5)
-                    Text(role.role.usesEmail ? "Enter business email" : "Enter phone number")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(.white)
-                }
-            }
-
-            if !role.role.usesEmail {
-                HStack(spacing: 8) {
-                    ForEach([("🇮🇳 +91", "+91"), ("🇺🇸 +1", "+1")], id: \.1) { label, code in
-                        Button {
-                            let oldPrefix = selectedCountryCode
-                            selectedCountryCode = code
-                            let raw = credential.hasPrefix(oldPrefix)
-                                ? String(credential.dropFirst(oldPrefix.count))
-                                : credential
-                            credential = code + raw
-                        } label: {
-                            Text(label)
-                                .font(.system(size: 13, weight: selectedCountryCode == code ? .bold : .regular))
-                                .foregroundStyle(selectedCountryCode == code ? role.accent : .white.opacity(0.5))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 11)
-                                .background(role.accent.opacity(selectedCountryCode == code ? 0.15 : 0.0))
-                                .cornerRadius(8)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .strokeBorder(
-                                            selectedCountryCode == code ? role.accent.opacity(0.6) : Color.white.opacity(0.18),
-                                            lineWidth: 1
-                                        )
-                                )
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
-
-            TextField(
-                role.role.usesEmail ? "name@company.com" : "\(selectedCountryCode)98765 43210",
-                text: $credential
-            )
-            .keyboardType(role.role.usesEmail ? .emailAddress : .phonePad)
-            .textInputAutocapitalization(.never)
-            .autocorrectionDisabled()
-            .font(.system(size: 16, weight: .medium))
-            .foregroundStyle(.white)
-            .padding(14)
-            .background(Color.white.opacity(0.1))
-            .cornerRadius(10)
-            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
-
-            Button(action: onSubmit) {
-                HStack(spacing: 10) {
-                    Image(systemName: "paperplane")
-                        .font(.system(size: 13, weight: .medium))
-                    Text("Send One-Time Code")
-                        .font(.system(size: 14, weight: .semibold))
-                    Spacer()
-                    Text("→")
-                        .font(.system(size: 15, weight: .bold))
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
-            }
-            .buttonStyle(FliqPrimaryButtonStyle(accent: role.accent))
-            .disabled(credential.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-        }
-        .padding(20)
-        .background(.ultraThinMaterial)
-        .background(Color.white.opacity(0.06))
-        .cornerRadius(16)
-        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color.white.opacity(0.18), lineWidth: 1))
-    }
-}
-
-// MARK: - OTP Card
-
-private struct OTPCard: View {
-    let role: RoleCard
-    let credential: String
-    @Binding var code: String
-    let onResend: () -> Void
-    let onVerify: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            HStack(spacing: 12) {
-                Rectangle()
-                    .fill(role.accent)
-                    .frame(width: 3, height: 36)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("VERIFICATION")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(role.accent)
-                        .kerning(1.5)
-                    Text("Enter the code we sent")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(.white)
-                }
-            }
-
-            Text(credential)
-                .font(.system(size: 13, weight: .regular))
-                .foregroundStyle(.white.opacity(0.5))
-
-            TextField("_ _ _ _ _ _", text: $code)
-                .keyboardType(.numberPad)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .font(.system(size: 34, weight: .black, design: .monospaced))
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.white)
-                .kerning(10)
-                .padding(16)
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(10)
-                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
-
-            Button(action: onVerify) {
-                HStack(spacing: 10) {
-                    Image(systemName: "checkmark.shield")
-                        .font(.system(size: 13, weight: .medium))
-                    Text("Verify & Sign In")
-                        .font(.system(size: 14, weight: .semibold))
-                    Spacer()
-                    Text("→")
-                        .font(.system(size: 15, weight: .bold))
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
-            }
-            .buttonStyle(FliqPrimaryButtonStyle(accent: role.accent))
-            .disabled(code.trimmingCharacters(in: .whitespacesAndNewlines).count < 4)
-
-            Button("Resend code →", action: onResend)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.white.opacity(0.5))
-                .buttonStyle(.plain)
-        }
-        .padding(20)
-        .background(.ultraThinMaterial)
-        .background(Color.white.opacity(0.06))
-        .cornerRadius(16)
-        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color.white.opacity(0.18), lineWidth: 1))
-    }
-}
-
-// MARK: - Customer Home Card
-
-private struct CustomerHomeCard: View {
-    let session: AuthSession
-    @ObservedObject var viewModel: AppViewModel
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Button("Log Out →") { viewModel.logout() }
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.5))
-                .buttonStyle(.plain)
-
-            DarkDivider()
-
-            CustomerProfileEditorCard(viewModel: viewModel)
-            PendingTipQueueSection(viewModel: viewModel)
-            CustomerRetentionView(
-                session: session,
-                selectedProvider: viewModel.selectedProvider,
-                amountRupees: viewModel.amountRupees,
-                message: viewModel.tipMessage,
-                rating: viewModel.selectedRating
-            )
-            CustomerJarView(session: session)
-
-            DarkSectionHeader(label: "RESOLVE", title: "QR or payment link")
-
-            DarkTextField(placeholder: "Paste /qr/… or /tip/… or raw ID",
-                          text: $viewModel.resolutionInput)
-
-            HStack(spacing: 8) {
-                Button(action: { viewModel.openScanner() }) {
-                    labelMono(viewModel.isResolvingScannedCode ? "Resolving…" : "Scan QR")
-                }
-                .buttonStyle(NothingGhostButtonStyle())
-                .disabled(viewModel.isScannerPresented || viewModel.isResolvingScannedCode)
-
-                Button(action: { Task { await viewModel.resolveQr() } }) {
-                    labelMono(viewModel.isResolvingQr ? "Resolving…" : "Resolve QR")
-                }
-                .buttonStyle(NothingGhostButtonStyle())
-                .disabled(
-                    viewModel.resolutionInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
-                    viewModel.isResolvingQr || viewModel.isResolvingScannedCode
-                )
-
-                Button(action: { Task { await viewModel.resolvePaymentLink() } }) {
-                    labelMono(viewModel.isResolvingPaymentLink ? "Resolving…" : "Resolve Link")
-                }
-                .buttonStyle(NothingGhostButtonStyle())
-                .disabled(
-                    viewModel.resolutionInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
-                    viewModel.isResolvingPaymentLink || viewModel.isResolvingScannedCode
-                )
-            }
-
-            DarkSectionHeader(label: "SEARCH", title: "Find a provider")
-
-            DarkTextField(placeholder: "Name or phone number",
-                          text: $viewModel.providerQuery)
-
-            Button(action: { Task { await viewModel.searchProviders() } }) {
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 12, weight: .medium))
-                    labelMono(viewModel.isSearchingProviders ? "Searching…" : "Search Providers")
-                    Spacer()
-                    Text("→").font(.system(size: 13))
-                }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 13)
-            }
-            .buttonStyle(FliqPrimaryButtonStyle())
-            .disabled(
-                viewModel.providerQuery.trimmingCharacters(in: .whitespacesAndNewlines).count < 2 ||
-                viewModel.isSearchingProviders
-            )
-
-            if let entry = viewModel.selectedEntryContext {
-                DarkCard {
-                    VStack(alignment: .leading, spacing: 10) {
-                        SectionLabel("ENTRY CONTEXT")
-                        DetailLine(label: "SOURCE", value: entry.source.label)
-                        DetailLine(label: "PROVIDER", value: entry.providerName)
-                        if let category = entry.category {
-                            DetailLine(label: "CATEGORY", value: category)
-                        }
-                        if let detail = entry.entryDetail {
-                            DetailLine(label: "CONTEXT", value: detail)
-                        }
-                        if let paise = entry.suggestedAmountPaise {
-                            DetailLine(label: "SUGGESTED AMOUNT", value: "₹\(paise / 100)")
-                        }
-                        DetailLine(label: "CUSTOM AMOUNT", value: entry.allowCustomAmount ? "Allowed" : "Locked")
-                    }
-                }
-            }
-
-            ProviderResultsSection(viewModel: viewModel)
-            ProviderTipFlowSection(viewModel: viewModel)
-            TipOrderSection(viewModel: viewModel)
-            CustomerTipSuccessSection(viewModel: viewModel)
-            CustomerHistorySection(viewModel: viewModel)
-        }
-        .sheet(isPresented: $viewModel.isScannerPresented) {
-            QRScannerSheet(
-                onCode: { code in Task { await viewModel.handleScannedCode(code) } },
-                onCancel: { viewModel.dismissScanner() },
-                onError: { message in
-                    viewModel.dismissScanner()
-                    viewModel.errorMessage = message
-                }
-            )
-        }
+        .tint(Color.dsAccent)
+        .toolbarBackground(Color.dsSurface, for: .tabBar)
+        .toolbarColorScheme(.light, for: .tabBar)
     }
 }
 
@@ -1077,29 +366,52 @@ private struct ProviderResultsSection: View {
 
     var body: some View {
         if !viewModel.providerResults.isEmpty {
-            DarkSectionHeader(label: "RESULTS", title: "\(viewModel.providerResults.count) provider(s) found")
-            ForEach(viewModel.providerResults) { provider in
-                DarkCard {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(provider.name)
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundStyle(.white)
-                        if let cat = provider.category { DetailLine(label: "CATEGORY", value: cat) }
-                        if let ph = provider.phone { DetailLine(label: "PHONE", value: ph) }
-                        DetailLine(label: "RATING", value: scoreText(provider.ratingAverage))
-                        DetailLine(label: "TOTAL TIPS", value: "\(provider.totalTipsReceived)")
-                        Button(action: { Task { await viewModel.loadProvider(provider.id) } }) {
-                            HStack {
-                                labelMono(viewModel.isLoadingProvider ? "Loading…" : "Open Provider")
-                                Spacer()
-                                Text("→").font(.system(size: 13))
+            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                Text("\(viewModel.providerResults.count) result\(viewModel.providerResults.count == 1 ? "" : "s")")
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(Color.dsSecondary)
+
+                ForEach(viewModel.providerResults) { provider in
+                    Button(action: { Task { await viewModel.loadProvider(provider.id) } }) {
+                        HStack(spacing: DS.Spacing.md) {
+                            // Avatar placeholder
+                            ZStack {
+                                RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                                    .fill(Color.dsAccentTint)
+                                    .frame(width: 44, height: 44)
+                                Text(String(provider.name.prefix(2)).uppercased())
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundStyle(Color.dsAccent)
                             }
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 12)
+
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(provider.name)
+                                    .font(DS.Typography.bodyMedium)
+                                    .foregroundStyle(Color.dsPrimary)
+                                if let cat = provider.category {
+                                    Text(cat.capitalized)
+                                        .font(DS.Typography.caption)
+                                        .foregroundStyle(Color.dsSecondary)
+                                }
+                            }
+
+                            Spacer()
+
+                            if viewModel.isLoadingProvider {
+                                ProgressView().tint(Color.dsAccent).controlSize(.small)
+                            } else {
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 13))
+                                    .foregroundStyle(Color.dsTertiary)
+                            }
                         }
-                        .buttonStyle(FliqPrimaryButtonStyle())
-                        .disabled(viewModel.isLoadingProvider)
+                        .padding(DS.Spacing.md)
+                        .background(Color.dsSurface)
+                        .cornerRadius(DS.CornerRadius.card)
+                        .shadow(color: Color.dsPrimary.opacity(0.05), radius: 4, x: 0, y: 1)
                     }
+                    .buttonStyle(.plain)
+                    .disabled(viewModel.isLoadingProvider)
                 }
             }
         }
@@ -1117,6 +429,7 @@ private struct ProviderTipFlowSection: View {
             set: { viewModel.amountRupees = String($0.filter(\.isNumber)) }
         )
     }
+
     private var isCustomAmountLocked: Bool {
         viewModel.selectedEntryContext?.allowCustomAmount == false &&
         viewModel.selectedEntryContext?.suggestedAmountPaise != nil
@@ -1124,95 +437,189 @@ private struct ProviderTipFlowSection: View {
 
     var body: some View {
         if let provider = viewModel.selectedProvider {
-            DarkCard {
-                VStack(alignment: .leading, spacing: 14) {
-                    HStack(alignment: .top, spacing: 14) {
+            FliqCard {
+                VStack(alignment: .leading, spacing: DS.Spacing.md) {
+
+                    // Provider header
+                    HStack(spacing: DS.Spacing.md) {
                         if let avatarUrl = provider.avatarUrl, let imageUrl = URL(string: avatarUrl) {
                             AsyncImage(url: imageUrl) { phase in
                                 switch phase {
-                                case .success(let image):
-                                    image.resizable().scaledToFill()
+                                case .success(let img):
+                                    img.resizable().scaledToFill()
                                         .frame(width: 52, height: 52)
-                                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                case .failure:
-                                    Image(systemName: "person.fill")
-                                        .font(.system(size: 24))
-                                        .foregroundStyle(.white.opacity(0.4))
-                                        .frame(width: 52, height: 52)
-                                        .background(Color.white.opacity(0.1))
-                                        .cornerRadius(12)
-                                case .empty:
-                                    ProgressView().tint(Color.fliqTeal)
-                                        .frame(width: 52, height: 52)
-                                @unknown default: EmptyView()
+                                        .clipShape(RoundedRectangle(cornerRadius: DS.CornerRadius.sm))
+                                case .failure, .empty:
+                                    providerAvatar(name: provider.displayName)
+                                @unknown default:
+                                    providerAvatar(name: provider.displayName)
+                                }
+                            }
+                        } else {
+                            providerAvatar(name: provider.displayName)
+                        }
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(provider.displayName)
+                                .font(DS.Typography.headline)
+                                .foregroundStyle(Color.dsPrimary)
+                            if let cat = provider.category {
+                                Text(cat.replacingOccurrences(of: "_", with: " ").capitalized)
+                                    .font(DS.Typography.caption)
+                                    .foregroundStyle(Color.dsSecondary)
+                            }
+                            if let rep = provider.reputation {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "star.fill")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(Color.dsWarning)
+                                    Text(scoreText(rep.score))
+                                        .font(DS.Typography.caption)
+                                        .foregroundStyle(Color.dsSecondary)
                                 }
                             }
                         }
-                        DarkSectionHeader(label: "SELECTED PROVIDER", title: provider.displayName)
+                        Spacer()
                     }
-                    if let cat = provider.category { DetailLine(label: "CATEGORY", value: cat) }
-                    if let bio = provider.bio { DetailLine(label: "BIO", value: bio) }
-                    DetailLine(label: "RATING", value: scoreText(provider.ratingAverage))
-                    DetailLine(label: "TIPS TODAY", value: "\(provider.stats.tipsToday)")
-                    DetailLine(label: "APPRECIATIONS", value: "\(provider.stats.recentAppreciations)")
-                    if let rep = provider.reputation {
-                        DetailLine(label: "REPUTATION", value: scoreText(rep.score))
-                    }
+
+                    // Dream progress
                     if let dream = provider.dream {
-                        DetailLine(label: "DREAM", value: "\(dream.title) (\(dream.percentage)% funded)")
+                        VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                            HStack {
+                                Image(systemName: "star.circle.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(Color.dsAccent)
+                                Text("Dream: \(dream.title)")
+                                    .font(DS.Typography.caption)
+                                    .foregroundStyle(Color.dsSecondary)
+                                Spacer()
+                                Text("\(dream.percentage)%")
+                                    .font(DS.Typography.micro)
+                                    .foregroundStyle(Color.dsAccent)
+                                    .fontWeight(.semibold)
+                            }
+                            GeometryReader { geo in
+                                ZStack(alignment: .leading) {
+                                    RoundedRectangle(cornerRadius: 2)
+                                        .fill(Color.dsBorder)
+                                        .frame(height: 4)
+                                    RoundedRectangle(cornerRadius: 2)
+                                        .fill(Color.dsAccent)
+                                        .frame(width: geo.size.width * (CGFloat(dream.percentage) / 100), height: 4)
+                                }
+                            }
+                            .frame(height: 4)
+                        }
+                        .padding(.vertical, DS.Spacing.xs)
                     }
-                    DarkDivider()
-                    SectionLabel("TIP AMOUNT")
-                    HStack(spacing: 8) {
-                        ForEach([50, 100, 200], id: \.self) { amount in
-                            Button("₹\(amount)") { viewModel.usePresetAmount(amount) }
-                                .font(.system(size: 13, weight: .bold))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 11)
-                                .buttonStyle(NothingGhostButtonStyle())
+
+                    FliqDivider()
+
+                    // Amount
+                    VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                        Text("Tip amount")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(Color.dsSecondary)
+
+                        HStack(spacing: DS.Spacing.sm) {
+                            ForEach([50, 100, 200], id: \.self) { amount in
+                                DSChoiceChip(
+                                    label: "₹\(amount)",
+                                    isSelected: viewModel.amountRupees == String(amount)
+                                ) { viewModel.usePresetAmount(amount) }
                                 .disabled(isCustomAmountLocked)
+                            }
                         }
-                    }
-                    DarkTextField(placeholder: "Custom amount in rupees",
-                                  text: amountBinding, keyboardType: .numberPad)
+
+                        FliqTextField(
+                            placeholder: "Custom amount (₹)",
+                            text: amountBinding,
+                            keyboardType: .numberPad
+                        )
                         .disabled(isCustomAmountLocked)
-                    if isCustomAmountLocked {
-                        Text("Amount locked by payment link.")
-                            .font(.system(size: 12))
-                            .foregroundStyle(.white.opacity(0.4))
                     }
-                    DarkDivider()
-                    SectionLabel("INTENT")
-                    ForEach(TipIntentOption.allCases) { intent in
-                        IntentButton(intent: intent,
-                                     isSelected: intent == viewModel.selectedIntent,
-                                     onTap: { viewModel.selectedIntent = intent })
-                    }
-                    DarkTextField(placeholder: "Message (optional)",
-                                  text: $viewModel.tipMessage, axis: .vertical)
-                    DarkDivider()
-                    SectionLabel("RATING")
-                    HStack(spacing: 8) {
-                        ForEach(1...5, id: \.self) { rating in
-                            RatingButton(rating: rating,
-                                         isSelected: rating == viewModel.selectedRating,
-                                         onTap: { viewModel.selectedRating = rating })
+
+                    FliqDivider()
+
+                    // Intent
+                    VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                        Text("Tip for")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(Color.dsSecondary)
+
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: DS.Spacing.sm) {
+                            ForEach(TipIntentOption.allCases) { intent in
+                                DSChoiceChip(
+                                    label: intent.label,
+                                    isSelected: intent == viewModel.selectedIntent
+                                ) { viewModel.selectedIntent = intent }
+                            }
                         }
                     }
+
+                    FliqDivider()
+
+                    // Rating
+                    VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                        Text("Rating")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(Color.dsSecondary)
+
+                        HStack(spacing: DS.Spacing.sm) {
+                            ForEach(1...5, id: \.self) { rating in
+                                Button(action: { viewModel.selectedRating = rating }) {
+                                    Image(systemName: rating <= viewModel.selectedRating ? "star.fill" : "star")
+                                        .font(.system(size: 22))
+                                        .foregroundStyle(rating <= viewModel.selectedRating ? Color.dsWarning : Color.dsTertiary)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            Spacer()
+                        }
+                    }
+
+                    // Message
+                    FliqTextField(
+                        placeholder: "Add a message (optional)",
+                        text: $viewModel.tipMessage,
+                        axis: .vertical
+                    )
+
+                    // CTA
                     Button(action: { Task { await viewModel.createTip() } }) {
                         HStack {
-                            Image(systemName: "bolt.fill").font(.system(size: 12, weight: .bold))
-                            labelMono(viewModel.isSubmittingTip ? "Creating Order…" : "Create Tip Order")
-                            Spacer()
-                            Text("→").font(.system(size: 14))
+                            if viewModel.isSubmittingTip {
+                                ProgressView().tint(.white).controlSize(.small)
+                            } else {
+                                Image(systemName: "bolt.fill")
+                            }
+                            Text(viewModel.isSubmittingTip ? "Creating order…" : "Send Tip")
                         }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 14)
+                        .font(DS.Typography.headline)
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 15)
+                        .background(
+                            RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                                .fill(Color.dsAccent)
+                        )
                     }
-                    .buttonStyle(NothingFilledButtonStyle())
+                    .buttonStyle(.plain)
                     .disabled(viewModel.isSubmittingTip)
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private func providerAvatar(name: String) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                .fill(Color.dsAccentTint)
+                .frame(width: 52, height: 52)
+            Text(String(name.prefix(2)).uppercased())
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(Color.dsAccent)
         }
     }
 }
@@ -1224,54 +631,90 @@ private struct TipOrderSection: View {
 
     var body: some View {
         if let order = viewModel.createdTipOrder {
-            DarkCard {
-                VStack(alignment: .leading, spacing: 10) {
-                    DarkSectionHeader(label: "TIP ORDER CREATED", title: order.provider.name)
-                    if let cat = order.provider.category { DetailLine(label: "CATEGORY", value: cat) }
-                    DetailLine(label: "AMOUNT", value: "₹\(order.amount / 100)")
-                    DetailLine(label: "CURRENCY", value: order.currency)
-                    DetailLine(label: "TIP ID", value: order.tipId)
-                    DetailLine(label: "ORDER ID", value: order.orderId)
-                    DetailLine(label: "RAZORPAY KEY", value: order.razorpayKeyId)
-                    if let tipStatus = viewModel.tipStatus {
-                        DetailLine(label: "STATUS", value: tipStatus.status)
-                        if let updatedAt = tipStatus.updatedAt {
-                            DetailLine(label: "UPDATED AT", value: updatedAt)
+            FliqCard {
+                VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Order created")
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(Color.dsSecondary)
+                            Text(order.provider.name)
+                                .font(DS.Typography.headline)
+                                .foregroundStyle(Color.dsPrimary)
                         }
+                        Spacer()
+                        Text("₹\(order.amount / 100)")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundStyle(Color.dsAccent)
                     }
-                    HStack(spacing: 8) {
+
+                    if let tipStatus = viewModel.tipStatus {
+                        FliqStatusBadge(status: tipStatus.status)
+                    }
+
+                    FliqDivider()
+
+                    HStack(spacing: DS.Spacing.sm) {
                         Button(action: { Task { await viewModel.refreshTipStatus() } }) {
-                            labelMono(viewModel.isRefreshingTipStatus ? "Refreshing…" : "Refresh Status")
-                                .padding(.vertical, 12)
+                            HStack {
+                                if viewModel.isRefreshingTipStatus {
+                                    ProgressView().tint(Color.dsAccent).controlSize(.small)
+                                }
+                                Text("Refresh")
+                            }
+                            .font(DS.Typography.bodyMedium)
+                            .foregroundStyle(Color.dsAccent)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 13)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                                    .strokeBorder(Color.dsAccent, lineWidth: 1.5)
+                            )
                         }
-                        .frame(maxWidth: .infinity)
-                        .buttonStyle(NothingGhostButtonStyle())
+                        .buttonStyle(.plain)
                         .disabled(viewModel.isRefreshingTipStatus)
 
                         if order.isMockOrder {
                             Button(action: { Task { await viewModel.completeMockPayment() } }) {
-                                labelMono(viewModel.isCompletingMockPayment ? "Completing…" : "Mock Payment")
-                                    .padding(.vertical, 12)
+                                HStack {
+                                    if viewModel.isCompletingMockPayment {
+                                        ProgressView().tint(.white).controlSize(.small)
+                                    }
+                                    Text(viewModel.isCompletingMockPayment ? "Completing…" : "Complete Payment")
+                                }
+                                .font(DS.Typography.bodyMedium)
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 13)
+                                .background(
+                                    RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                                        .fill(Color.dsAccent)
+                                )
                             }
-                            .frame(maxWidth: .infinity)
-                            .buttonStyle(FliqPrimaryButtonStyle())
+                            .buttonStyle(.plain)
                             .disabled(viewModel.isCompletingMockPayment)
                         } else {
                             Button(action: { viewModel.openCheckout() }) {
-                                labelMono(viewModel.isVerifyingCheckout ? "Verifying…" :
-                                          viewModel.isLaunchingCheckout ? "Opening…" : "Open Checkout")
-                                    .padding(.vertical, 12)
+                                HStack {
+                                    if viewModel.isVerifyingCheckout || viewModel.isLaunchingCheckout {
+                                        ProgressView().tint(.white).controlSize(.small)
+                                    }
+                                    Text(viewModel.isVerifyingCheckout ? "Verifying…" :
+                                         viewModel.isLaunchingCheckout ? "Opening…" : "Pay Now")
+                                }
+                                .font(DS.Typography.bodyMedium)
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 13)
+                                .background(
+                                    RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                                        .fill(Color.dsAccent)
+                                )
                             }
-                            .frame(maxWidth: .infinity)
-                            .buttonStyle(NothingFilledButtonStyle())
+                            .buttonStyle(.plain)
                             .disabled(viewModel.isLaunchingCheckout || viewModel.isVerifyingCheckout)
                         }
                     }
-                    Text(order.isMockOrder
-                         ? "Dev-bypass order — complete without the Razorpay SDK."
-                         : "Native Razorpay checkout wired. Opens SDK and verifies callback.")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.white.opacity(0.4))
                 }
             }
         }
@@ -1285,34 +728,70 @@ private struct CustomerTipSuccessSection: View {
 
     var body: some View {
         if viewModel.isLoadingTipImpact || viewModel.tipImpact != nil {
-            DarkCard {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        DarkSectionHeader(label: "PAYMENT SUCCESS", title: "Tip impact")
-                        Spacer()
-                        if viewModel.tipImpact != nil {
-                            Button(action: { Task { await viewModel.refreshTipImpact() } }) {
-                                labelMono(viewModel.isLoadingTipImpact ? "Refreshing…" : "Refresh")
-                            }
-                            .buttonStyle(NothingGhostButtonStyle())
-                            .disabled(viewModel.isLoadingTipImpact)
+            FliqCard {
+                VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                    if viewModel.isLoadingTipImpact && viewModel.tipImpact == nil {
+                        HStack {
+                            ProgressView().tint(Color.dsAccent)
+                            Text("Processing payment…")
+                                .font(DS.Typography.body)
+                                .foregroundStyle(Color.dsSecondary)
                         }
-                    }
-
-                    if viewModel.isLoadingTipImpact, viewModel.tipImpact == nil {
-                        ProgressView().tint(Color.fliqTeal).frame(maxWidth: .infinity)
                     } else if let impact = viewModel.tipImpact {
-                        DetailLine(label: "WORKER", value: impact.workerName)
-                        DetailLine(label: "AMOUNT", value: historyAmountPaiseText(impact.amountPaise))
-                        if let intent = historyIntentText(impact.intent) {
-                            DetailLine(label: "INTENT", value: intent)
+                        // Success header
+                        HStack(spacing: DS.Spacing.sm) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.dsSuccessTint)
+                                    .frame(width: 44, height: 44)
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundStyle(Color.dsSuccess)
+                            }
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Tip sent!")
+                                    .font(DS.Typography.headline)
+                                    .foregroundStyle(Color.dsPrimary)
+                                Text(historyAmountPaiseText(impact.amountPaise) + " to \(impact.workerName)")
+                                    .font(DS.Typography.caption)
+                                    .foregroundStyle(Color.dsSecondary)
+                            }
                         }
-                        Text(impact.message)
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(.white)
+
+                        if !impact.message.isEmpty {
+                            Text(impact.message)
+                                .font(DS.Typography.bodyMedium)
+                                .foregroundStyle(Color.dsPrimary)
+                                .lineSpacing(4)
+                        }
+
                         if let dream = impact.dream {
-                            DetailLine(label: "DREAM", value: dream.title)
-                            DetailLine(label: "PROGRESS", value: "\(dream.previousProgress)% → \(dream.newProgress)%")
+                            VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                                HStack {
+                                    Text("Dream progress")
+                                        .font(DS.Typography.caption)
+                                        .foregroundStyle(Color.dsSecondary)
+                                    Spacer()
+                                    Text("\(dream.previousProgress)% → \(dream.newProgress)%")
+                                        .font(DS.Typography.caption)
+                                        .foregroundStyle(Color.dsAccent)
+                                        .fontWeight(.semibold)
+                                }
+                                Text(dream.title)
+                                    .font(DS.Typography.caption)
+                                    .foregroundStyle(Color.dsSecondary)
+                                GeometryReader { geo in
+                                    ZStack(alignment: .leading) {
+                                        RoundedRectangle(cornerRadius: 2)
+                                            .fill(Color.dsBorder)
+                                            .frame(height: 6)
+                                        RoundedRectangle(cornerRadius: 2)
+                                            .fill(Color.dsAccent)
+                                            .frame(width: geo.size.width * (CGFloat(dream.newProgress) / 100), height: 6)
+                                    }
+                                }
+                                .frame(height: 6)
+                            }
                         }
                     }
                 }
@@ -1327,100 +806,141 @@ private struct PendingTipQueueSection: View {
     @ObservedObject var viewModel: AppViewModel
 
     var body: some View {
-        DarkCard {
-            VStack(alignment: .leading, spacing: 14) {
+        FliqCard {
+            VStack(alignment: .leading, spacing: DS.Spacing.md) {
                 HStack {
-                    DarkSectionHeader(label: "OFFLINE QUEUE", title: "Pending tips")
+                    HStack(spacing: DS.Spacing.sm) {
+                        Image(systemName: "wifi.slash")
+                            .foregroundStyle(Color.dsWarning)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Offline tips pending")
+                                .font(DS.Typography.headline)
+                                .foregroundStyle(Color.dsPrimary)
+                            Text("\(viewModel.pendingTipDrafts.count) tip\(viewModel.pendingTipDrafts.count == 1 ? "" : "s") queued")
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(Color.dsSecondary)
+                        }
+                    }
                     Spacer()
                     Button(action: { Task { await viewModel.syncPendingTipDrafts() } }) {
-                        labelMono(viewModel.isSyncingPendingTips ? "Syncing…" : "Sync Now")
+                        Text(viewModel.isSyncingPendingTips ? "Syncing…" : "Sync")
+                            .font(DS.Typography.caption)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(Color.dsAccent)
+                            .padding(.horizontal, DS.Spacing.sm)
+                            .padding(.vertical, DS.Spacing.xs)
+                            .background(Color.dsAccentTint)
+                            .cornerRadius(DS.CornerRadius.sm)
                     }
-                    .buttonStyle(NothingGhostButtonStyle())
-                    .disabled(viewModel.pendingTipDrafts.isEmpty || viewModel.isSyncingPendingTips)
+                    .buttonStyle(.plain)
+                    .disabled(viewModel.isSyncingPendingTips)
                 }
 
-                if viewModel.pendingTipDrafts.isEmpty {
-                    Text("Offline-created tips will queue here when the backend is unreachable.")
-                        .font(.system(size: 13))
-                        .foregroundStyle(.white.opacity(0.5))
-                } else {
-                    ForEach(viewModel.pendingTipDrafts) { draft in
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("\(historyAmountPaiseText(draft.amountPaise)) → \(draft.providerName)")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(.white)
-                            if let cat = draft.providerCategory { DetailLine(label: "CATEGORY", value: cat) }
-                            DetailLine(label: "SOURCE", value: draft.source.label)
-                            DetailLine(label: "INTENT", value: draft.intent.label)
-                            if let msg = draft.message { DetailLine(label: "MESSAGE", value: msg) }
-                            DetailLine(label: "QUEUED", value: historyDateText(draft.createdAt) ?? draft.createdAt)
+                FliqDivider()
 
-                            HStack(spacing: 8) {
-                                Button(action: { Task { await viewModel.syncPendingTipDrafts() } }) {
-                                    labelMono("Retry Sync").padding(.vertical, 11)
-                                }
-                                .frame(maxWidth: .infinity)
-                                .buttonStyle(FliqPrimaryButtonStyle())
-                                .disabled(viewModel.isSyncingPendingTips)
-
-                                Button(action: { viewModel.discardPendingTipDraft(draft.id) }) {
-                                    labelMono("Discard").padding(.vertical, 11)
-                                }
-                                .frame(maxWidth: .infinity)
-                                .buttonStyle(NothingGhostButtonStyle())
-                                .disabled(viewModel.isSyncingPendingTips)
-                            }
+                ForEach(viewModel.pendingTipDrafts) { draft in
+                    HStack {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(draft.providerName)
+                                .font(DS.Typography.bodyMedium)
+                                .foregroundStyle(Color.dsPrimary)
+                            Text(historyAmountPaiseText(draft.amountPaise))
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(Color.dsSecondary)
                         }
-                        .padding(.top, 10)
-
-                        Rectangle()
-                            .fill(Color.white.opacity(0.1))
-                            .frame(height: 1)
+                        Spacer()
+                        Button(action: { viewModel.discardPendingTipDraft(draft.id) }) {
+                            Image(systemName: "trash")
+                                .font(.system(size: 14))
+                                .foregroundStyle(Color.dsError)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(viewModel.isSyncingPendingTips)
                     }
+                    .padding(.vertical, DS.Spacing.xs)
                 }
             }
         }
     }
 }
 
-// MARK: - Customer Profile Editor Card
+// MARK: - Customer Profile Editor
 
 private struct CustomerProfileEditorCard: View {
     @ObservedObject var viewModel: AppViewModel
 
     var body: some View {
-        DarkCard {
-            VStack(alignment: .leading, spacing: 14) {
-                DarkSectionHeader(label: "PROFILE", title: "Your details")
-
-                if let profile = viewModel.customerProfile {
-                    DetailLine(label: "CUSTOMER ID", value: String(profile.id.prefix(8)).uppercased())
+        FliqCard {
+            VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                HStack(spacing: DS.Spacing.md) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.dsAccentTint)
+                            .frame(width: 52, height: 52)
+                        Text(viewModel.profileName.isEmpty ? "?" : String(viewModel.profileName.prefix(1)).uppercased())
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundStyle(Color.dsAccent)
+                    }
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(viewModel.profileName.isEmpty ? "Your Profile" : viewModel.profileName)
+                            .font(DS.Typography.headline)
+                            .foregroundStyle(Color.dsPrimary)
+                        if !viewModel.profilePhone.isEmpty {
+                            Text(viewModel.profilePhone)
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(Color.dsSecondary)
+                        }
+                    }
+                    Spacer()
                 }
 
-                DarkTextField(placeholder: "Name", text: $viewModel.profileName)
-                DarkTextField(placeholder: "Email", text: $viewModel.profileEmail,
-                              keyboardType: .emailAddress)
-                DarkTextField(placeholder: "Phone", text: $viewModel.profilePhone,
-                              keyboardType: .phonePad)
-                DarkTextField(placeholder: "Language (en, hi, ta, te, kn, mr)",
-                              text: $viewModel.profileLanguage)
+                FliqDivider()
 
-                HStack(spacing: 8) {
+                VStack(spacing: DS.Spacing.sm) {
+                    FliqTextField(placeholder: "Full name", text: $viewModel.profileName)
+                    FliqTextField(placeholder: "Email", text: $viewModel.profileEmail, keyboardType: .emailAddress)
+                    FliqTextField(placeholder: "Phone", text: $viewModel.profilePhone, keyboardType: .phonePad)
+                    FliqTextField(placeholder: "Language (en, hi, ta, te, kn, mr)", text: $viewModel.profileLanguage)
+                }
+
+                HStack(spacing: DS.Spacing.sm) {
                     Button(action: { Task { await viewModel.refreshCustomerProfile() } }) {
-                        labelMono(viewModel.isLoadingCustomerProfile ? "Refreshing…" : "Refresh")
-                            .padding(.vertical, 12)
+                        HStack {
+                            if viewModel.isLoadingCustomerProfile { ProgressView().controlSize(.small).tint(Color.dsAccent) }
+                            Text("Refresh")
+                        }
+                        .font(DS.Typography.bodyMedium)
+                        .foregroundStyle(Color.dsAccent)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                                .strokeBorder(Color.dsAccent, lineWidth: 1.5)
+                        )
                     }
-                    .frame(maxWidth: .infinity)
-                    .buttonStyle(NothingGhostButtonStyle())
+                    .buttonStyle(.plain)
                     .disabled(viewModel.isLoadingCustomerProfile || viewModel.isSavingCustomerProfile)
 
                     Button(action: { Task { await viewModel.saveCustomerProfile() } }) {
-                        labelMono(viewModel.isSavingCustomerProfile ? "Saving…" : "Save Profile")
-                            .padding(.vertical, 12)
+                        HStack {
+                            if viewModel.isSavingCustomerProfile { ProgressView().controlSize(.small).tint(.white) }
+                            Text("Save")
+                        }
+                        .font(DS.Typography.bodyMedium)
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .background(
+                            RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                                .fill(Color.dsAccent)
+                        )
                     }
-                    .frame(maxWidth: .infinity)
-                    .buttonStyle(FliqPrimaryButtonStyle())
+                    .buttonStyle(.plain)
                     .disabled(viewModel.isLoadingCustomerProfile || viewModel.isSavingCustomerProfile)
+                }
+
+                if let error = viewModel.errorMessage {
+                    FliqErrorBanner(message: error)
                 }
             }
         }
@@ -1433,70 +953,712 @@ private struct CustomerHistorySection: View {
     @ObservedObject var viewModel: AppViewModel
 
     var body: some View {
-        DarkCard {
-            VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+            HStack {
+                Text("Tip history")
+                    .font(DS.Typography.title2)
+                    .foregroundStyle(Color.dsPrimary)
+                Spacer()
+                Button(action: { Task { await viewModel.refreshCustomerHistory() } }) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(viewModel.isLoadingCustomerHistory ? Color.dsTertiary : Color.dsAccent)
+                }
+                .buttonStyle(.plain)
+                .disabled(viewModel.isLoadingCustomerHistory)
+            }
+
+            if viewModel.isLoadingCustomerHistory && viewModel.customerTipHistory.isEmpty {
                 HStack {
-                    DarkSectionHeader(label: "HISTORY", title: "Recent tips")
                     Spacer()
-                    Button(action: { Task { await viewModel.refreshCustomerHistory() } }) {
-                        labelMono(viewModel.isLoadingCustomerHistory ? "Refreshing…" : "Refresh")
-                    }
-                    .buttonStyle(NothingGhostButtonStyle())
-                    .disabled(viewModel.isLoadingCustomerHistory)
+                    ProgressView().tint(Color.dsAccent)
+                    Spacer()
+                }
+                .padding(.vertical, DS.Spacing.xl)
+            } else if viewModel.customerTipHistory.isEmpty {
+                VStack(spacing: DS.Spacing.sm) {
+                    Image(systemName: "heart")
+                        .font(.system(size: 32))
+                        .foregroundStyle(Color.dsTertiary)
+                    Text("No tips yet")
+                        .font(DS.Typography.bodyMedium)
+                        .foregroundStyle(Color.dsSecondary)
+                    Text("Your tips will appear here")
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(Color.dsTertiary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, DS.Spacing.xl)
+            } else {
+                ForEach(viewModel.customerTipHistory) { tip in
+                    TipHistoryRow(tip: tip)
                 }
 
-                if viewModel.isLoadingCustomerHistory && viewModel.customerTipHistory.isEmpty {
-                    ProgressView().tint(Color.fliqTeal).frame(maxWidth: .infinity)
-                } else if viewModel.customerTipHistory.isEmpty {
-                    Text("No tips yet. Authenticated tips will appear here.")
-                        .font(.system(size: 13))
-                        .foregroundStyle(.white.opacity(0.5))
-                } else {
-                    ForEach(viewModel.customerTipHistory) { tip in
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("\(historyAmountText(tip)) → \(tip.providerName)")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(.white)
-                            if let cat = tip.providerCategory { DetailLine(label: "CATEGORY", value: cat) }
-                            DetailLine(label: "STATUS", value: tip.status)
-                            if let intent = historyIntentText(tip.intent) { DetailLine(label: "INTENT", value: intent) }
-                            if let msg = tip.message { DetailLine(label: "MESSAGE", value: msg) }
-                            if let date = historyDateText(tip.createdAt) { DetailLine(label: "CREATED", value: date) }
-                        }
-                        .padding(.top, 10)
-
-                        Rectangle()
-                            .fill(Color.white.opacity(0.1))
-                            .frame(height: 1)
-                    }
-
-                    if viewModel.customerHistoryHasMore {
-                        Button(action: { Task { await viewModel.loadMoreCustomerHistory() } }) {
-                            HStack {
-                                if viewModel.isLoadingCustomerHistory {
-                                    ProgressView().tint(Color.fliqTeal).controlSize(.small)
-                                }
-                                labelMono(viewModel.isLoadingCustomerHistory ? "Loading…" : "Load More")
+                if viewModel.customerHistoryHasMore {
+                    Button(action: { Task { await viewModel.loadMoreCustomerHistory() } }) {
+                        HStack {
+                            if viewModel.isLoadingCustomerHistory {
+                                ProgressView().tint(Color.dsAccent).controlSize(.small)
                             }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
+                            Text(viewModel.isLoadingCustomerHistory ? "Loading…" : "Load more")
+                                .font(DS.Typography.bodyMedium)
+                                .foregroundStyle(Color.dsAccent)
                         }
-                        .buttonStyle(NothingGhostButtonStyle())
-                        .disabled(viewModel.isLoadingCustomerHistory)
-                        .padding(.top, 4)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, DS.Spacing.md)
                     }
+                    .buttonStyle(.plain)
+                    .disabled(viewModel.isLoadingCustomerHistory)
                 }
             }
         }
     }
 }
 
-// MARK: - Shared UI Primitives
+// MARK: - Tip History Row
+
+struct TipHistoryRow: View {
+    let tip: CustomerTipHistoryItem
+
+    var body: some View {
+        HStack(spacing: DS.Spacing.md) {
+            ZStack {
+                RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                    .fill(statusColor(tip.status).opacity(0.12))
+                    .frame(width: 40, height: 40)
+                Image(systemName: statusIcon(tip.status))
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(statusColor(tip.status))
+            }
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(tip.providerName)
+                    .font(DS.Typography.bodyMedium)
+                    .foregroundStyle(Color.dsPrimary)
+                HStack(spacing: DS.Spacing.xs) {
+                    if let cat = tip.providerCategory {
+                        Text(cat.capitalized)
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(Color.dsSecondary)
+                        Text("·")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(Color.dsTertiary)
+                    }
+                    if let date = historyDateText(tip.createdAt) {
+                        Text(date)
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(Color.dsSecondary)
+                    }
+                }
+            }
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 3) {
+                Text(historyAmountText(tip))
+                    .font(DS.Typography.bodyMedium)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.dsPrimary)
+                FliqStatusBadge(status: tip.status)
+            }
+        }
+        .padding(DS.Spacing.md)
+        .background(Color.dsSurface)
+        .cornerRadius(DS.CornerRadius.card)
+        .shadow(color: Color.dsPrimary.opacity(0.04), radius: 4, x: 0, y: 1)
+    }
+
+    private func statusIcon(_ status: String) -> String {
+        switch status.uppercased() {
+        case "PAID", "SETTLED": return "checkmark.circle.fill"
+        case "INITIATED", "PENDING": return "clock.fill"
+        case "FAILED": return "xmark.circle.fill"
+        default: return "circle.fill"
+        }
+    }
+
+    private func statusColor(_ status: String) -> Color {
+        switch status.uppercased() {
+        case "PAID", "SETTLED", "SUCCESS": return .dsSuccess
+        case "INITIATED", "PENDING": return .dsWarning
+        case "FAILED": return .dsError
+        default: return .dsSecondary
+        }
+    }
+}
+
+// MARK: - What's New View
+
+private struct WhatsNewView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    private let updates: [(String, String, String)] = [
+        ("sparkles", "Native iOS app", "Full tipping flow, QR scanning, provider search, and payment via Razorpay — all native."),
+        ("qrcode.viewfinder", "QR & Deep Links", "Scan provider QR codes or open fliq.co.in links directly in the app."),
+        ("bell.badge", "Push Notifications", "Tap a notification to jump straight to the relevant tip or payout."),
+        ("person.crop.square.fill", "Avatar Uploads", "Providers can upload a profile photo directly from their camera roll."),
+        ("tablecells", "Tab Navigation", "Three-tab layout for Tippers, four-tab layout for Workers and Businesses."),
+        ("clock.arrow.circlepath", "Tip History", "Scroll through your full tip history with load-more support."),
+    ]
+
+    var body: some View {
+        ZStack {
+            Color.dsBackground.ignoresSafeArea()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("What's New")
+                                .font(DS.Typography.title)
+                                .foregroundStyle(Color.dsPrimary)
+                            Text("Recent updates")
+                                .font(DS.Typography.body)
+                                .foregroundStyle(Color.dsSecondary)
+                        }
+                        Spacer()
+                        Button(action: { dismiss() }) {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(Color.dsSecondary)
+                                .padding(DS.Spacing.sm)
+                                .background(Color.dsBorderLight)
+                                .cornerRadius(DS.CornerRadius.sm)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.bottom, DS.Spacing.xl)
+
+                    ForEach(updates, id: \.0) { icon, title, desc in
+                        HStack(alignment: .top, spacing: DS.Spacing.md) {
+                            Image(systemName: icon)
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundStyle(Color.dsAccent)
+                                .frame(width: 36, height: 36)
+                                .background(Color.dsAccentTint)
+                                .cornerRadius(DS.CornerRadius.sm)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(title)
+                                    .font(DS.Typography.bodyMedium)
+                                    .foregroundStyle(Color.dsPrimary)
+                                Text(desc)
+                                    .font(DS.Typography.footnote)
+                                    .foregroundStyle(Color.dsSecondary)
+                                    .lineSpacing(3)
+                            }
+                        }
+                        .padding(.bottom, DS.Spacing.lg)
+                    }
+                }
+                .padding(.horizontal, DS.Spacing.lg)
+                .padding(.vertical, DS.Spacing.xl)
+            }
+        }
+    }
+}
+
+// MARK: - Back Bar
+
+private struct BackBar: View {
+    let title: String
+    let onBack: () -> Void
+
+    var body: some View {
+        HStack {
+            Button(action: onBack) {
+                HStack(spacing: DS.Spacing.xs) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 13, weight: .semibold))
+                    Text("Back")
+                        .font(DS.Typography.bodyMedium)
+                }
+                .foregroundStyle(Color.dsAccent)
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+
+            Text(title)
+                .font(DS.Typography.caption)
+                .foregroundStyle(Color.dsSecondary)
+
+            Image(systemName: "bolt.fill")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(Color.dsAccent)
+        }
+        .padding(.vertical, DS.Spacing.sm)
+    }
+}
+
+// MARK: - Hero Section
+
+private struct HeroSection: View {
+    @Binding var showDemo: Bool
+    @Binding var showWhatsNew: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Brand bar
+            HStack {
+                HStack(spacing: DS.Spacing.sm) {
+                    Circle()
+                        .fill(Color.dsSuccess)
+                        .frame(width: 6, height: 6)
+                    Text("Human Value Infrastructure")
+                        .font(DS.Typography.micro)
+                        .foregroundStyle(Color.dsSecondary)
+                }
+                .padding(.horizontal, DS.Spacing.md)
+                .padding(.vertical, DS.Spacing.sm)
+                .background(Color.dsBorderLight)
+                .cornerRadius(20)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .strokeBorder(Color.dsBorder, lineWidth: 1)
+                )
+
+                Spacer()
+
+                Text("Fliq")
+                    .font(.system(size: 22, weight: .black))
+                    .foregroundStyle(Color.dsAccent)
+            }
+            .padding(.bottom, DS.Spacing.xl)
+
+            // Hero title
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Every tip tells a")
+                    .font(.system(size: 38, weight: .black))
+                    .foregroundStyle(Color.dsPrimary)
+                    .lineSpacing(2)
+                Text("story.")
+                    .font(.system(size: 48, weight: .black))
+                    .foregroundStyle(Color.dsAccent)
+            }
+            .padding(.bottom, DS.Spacing.lg)
+
+            Text("Fliq transforms tipping into meaningful appreciation. Workers define dreams, tippers see impact — all on UPI, zero friction.")
+                .font(DS.Typography.body)
+                .foregroundStyle(Color.dsSecondary)
+                .lineSpacing(5)
+                .padding(.bottom, DS.Spacing.xl)
+
+            HStack(spacing: DS.Spacing.sm) {
+                Button(action: { showDemo = true }) {
+                    Text("Try Demo")
+                        .font(DS.Typography.bodyMedium)
+                        .foregroundStyle(Color.dsAccent)
+                        .padding(.horizontal, DS.Spacing.lg)
+                        .padding(.vertical, 13)
+                        .frame(maxWidth: .infinity)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                                .strokeBorder(Color.dsAccent, lineWidth: 1.5)
+                        )
+                }
+                .buttonStyle(.plain)
+
+                Button(action: { showWhatsNew = true }) {
+                    Text("What's New")
+                        .font(DS.Typography.bodyMedium)
+                        .foregroundStyle(Color.dsSecondary)
+                        .padding(.horizontal, DS.Spacing.lg)
+                        .padding(.vertical, 13)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.dsBorderLight)
+                        .cornerRadius(DS.CornerRadius.sm)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.bottom, DS.Spacing.xl)
+
+            // Mini preview card
+            PhoneWidget()
+        }
+    }
+}
+
+// MARK: - Phone Widget
+
+private struct PhoneWidget: View {
+    @State private var progressFraction: CGFloat = 0.18
+    @State private var selectedAmount = 100
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("Provider Profile")
+                    .font(DS.Typography.micro)
+                    .foregroundStyle(Color.dsSecondary)
+                Spacer()
+                HStack(spacing: 5) {
+                    Circle().fill(Color.dsSuccess).frame(width: 6, height: 6)
+                    Text("UPI Live")
+                        .font(DS.Typography.micro)
+                        .foregroundStyle(Color.dsSuccess)
+                }
+            }
+            .padding(.bottom, DS.Spacing.md)
+
+            FliqDivider().padding(.bottom, DS.Spacing.md)
+
+            HStack(alignment: .top, spacing: DS.Spacing.md) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                        .fill(Color.dsAccentTint)
+                        .frame(width: 48, height: 48)
+                    Text("RK")
+                        .font(.system(size: 14, weight: .black))
+                        .foregroundStyle(Color.dsAccent)
+                }
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Ravi Kumar")
+                        .font(DS.Typography.bodyMedium)
+                        .foregroundStyle(Color.dsPrimary)
+                    HStack(spacing: DS.Spacing.xs) {
+                        Text("Trust")
+                            .font(DS.Typography.micro)
+                            .foregroundStyle(Color.dsSecondary)
+                        Text("82/100")
+                            .font(.system(size: 13, weight: .black))
+                            .foregroundStyle(Color.dsAccent)
+                    }
+                }
+                Spacer()
+            }
+            .padding(.bottom, DS.Spacing.lg)
+
+            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                Text("Active Dream")
+                    .font(DS.Typography.micro)
+                    .foregroundStyle(Color.dsSecondary)
+                Text("Daughter's School Books")
+                    .font(DS.Typography.bodyMedium)
+                    .foregroundStyle(Color.dsPrimary)
+
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 2).fill(Color.dsBorder).frame(height: 4)
+                        RoundedRectangle(cornerRadius: 2).fill(Color.dsAccent)
+                            .frame(width: geo.size.width * progressFraction, height: 4)
+                    }
+                }
+                .frame(height: 4)
+
+                HStack {
+                    Text("65% funded").font(DS.Typography.micro).foregroundStyle(Color.dsAccent).fontWeight(.semibold)
+                    Spacer()
+                    Text("₹3,250 / ₹5,000").font(DS.Typography.micro).foregroundStyle(Color.dsSecondary)
+                }
+            }
+            .padding(.bottom, DS.Spacing.lg)
+
+            FliqDivider().padding(.bottom, DS.Spacing.md)
+
+            HStack(spacing: DS.Spacing.sm) {
+                ForEach([50, 100, 200], id: \.self) { amount in
+                    Text("₹\(amount)")
+                        .font(.system(size: 13, weight: .bold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .foregroundStyle(selectedAmount == amount ? Color.dsAccent : Color.dsSecondary)
+                        .background(selectedAmount == amount ? Color.dsAccentTint : Color.dsBorderLight)
+                        .cornerRadius(DS.CornerRadius.sm)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                                .strokeBorder(selectedAmount == amount ? Color.dsAccent.opacity(0.5) : Color.clear, lineWidth: 1)
+                        )
+                        .onTapGesture { selectedAmount = amount }
+                }
+            }
+            .padding(.bottom, DS.Spacing.sm)
+
+            HStack {
+                Image(systemName: "bolt.fill").font(.system(size: 12, weight: .bold))
+                Text("Tip ₹100 with Kindness").font(DS.Typography.caption).fontWeight(.bold)
+                Spacer()
+                Text("→").font(.system(size: 14, weight: .bold))
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, DS.Spacing.md)
+            .padding(.vertical, 13)
+            .background(Color.dsAccent)
+            .cornerRadius(DS.CornerRadius.sm)
+        }
+        .padding(DS.Spacing.md)
+        .background(Color.dsSurface)
+        .cornerRadius(DS.CornerRadius.card)
+        .shadow(color: Color.dsPrimary.opacity(0.08), radius: 12, x: 0, y: 4)
+        .onAppear {
+            withAnimation(.easeOut(duration: 2.8).delay(0.5)) {
+                progressFraction = 0.65
+            }
+        }
+    }
+}
+
+// MARK: - Role Section Header
+
+private struct RoleSectionHeader: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+            Text("Choose your role")
+                .font(DS.Typography.title2)
+                .foregroundStyle(Color.dsPrimary)
+            Text("How would you like to use Fliq?")
+                .font(DS.Typography.body)
+                .foregroundStyle(Color.dsSecondary)
+        }
+    }
+}
+
+// MARK: - Role Entry Card
+
+private struct RoleEntryCard: View {
+    let role: RoleCard
+    let action: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .top, spacing: DS.Spacing.md) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: DS.CornerRadius.sm, style: .continuous)
+                        .fill(role.accent.opacity(0.12))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: role.sfSymbol)
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(role.accent)
+                }
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(role.title)
+                        .font(DS.Typography.headline)
+                        .foregroundStyle(Color.dsPrimary)
+                    Text(role.subtitle)
+                        .font(DS.Typography.footnote)
+                        .foregroundStyle(Color.dsSecondary)
+                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 4)
+            }
+            .padding(DS.Spacing.md)
+
+            Rectangle().fill(Color.dsBorder).frame(height: 1)
+
+            Button(action: action) {
+                HStack(spacing: DS.Spacing.sm) {
+                    Image(systemName: role.sfSymbol)
+                        .font(.system(size: 12, weight: .medium))
+                    Text(role.actionLabel)
+                        .font(DS.Typography.caption)
+                        .fontWeight(.semibold)
+                    Spacer()
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                .foregroundStyle(role.accent)
+                .padding(.horizontal, DS.Spacing.md)
+                .padding(.vertical, DS.Spacing.md)
+                .background(role.accent.opacity(0.06))
+            }
+            .buttonStyle(.plain)
+        }
+        .background(Color.dsSurface)
+        .cornerRadius(DS.CornerRadius.card)
+        .shadow(color: Color.dsPrimary.opacity(0.06), radius: 8, x: 0, y: 2)
+    }
+}
+
+// MARK: - Auth Card
+
+private struct AuthCard: View {
+    let role: RoleCard
+    @Binding var credential: String
+    let onSubmit: () -> Void
+    @State private var selectedCountryCode = "+91"
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.md) {
+            HStack(spacing: DS.Spacing.md) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                        .fill(role.accent.opacity(0.12))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: role.sfSymbol)
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(role.accent)
+                }
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(role.role.usesEmail ? "Enter email" : "Enter phone")
+                        .font(DS.Typography.title2)
+                        .foregroundStyle(Color.dsPrimary)
+                    Text(role.role.usesEmail ? "We'll send you a one-time code" : "We'll send an OTP to your number")
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(Color.dsSecondary)
+                }
+            }
+
+            if !role.role.usesEmail {
+                HStack(spacing: DS.Spacing.sm) {
+                    ForEach([("🇮🇳 +91", "+91"), ("🇺🇸 +1", "+1")], id: \.1) { label, code in
+                        Button {
+                            let oldPrefix = selectedCountryCode
+                            selectedCountryCode = code
+                            let raw = credential.hasPrefix(oldPrefix) ? String(credential.dropFirst(oldPrefix.count)) : credential
+                            credential = code + raw
+                        } label: {
+                            Text(label)
+                                .font(DS.Typography.caption)
+                                .fontWeight(selectedCountryCode == code ? .semibold : .regular)
+                                .foregroundStyle(selectedCountryCode == code ? role.accent : Color.dsSecondary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                                .background(selectedCountryCode == code ? role.accent.opacity(0.1) : Color.dsBorderLight)
+                                .cornerRadius(DS.CornerRadius.sm)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                                        .strokeBorder(selectedCountryCode == code ? role.accent.opacity(0.5) : Color.clear, lineWidth: 1)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+
+            FliqTextField(
+                placeholder: role.role.usesEmail ? "name@company.com" : "\(selectedCountryCode)98765 43210",
+                text: $credential,
+                keyboardType: role.role.usesEmail ? .emailAddress : .phonePad
+            )
+
+            Button(action: onSubmit) {
+                HStack(spacing: DS.Spacing.sm) {
+                    Image(systemName: "paperplane")
+                        .font(.system(size: 13, weight: .medium))
+                    Text("Send One-Time Code")
+                        .font(DS.Typography.bodyMedium)
+                    Spacer()
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 13, weight: .semibold))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, DS.Spacing.md)
+                .padding(.vertical, 15)
+                .background(
+                    RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                        .fill(credential.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Color.dsTertiary : role.accent)
+                )
+            }
+            .buttonStyle(.plain)
+            .disabled(credential.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        }
+        .padding(DS.Spacing.md)
+        .background(Color.dsSurface)
+        .cornerRadius(DS.CornerRadius.card)
+        .shadow(color: Color.dsPrimary.opacity(0.06), radius: 8, x: 0, y: 2)
+    }
+}
+
+// MARK: - OTP Card
+
+private struct OTPCard: View {
+    let role: RoleCard
+    let credential: String
+    @Binding var code: String
+    let onResend: () -> Void
+    let onVerify: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.md) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Check your \(role.role.usesEmail ? "email" : "messages")")
+                    .font(DS.Typography.title2)
+                    .foregroundStyle(Color.dsPrimary)
+                Text("We sent a code to \(credential)")
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(Color.dsSecondary)
+            }
+
+            TextField("_ _ _ _ _ _", text: $code)
+                .keyboardType(.numberPad)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .font(.system(size: 32, weight: .black, design: .monospaced))
+                .multilineTextAlignment(.center)
+                .foregroundStyle(Color.dsPrimary)
+                .kerning(10)
+                .padding(DS.Spacing.md)
+                .background(Color.dsBorderLight)
+                .cornerRadius(DS.CornerRadius.sm)
+                .overlay(RoundedRectangle(cornerRadius: DS.CornerRadius.sm).strokeBorder(Color.dsBorder, lineWidth: 1))
+
+            Button(action: onVerify) {
+                HStack(spacing: DS.Spacing.sm) {
+                    Image(systemName: "checkmark.shield")
+                        .font(.system(size: 13, weight: .medium))
+                    Text("Verify & Sign In")
+                        .font(DS.Typography.bodyMedium)
+                    Spacer()
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 13, weight: .semibold))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, DS.Spacing.md)
+                .padding(.vertical, 15)
+                .background(
+                    RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                        .fill(code.trimmingCharacters(in: .whitespacesAndNewlines).count < 4 ? Color.dsTertiary : role.accent)
+                )
+            }
+            .buttonStyle(.plain)
+            .disabled(code.trimmingCharacters(in: .whitespacesAndNewlines).count < 4)
+
+            Button("Resend code", action: onResend)
+                .font(DS.Typography.footnote)
+                .foregroundStyle(Color.dsAccent)
+                .buttonStyle(.plain)
+        }
+        .padding(DS.Spacing.md)
+        .background(Color.dsSurface)
+        .cornerRadius(DS.CornerRadius.card)
+        .shadow(color: Color.dsPrimary.opacity(0.06), radius: 8, x: 0, y: 2)
+    }
+}
+
+// MARK: - Shared Legacy Primitives (used by ProviderBusinessViews, AdvancedNativeViews, etc.)
 
 private func labelMono(_ text: String) -> some View {
     Text(text)
-        .font(.system(size: 12, weight: .semibold))
-        .foregroundStyle(.white)
+        .font(DS.Typography.caption)
+        .fontWeight(.semibold)
+        .foregroundStyle(Color.dsAccent)
+}
+
+struct DetailLine: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+        FliqDetailRow(label: label, value: value)
+    }
+}
+
+struct StatusCard: View {
+    var title: String = ""
+    let message: String
+    let isError: Bool
+
+    var body: some View {
+        if isError {
+            FliqErrorBanner(message: message)
+        } else if !message.isEmpty {
+            FliqSuccessBanner(message: message)
+        }
+    }
+}
+
+struct RoleBadge: View {
+    let accent: Color
+    var body: some View { EmptyView() }
 }
 
 private struct DarkSectionHeader: View {
@@ -1504,14 +1666,13 @@ private struct DarkSectionHeader: View {
     let title: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 3) {
             Text(label)
-                .font(.system(size: 10, weight: .bold))
-                .foregroundStyle(.white.opacity(0.5))
-                .kerning(1)
+                .font(DS.Typography.micro)
+                .foregroundStyle(Color.dsSecondary)
             Text(title)
-                .font(.system(size: 20, weight: .bold))
-                .foregroundStyle(.white)
+                .font(DS.Typography.title2)
+                .foregroundStyle(Color.dsPrimary)
         }
     }
 }
@@ -1522,18 +1683,13 @@ private struct SectionLabel: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 10, weight: .bold))
-            .foregroundStyle(.white.opacity(0.5))
-            .kerning(1)
+            .font(DS.Typography.caption)
+            .foregroundStyle(Color.dsSecondary)
     }
 }
 
 private struct DarkDivider: View {
-    var body: some View {
-        Rectangle()
-            .fill(Color.white.opacity(0.12))
-            .frame(height: 1)
-    }
+    var body: some View { FliqDivider() }
 }
 
 private struct DarkTextField: View {
@@ -1543,17 +1699,7 @@ private struct DarkTextField: View {
     var axis: Axis = .horizontal
 
     var body: some View {
-        TextField(placeholder, text: $text, axis: axis)
-            .keyboardType(keyboardType)
-            .textInputAutocapitalization(.never)
-            .autocorrectionDisabled()
-            .font(.system(size: 14, weight: .medium))
-            .foregroundStyle(.white)
-            .lineLimit(axis == .vertical ? 3...6 : 1...1)
-            .padding(13)
-            .background(Color.white.opacity(0.1))
-            .cornerRadius(10)
-            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
+        FliqTextField(placeholder: placeholder, text: $text, keyboardType: keyboardType, axis: axis)
     }
 }
 
@@ -1561,20 +1707,9 @@ private struct DarkCard<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
-        content
-            .padding(18)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.ultraThinMaterial)
-            .background(Color.white.opacity(0.06))
-            .cornerRadius(16)
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
-            )
+        FliqCard { content }
     }
 }
-
-// MARK: - Intent & Rating Buttons
 
 private struct IntentButton: View {
     let intent: TipIntentOption
@@ -1582,25 +1717,7 @@ private struct IntentButton: View {
     let onTap: () -> Void
 
     var body: some View {
-        Button(action: onTap) {
-            HStack {
-                Text(isSelected ? "✓ \(intent.label.uppercased())" : "\(intent.label.uppercased()): \(intent.summary)")
-                    .font(.system(size: 12, weight: .medium))
-                    .kerning(0.3)
-                    .multilineTextAlignment(.leading)
-                Spacer()
-            }
-            .foregroundStyle(isSelected ? Color.fliqTeal : Color.white.opacity(0.65))
-            .padding(.horizontal, 14)
-            .padding(.vertical, 11)
-            .background(Color.fliqTeal.opacity(isSelected ? 0.15 : 0.0))
-            .cornerRadius(8)
-            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(
-                isSelected ? Color.fliqTeal.opacity(0.5) : Color.white.opacity(0.15),
-                lineWidth: 1)
-            )
-        }
-        .buttonStyle(.plain)
+        DSChoiceChip(label: intent.label, isSelected: isSelected, action: onTap)
     }
 }
 
@@ -1611,85 +1728,16 @@ private struct RatingButton: View {
 
     var body: some View {
         Button(action: onTap) {
-            Text(isSelected ? "★\(rating)" : "\(rating)")
-                .font(.system(size: 14, weight: .bold))
-                .foregroundStyle(isSelected ? Color.fliqAmber : Color.white.opacity(0.5))
+            Image(systemName: isSelected ? "star.fill" : "star")
+                .font(.system(size: 20))
+                .foregroundStyle(isSelected ? Color.dsWarning : Color.dsTertiary)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 11)
-                .background(Color.fliqAmber.opacity(isSelected ? 0.18 : 0.0))
-                .cornerRadius(8)
-                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(
-                    isSelected ? Color.fliqAmber.opacity(0.5) : Color.white.opacity(0.15),
-                    lineWidth: 1)
-                )
+                .padding(.vertical, 10)
+                .background(isSelected ? Color.dsWarning.opacity(0.1) : Color.dsBorderLight)
+                .cornerRadius(DS.CornerRadius.sm)
         }
         .buttonStyle(.plain)
     }
-}
-
-// MARK: - Detail Line
-
-struct DetailLine: View {
-    let label: String
-    let value: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text(label)
-                .font(.system(size: 10, weight: .bold))
-                .foregroundStyle(.white.opacity(0.5))
-                .kerning(0.8)
-            Text(value)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.9))
-        }
-    }
-}
-
-// MARK: - Status Card
-
-struct StatusCard: View {
-    var title: String = ""
-    let message: String
-    let isError: Bool
-
-    var body: some View {
-        HStack(spacing: 14) {
-            Rectangle()
-                .fill(isError ? Color.red.opacity(0.8) : Color.fliqTeal)
-                .frame(width: 3)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(isError ? "Error" : "Status")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(isError ? Color.red.opacity(0.9) : Color.fliqTeal)
-                    .kerning(0.8)
-                Text(message)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(isError ? Color.red.opacity(0.85) : .white.opacity(0.75))
-                    .lineLimit(4)
-            }
-
-            Spacer()
-        }
-        .padding(14)
-        .background(Color.white.opacity(0.08))
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(
-                    isError ? Color.red.opacity(0.3) : Color.white.opacity(0.15),
-                    lineWidth: 1
-                )
-        )
-    }
-}
-
-// MARK: - Role Badge (legacy compat, renders nothing)
-
-struct RoleBadge: View {
-    let accent: Color
-    var body: some View { EmptyView() }
 }
 
 // MARK: - Demo Tip View
@@ -1706,211 +1754,160 @@ struct DemoTipView: View {
 
     var body: some View {
         ZStack {
-            GradientBackground()
+            Color.dsBackground.ignoresSafeArea()
 
             if showSuccess {
                 DemoSuccessView(amount: selectedAmount, onDismiss: { dismiss() })
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-
-                        // ── Header bar ─────────────────────────────────────
                         HStack {
-                            HStack(spacing: 8) {
-                                Text("DEMO")
-                                    .font(.system(size: 20, weight: .black))
-                                    .foregroundStyle(.white)
-                                Text("MODE")
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundStyle(Color.fliqTeal)
-                                    .kerning(1.5)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.fliqTeal.opacity(0.15))
-                                    .cornerRadius(6)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 6)
-                                            .strokeBorder(Color.fliqTeal.opacity(0.4), lineWidth: 1)
-                                    )
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("Demo mode")
+                                    .font(DS.Typography.title)
+                                    .foregroundStyle(Color.dsPrimary)
+                                Text("No sign-up needed · No real payment")
+                                    .font(DS.Typography.caption)
+                                    .foregroundStyle(Color.dsSecondary)
                             }
                             Spacer()
                             Button(action: { dismiss() }) {
                                 Image(systemName: "xmark")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundStyle(.white.opacity(0.6))
-                                    .padding(8)
-                                    .background(Color.white.opacity(0.1))
-                                    .cornerRadius(8)
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(Color.dsSecondary)
+                                    .padding(DS.Spacing.sm)
+                                    .background(Color.dsBorderLight)
+                                    .cornerRadius(DS.CornerRadius.sm)
                             }
                             .buttonStyle(.plain)
                         }
-                        .padding(.bottom, 8)
+                        .padding(.bottom, DS.Spacing.xl)
 
-                        Text("No sign-up needed. Experience the full tipping flow.")
-                            .font(.system(size: 14, weight: .regular))
-                            .foregroundStyle(.white.opacity(0.6))
-                            .padding(.bottom, 28)
-
-                        // ── Worker profile ─────────────────────────────────
-                        HStack(alignment: .top, spacing: 16) {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .fill(Color.white.opacity(0.12))
-                                    .frame(width: 60, height: 60)
-                                Text("DW")
-                                    .font(.system(size: 17, weight: .black, design: .monospaced))
-                                    .foregroundStyle(.white)
-                            }
-
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Demo Worker")
-                                    .font(.system(size: 16, weight: .black))
-                                    .foregroundStyle(.white)
-
-                                HStack(spacing: 8) {
-                                    Text("Trust")
-                                        .font(.system(size: 10, weight: .semibold))
-                                        .foregroundStyle(.white.opacity(0.5))
-                                    Text("\(demoTrust)")
-                                        .font(.system(size: 16, weight: .black))
-                                        .foregroundStyle(
-                                            LinearGradient(
-                                                colors: [Color.fliqGreen, Color.fliqTeal],
-                                                startPoint: .leading,
-                                                endPoint: .trailing
-                                            )
-                                        )
-                                    Text("/ 100")
-                                        .font(.system(size: 12, weight: .medium))
-                                        .foregroundStyle(.white.opacity(0.4))
-                                }
-
-                                Text("Delivery · 4 years on Fliq")
-                                    .font(.system(size: 13, weight: .regular))
-                                    .foregroundStyle(.white.opacity(0.55))
-                            }
-                            Spacer()
-                        }
-                        .padding(.bottom, 24)
-
-                        Rectangle()
-                            .fill(Color.white.opacity(0.12))
-                            .frame(height: 1)
-                            .padding(.bottom, 20)
-
-                        // ── Dream goal ─────────────────────────────────────
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("Active Dream")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(.white.opacity(0.5))
-                                .kerning(0.5)
-
-                            Text(demoGoal)
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(.white.opacity(0.9))
-
-                            GeometryReader { geo in
-                                ZStack(alignment: .leading) {
-                                    Rectangle()
-                                        .fill(Color.white.opacity(0.15))
-                                        .frame(height: 4)
-                                        .cornerRadius(2)
-                                    Rectangle()
-                                        .fill(
-                                            LinearGradient(
-                                                colors: [Color.fliqGreen, Color.fliqTeal],
-                                                startPoint: .leading,
-                                                endPoint: .trailing
-                                            )
-                                        )
-                                        .frame(width: geo.size.width * progressFraction, height: 4)
-                                        .cornerRadius(2)
-                                }
-                            }
-                            .frame(height: 4)
-
-                            HStack {
-                                Text("\(demoProgress)% funded")
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundStyle(Color.fliqGreen)
-                                Spacer()
-                                Text("₹2,100 / ₹5,000")
-                                    .font(.system(size: 10, weight: .medium))
-                                    .foregroundStyle(.white.opacity(0.4))
-                            }
-                        }
-                        .padding(.bottom, 28)
-                        .onAppear {
-                            withAnimation(.easeOut(duration: 1.8).delay(0.3)) {
-                                progressFraction = CGFloat(demoProgress) / 100.0
-                            }
-                        }
-
-                        Rectangle()
-                            .fill(Color.white.opacity(0.12))
-                            .frame(height: 1)
-                            .padding(.bottom, 20)
-
-                        // ── Tip amount selector ────────────────────────────
-                        Text("Tip Amount")
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(.white.opacity(0.5))
-                            .kerning(0.5)
-                            .padding(.bottom, 12)
-
-                        HStack(spacing: 10) {
-                            ForEach([50, 100, 200], id: \.self) { amount in
-                                Button(action: { selectedAmount = amount }) {
-                                    VStack(spacing: 4) {
-                                        Text("₹\(amount)")
+                        // Worker profile card
+                        FliqCard {
+                            VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                                HStack(alignment: .top, spacing: DS.Spacing.md) {
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: DS.CornerRadius.md)
+                                            .fill(Color.dsAccentTint)
+                                            .frame(width: 56, height: 56)
+                                        Text("DW")
                                             .font(.system(size: 16, weight: .black))
-                                        Text(amount == 50 ? "small" : amount == 100 ? "kind" : "generous")
-                                            .font(.system(size: 10, weight: .medium))
+                                            .foregroundStyle(Color.dsAccent)
                                     }
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 14)
-                                    .foregroundStyle(selectedAmount == amount ? Color.fliqTeal : .white.opacity(0.5))
-                                    .background(Color.white.opacity(selectedAmount == amount ? 0.15 : 0.07))
-                                    .cornerRadius(12)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .strokeBorder(
-                                                selectedAmount == amount
-                                                    ? Color.fliqTeal.opacity(0.7)
-                                                    : Color.white.opacity(0.15),
-                                                lineWidth: selectedAmount == amount ? 1.5 : 1
-                                            )
-                                    )
+
+                                    VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                                        Text("Demo Worker")
+                                            .font(DS.Typography.headline)
+                                            .foregroundStyle(Color.dsPrimary)
+
+                                        HStack(spacing: DS.Spacing.xs) {
+                                            Text("Trust score")
+                                                .font(DS.Typography.caption)
+                                                .foregroundStyle(Color.dsSecondary)
+                                            Text("\(demoTrust)/100")
+                                                .font(.system(size: 15, weight: .black))
+                                                .foregroundStyle(Color.dsAccent)
+                                        }
+
+                                        Text("Delivery · 4 years on Fliq")
+                                            .font(DS.Typography.caption)
+                                            .foregroundStyle(Color.dsSecondary)
+                                    }
+                                    Spacer()
                                 }
-                                .buttonStyle(.plain)
+
+                                FliqDivider()
+
+                                // Dream goal
+                                VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                                    Text("Active Dream")
+                                        .font(DS.Typography.caption)
+                                        .foregroundStyle(Color.dsSecondary)
+                                    Text(demoGoal)
+                                        .font(DS.Typography.bodyMedium)
+                                        .foregroundStyle(Color.dsPrimary)
+
+                                    GeometryReader { geo in
+                                        ZStack(alignment: .leading) {
+                                            RoundedRectangle(cornerRadius: 2).fill(Color.dsBorder).frame(height: 6)
+                                            RoundedRectangle(cornerRadius: 2).fill(Color.dsAccent)
+                                                .frame(width: geo.size.width * progressFraction, height: 6)
+                                        }
+                                    }
+                                    .frame(height: 6)
+
+                                    HStack {
+                                        Text("\(demoProgress)% funded")
+                                            .font(DS.Typography.micro)
+                                            .fontWeight(.semibold)
+                                            .foregroundStyle(Color.dsAccent)
+                                        Spacer()
+                                        Text("₹2,100 / ₹5,000")
+                                            .font(DS.Typography.micro)
+                                            .foregroundStyle(Color.dsSecondary)
+                                    }
+                                }
+                                .onAppear {
+                                    withAnimation(.easeOut(duration: 1.8).delay(0.3)) {
+                                        progressFraction = CGFloat(demoProgress) / 100.0
+                                    }
+                                }
                             }
                         }
-                        .padding(.bottom, 20)
+                        .padding(.bottom, DS.Spacing.lg)
 
-                        // ── CTA ────────────────────────────────────────────
+                        // Amount selector
+                        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                            Text("Tip amount")
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(Color.dsSecondary)
+
+                            HStack(spacing: DS.Spacing.sm) {
+                                ForEach([50, 100, 200], id: \.self) { amount in
+                                    Button(action: { selectedAmount = amount }) {
+                                        VStack(spacing: 4) {
+                                            Text("₹\(amount)")
+                                                .font(.system(size: 16, weight: .black))
+                                            Text(amount == 50 ? "small" : amount == 100 ? "kind" : "generous")
+                                                .font(DS.Typography.micro)
+                                        }
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 14)
+                                        .foregroundStyle(selectedAmount == amount ? Color.dsAccent : Color.dsSecondary)
+                                        .background(selectedAmount == amount ? Color.dsAccentTint : Color.dsBorderLight)
+                                        .cornerRadius(DS.CornerRadius.md)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: DS.CornerRadius.md)
+                                                .strokeBorder(selectedAmount == amount ? Color.dsAccent.opacity(0.5) : Color.clear, lineWidth: 1.5)
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+                        .padding(.bottom, DS.Spacing.lg)
+
                         Button(action: { withAnimation(.spring(duration: 0.4)) { showSuccess = true } }) {
-                            HStack(spacing: 10) {
+                            HStack(spacing: DS.Spacing.sm) {
                                 Image(systemName: "bolt.fill")
                                     .font(.system(size: 13, weight: .bold))
                                 Text("Tip ₹\(selectedAmount) with Kindness")
-                                    .font(.system(size: 14, weight: .bold))
+                                    .font(DS.Typography.bodyMedium)
                                 Spacer()
-                                Text("→")
-                                    .font(.system(size: 16, weight: .bold))
+                                Image(systemName: "arrow.right")
+                                    .font(.system(size: 15, weight: .bold))
                             }
-                            .padding(.horizontal, 16)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, DS.Spacing.md)
                             .padding(.vertical, 16)
+                            .background(Color.dsAccent)
+                            .cornerRadius(DS.CornerRadius.sm)
                         }
-                        .buttonStyle(NothingFilledButtonStyle())
-                        .padding(.bottom, 16)
-
-                        Text("This is a demo — no real payment is made.")
-                            .font(.system(size: 12))
-                            .foregroundStyle(.white.opacity(0.4))
-                            .frame(maxWidth: .infinity, alignment: .center)
+                        .buttonStyle(.plain)
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 32)
+                    .padding(.horizontal, DS.Spacing.lg)
+                    .padding(.vertical, DS.Spacing.xl)
                 }
             }
         }
@@ -1930,25 +1927,15 @@ private struct DemoSuccessView: View {
             Spacer()
 
             ZStack {
-                Circle()
-                    .fill(Color.fliqGreen.opacity(0.15))
-                    .frame(width: 110, height: 110)
-                Circle()
-                    .stroke(Color.fliqGreen.opacity(0.4), lineWidth: 2)
-                    .frame(width: 110, height: 110)
+                Circle().fill(Color.dsSuccessTint).frame(width: 100, height: 100)
+                Circle().stroke(Color.dsSuccess.opacity(0.3), lineWidth: 2).frame(width: 100, height: 100)
                 Image(systemName: "checkmark")
-                    .font(.system(size: 40, weight: .black))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [Color.fliqGreen, Color.fliqTeal],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                    .font(.system(size: 38, weight: .black))
+                    .foregroundStyle(Color.dsSuccess)
             }
             .scaleEffect(checkScale)
             .opacity(checkOpacity)
-            .padding(.bottom, 32)
+            .padding(.bottom, DS.Spacing.xl)
             .onAppear {
                 withAnimation(.spring(response: 0.45, dampingFraction: 0.6).delay(0.1)) {
                     checkScale = 1.0
@@ -1958,41 +1945,33 @@ private struct DemoSuccessView: View {
 
             Text("₹\(amount) Sent")
                 .font(.system(size: 36, weight: .black))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [Color.fliqGreen, Color.fliqTeal],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
-                .padding(.bottom, 16)
+                .foregroundStyle(Color.dsAccent)
+                .padding(.bottom, DS.Spacing.md)
 
             Text("Your kindness just moved Demo Worker closer to their dream.")
-                .font(.system(size: 16, weight: .regular))
-                .foregroundStyle(.white.opacity(0.7))
+                .font(DS.Typography.body)
+                .foregroundStyle(Color.dsSecondary)
                 .multilineTextAlignment(.center)
                 .lineSpacing(5)
-                .padding(.horizontal, 32)
-                .padding(.bottom, 12)
-
-            Text("Buy a bicycle for daily commute")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.5))
-                .padding(.bottom, 48)
+                .padding(.horizontal, DS.Spacing.xl)
+                .padding(.bottom, DS.Spacing.xxl)
 
             Button(action: onDismiss) {
-                HStack(spacing: 10) {
+                HStack(spacing: DS.Spacing.sm) {
                     Image(systemName: "arrow.left")
                         .font(.system(size: 13, weight: .semibold))
                     Text("Back to Home")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(DS.Typography.bodyMedium)
                     Spacer()
                 }
-                .padding(.horizontal, 20)
+                .foregroundStyle(.white)
+                .padding(.horizontal, DS.Spacing.md)
                 .padding(.vertical, 15)
+                .background(Color.dsAccent)
+                .cornerRadius(DS.CornerRadius.sm)
             }
-            .buttonStyle(FliqPrimaryButtonStyle())
-            .padding(.horizontal, 32)
+            .buttonStyle(.plain)
+            .padding(.horizontal, DS.Spacing.xl)
 
             Spacer()
         }
@@ -2005,7 +1984,7 @@ private func historyAmountText(_ tip: CustomerTipHistoryItem) -> String {
     String(format: "₹%.0f", Double(tip.amountPaise) / 100.0)
 }
 
-private func historyAmountPaiseText(_ amountPaise: Int) -> String {
+func historyAmountPaiseText(_ amountPaise: Int) -> String {
     String(format: "₹%.0f", Double(amountPaise) / 100.0)
 }
 
@@ -2033,6 +2012,14 @@ private func historyIntentText(_ value: String?) -> String? {
 private func scoreText(_ value: Double?) -> String {
     guard let value else { return "0.0" }
     return String(format: "%.1f", value)
+}
+
+// MARK: - Legacy stub (CustomerHomeCard kept for compile compat)
+
+private struct CustomerHomeCard: View {
+    let session: AuthSession
+    @ObservedObject var viewModel: AppViewModel
+    var body: some View { EmptyView() }
 }
 
 // MARK: - Preview

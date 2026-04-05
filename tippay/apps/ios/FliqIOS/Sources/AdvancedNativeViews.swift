@@ -954,19 +954,15 @@ private struct AdvancedNativeCard<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
-                .font(.system(size: 20, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white)
+                .font(DS.Typography.title2)
+                .foregroundStyle(Color.dsPrimary)
             content
         }
-        .padding(20)
+        .padding(DS.Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.ultraThinMaterial)
-        .background(Color.white.opacity(0.06))
-        .cornerRadius(26)
-        .overlay(
-            RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
-        )
+        .background(Color.dsSurface)
+        .cornerRadius(DS.CornerRadius.card)
+        .shadow(color: Color.dsPrimary.opacity(0.06), radius: 8, x: 0, y: 2)
     }
 }
 
@@ -977,13 +973,13 @@ private struct AdvancedNativeListCard<Content: View>: View {
         VStack(alignment: .leading, spacing: 8) {
             content
         }
-        .padding(16)
+        .padding(DS.Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white.opacity(0.08))
-        .cornerRadius(22)
+        .background(Color.dsBorderLight)
+        .cornerRadius(DS.CornerRadius.md)
         .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
+            RoundedRectangle(cornerRadius: DS.CornerRadius.md, style: .continuous)
+                .strokeBorder(Color.dsBorder, lineWidth: 1)
         )
     }
 }
@@ -996,8 +992,8 @@ private struct AdvancedChoiceSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
-                .font(.system(size: 13, weight: .medium, design: .rounded))
-                .foregroundStyle(Color.fliqMuted)
+                .font(DS.Typography.caption)
+                .foregroundStyle(Color.dsSecondary)
 
             ForEach(Array(options.chunked(into: 3)), id: \.self) { row in
                 HStack(spacing: 8) {
@@ -1026,8 +1022,8 @@ private struct AdvancedChoiceSection: View {
 
 private let advancedFieldBackground =
     RoundedRectangle(cornerRadius: 10, style: .continuous)
-        .fill(Color.white.opacity(0.1))
-        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+        .fill(Color(hex: "F3F4F6"))
+        .stroke(Color(hex: "E5E7EB"), lineWidth: 1)
 
 private func advancedAmountText(_ amountPaise: Int) -> String {
     "Rs \(amountPaise / 100)"

@@ -54,7 +54,7 @@ struct ProviderHomeView: View {
     @State private var isCreatingLink = false
     @State private var isRequestingPayout = false
     @State private var isSavingDream = false
-    @State private var statusMessage = "Provider parity is loading from the shared backend."
+    @State private var statusMessage = ""
     @State private var errorMessage: String?
 
     @State private var displayName = ""
@@ -81,13 +81,11 @@ struct ProviderHomeView: View {
             NavigationStack {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        StatusCard(
-                            title: errorMessage == nil ? "Current status" : "Error",
-                            message: errorMessage ?? statusMessage,
-                            isError: errorMessage != nil
-                        )
+                        if let error = errorMessage {
+                            FliqErrorBanner(message: error)
+                        }
                         if isLoading {
-                            ProgressView().frame(maxWidth: .infinity, alignment: .center)
+                            ProgressView().tint(Color.dsAccent).frame(maxWidth: .infinity, alignment: .center)
                         }
                         ProviderProfileSection(
                             hasProfile: profile != nil,
@@ -136,8 +134,8 @@ struct ProviderHomeView: View {
                 .background(Color.clear)
                 .navigationTitle("Dashboard")
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-                .toolbarColorScheme(.dark, for: .navigationBar)
+                .toolbarBackground(Color.dsSurface, for: .navigationBar)
+                .toolbarColorScheme(.light, for: .navigationBar)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button(action: { Task { await loadProviderHome() } }) {
@@ -174,8 +172,8 @@ struct ProviderHomeView: View {
                 .background(Color.clear)
                 .navigationTitle("Tips")
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-                .toolbarColorScheme(.dark, for: .navigationBar)
+                .toolbarBackground(Color.dsSurface, for: .navigationBar)
+                .toolbarColorScheme(.light, for: .navigationBar)
             }
             .tabItem { Label("Tips", systemImage: "banknote.fill") }
 
@@ -218,8 +216,8 @@ struct ProviderHomeView: View {
                 .background(Color.clear)
                 .navigationTitle("Collect")
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-                .toolbarColorScheme(.dark, for: .navigationBar)
+                .toolbarBackground(Color.dsSurface, for: .navigationBar)
+                .toolbarColorScheme(.light, for: .navigationBar)
             }
             .tabItem { Label("Collect", systemImage: "qrcode") }
 
@@ -255,14 +253,14 @@ struct ProviderHomeView: View {
                 .background(Color.clear)
                 .navigationTitle("Profile")
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-                .toolbarColorScheme(.dark, for: .navigationBar)
+                .toolbarBackground(Color.dsSurface, for: .navigationBar)
+                .toolbarColorScheme(.light, for: .navigationBar)
             }
             .tabItem { Label("Profile", systemImage: "person.fill") }
         }
-        .tint(Color.fliqMint)
-        .toolbarBackground(.ultraThinMaterial, for: .tabBar)
-        .toolbarColorScheme(.dark, for: .tabBar)
+        .tint(Color.dsAccent)
+        .toolbarBackground(Color.dsSurface, for: .tabBar)
+        .toolbarColorScheme(.light, for: .tabBar)
         .task(id: session.user.id) {
             await loadProviderHome()
         }
@@ -296,7 +294,7 @@ struct ProviderHomeView: View {
                     dreamCategory = dream.category ?? dreamCategory
                     dreamGoalAmount = String(dream.goalAmount / 100)
                 }
-                statusMessage = "Provider profile, tips, QR codes, links, payouts, dream, affiliations, and invitations are loading natively."
+                statusMessage = ""
             } else {
                 tips = []
                 qrCodes = []
@@ -304,7 +302,7 @@ struct ProviderHomeView: View {
                 payouts = []
                 dream = nil
                 recurringTips = []
-                statusMessage = "No provider profile exists yet. Complete onboarding to unlock native provider tools."
+                statusMessage = ""
             }
         } catch {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? "Unable to load the provider home right now."
@@ -650,8 +648,8 @@ struct BusinessHomeView: View {
                 .background(Color.clear)
                 .navigationTitle("Dashboard")
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-                .toolbarColorScheme(.dark, for: .navigationBar)
+                .toolbarBackground(Color.dsSurface, for: .navigationBar)
+                .toolbarColorScheme(.light, for: .navigationBar)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button(action: { Task { await loadBusinessHome() } }) {
@@ -716,8 +714,8 @@ struct BusinessHomeView: View {
                 .background(Color.clear)
                 .navigationTitle("Staff")
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-                .toolbarColorScheme(.dark, for: .navigationBar)
+                .toolbarBackground(Color.dsSurface, for: .navigationBar)
+                .toolbarColorScheme(.light, for: .navigationBar)
             }
             .tabItem { Label("Staff", systemImage: "person.2.fill") }
 
@@ -752,8 +750,8 @@ struct BusinessHomeView: View {
                 .background(Color.clear)
                 .navigationTitle("Analytics")
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-                .toolbarColorScheme(.dark, for: .navigationBar)
+                .toolbarBackground(Color.dsSurface, for: .navigationBar)
+                .toolbarColorScheme(.light, for: .navigationBar)
             }
             .tabItem { Label("Analytics", systemImage: "chart.pie.fill") }
 
@@ -794,14 +792,14 @@ struct BusinessHomeView: View {
                 .background(Color.clear)
                 .navigationTitle("Settings")
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-                .toolbarColorScheme(.dark, for: .navigationBar)
+                .toolbarBackground(Color.dsSurface, for: .navigationBar)
+                .toolbarColorScheme(.light, for: .navigationBar)
             }
             .tabItem { Label("Settings", systemImage: "gear") }
         }
         .tint(Color.fliqLilac)
-        .toolbarBackground(.ultraThinMaterial, for: .tabBar)
-        .toolbarColorScheme(.dark, for: .tabBar)
+        .toolbarBackground(Color.dsSurface, for: .tabBar)
+        .toolbarColorScheme(.light, for: .tabBar)
         .task(id: session.user.id) {
             await loadBusinessHome()
         }
@@ -1421,19 +1419,15 @@ private struct RoleSectionContainer<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(title)
-                .font(.system(size: 20, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white)
+                .font(DS.Typography.title2)
+                .foregroundStyle(Color.dsPrimary)
             content
         }
-        .padding(20)
+        .padding(DS.Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.ultraThinMaterial)
-        .background(Color.white.opacity(0.06))
-        .cornerRadius(26)
-        .overlay(
-            RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
-        )
+        .background(Color.dsSurface)
+        .cornerRadius(DS.CornerRadius.card)
+        .shadow(color: Color.dsPrimary.opacity(0.06), radius: 8, x: 0, y: 2)
     }
 }
 
@@ -1444,13 +1438,13 @@ private struct RoleItemCard<Content: View>: View {
         VStack(alignment: .leading, spacing: 8) {
             content
         }
-        .padding(16)
+        .padding(DS.Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white.opacity(0.08))
-        .cornerRadius(22)
+        .background(Color.dsBorderLight)
+        .cornerRadius(DS.CornerRadius.md)
         .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
+            RoundedRectangle(cornerRadius: DS.CornerRadius.md, style: .continuous)
+                .strokeBorder(Color.dsBorder, lineWidth: 1)
         )
     }
 }
@@ -1463,23 +1457,23 @@ private struct RoleChoiceSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(label)
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundStyle(Color.fliqMuted)
+                .font(DS.Typography.caption)
+                .foregroundStyle(Color.dsSecondary)
 
             ForEach(Array(options.chunked(into: 3).enumerated()), id: \.offset) { chunk in
-                HStack(spacing: 10) {
+                HStack(spacing: 8) {
                     ForEach(chunk.element, id: \.self) { option in
                         let isSelected = selected == option
                         Button(action: { selected = option }) {
                             Text(isSelected ? "✓ \(option)" : option)
                                 .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
-                                .foregroundStyle(isSelected ? Color.fliqTeal : Color.white.opacity(0.75))
+                                .foregroundStyle(isSelected ? Color.dsAccent : Color.dsSecondary)
                                 .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(Color.fliqTeal.opacity(isSelected ? 0.18 : 0.0))
-                                .cornerRadius(8)
-                                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(
-                                    isSelected ? Color.fliqTeal.opacity(0.5) : Color.white.opacity(0.2),
+                                .padding(.vertical, 11)
+                                .background(isSelected ? Color.dsAccentTint : Color.dsBorderLight)
+                                .cornerRadius(DS.CornerRadius.sm)
+                                .overlay(RoundedRectangle(cornerRadius: DS.CornerRadius.sm).strokeBorder(
+                                    isSelected ? Color.dsAccent.opacity(0.5) : Color.clear,
                                     lineWidth: 1))
                         }
                         .buttonStyle(.plain)
