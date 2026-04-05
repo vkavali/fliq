@@ -550,11 +550,12 @@ function updateSubDisplay() {
 
 async function createSubscription() {
   const btn = document.getElementById('subscribe-btn');
+  const errEl = document.getElementById('sub-error');
   btn.disabled = true;
   btn.textContent = 'Setting up AutoPay...';
+  if (errEl) errEl.classList.add('hidden');
 
   try {
-    // In dev mode, this will create a mock subscription
     const res = await api('POST', '/recurring-tips', {
       providerId: state.providerId,
       amountPaise: state.subAmount,
@@ -577,21 +578,20 @@ async function createSubscription() {
 
     goScreen('sub-success');
   } catch (e) {
-    // Mock success for dev mode (API may require auth)
-    const name = state.provider?.providerName || state.publicProfile?.displayName || 'this worker';
-    const isMonthly = state.subFreq === 'MONTHLY';
-    document.getElementById('sub-confirm-amt').textContent = (state.subAmount / 100).toFixed(0);
-    document.getElementById('sub-confirm-name').textContent = name.split(' ')[0];
-    document.getElementById('sub-confirm-freq').textContent = isMonthly ? 'month' : 'week';
-    document.getElementById('sub-impact-name').textContent = name.split(' ')[0];
-    const next = new Date();
-    if (isMonthly) { next.setMonth(next.getMonth() + 1); next.setDate(1); }
-    else { next.setDate(next.getDate() + (8 - next.getDay()) % 7); }
-    document.getElementById('sub-next-date').textContent = next.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-    goScreen('sub-success');
+    // Show real error — do not fake success
+    const msg = e.message || 'Failed to set up subscription';
+    const errorMsg = msg.includes('401') || msg.toLowerCase().includes('unauthorized')
+      ? 'Please log in to set up a recurring subscription.'
+      : msg;
+    if (errEl) {
+      errEl.textContent = errorMsg;
+      errEl.classList.remove('hidden');
+    } else {
+      alert(errorMsg);
+    }
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Start AutoPay Subscription \uD83D\uDD04';
+    btn.textContent = 'Start AutoPay Subscription 🔄';
   }
 }
 

@@ -433,8 +433,8 @@ async function loadDashboard() {
       document.getElementById('d-wallet-balance').textContent = '0';
     }
 
-    // Tip link
-    document.getElementById('tip-link').textContent = `${location.origin}/app/#tip/${p.id}`;
+    // Tip link — points to V5 tip page (/tip/ID)
+    document.getElementById('tip-link').textContent = `${location.origin}/tip/${p.id}`;
 
     loadQrCodes();
     loadTipLinks();
@@ -522,26 +522,29 @@ async function respondInvitation(invitationId, response) {
 // ===== V5: DREAMS =====
 async function loadDream(providerId) {
   try {
-    const dreams = await api('GET', '/dreams');
-    const active = dreams.find(d => d.status === 'ACTIVE') || dreams[0];
-    if (active) {
+    // GET /dreams/active returns a single active dream object (or 404 if none)
+    const active = await api('GET', '/dreams/active');
+    if (active && active.id) {
       document.getElementById('dream-empty').classList.add('hidden');
       document.getElementById('dream-active').classList.remove('hidden');
       document.getElementById('dream-edit-btn').classList.remove('hidden');
       document.getElementById('d-dream-title').textContent = active.title;
       document.getElementById('d-dream-desc').textContent = active.description || '';
-      const pct = active.goalAmountPaise > 0 ? Math.round((active.currentAmountPaise / active.goalAmountPaise) * 100) : 0;
+      const goalPaise = active.goalAmountPaise || active.goalAmount || 0;
+      const currentPaise = active.currentAmountPaise || active.currentAmount || 0;
+      const pct = goalPaise > 0 ? Math.round((currentPaise / goalPaise) * 100) : 0;
       setTimeout(() => { document.getElementById('d-dream-fill').style.width = pct + '%'; }, 300);
       document.getElementById('d-dream-pct').textContent = pct + '%';
-      document.getElementById('d-dream-amounts').textContent = `₹${Math.round(active.currentAmountPaise / 100)} / ₹${Math.round(active.goalAmountPaise / 100)}`;
+      document.getElementById('d-dream-amounts').textContent = `₹${Math.round(currentPaise / 100)} / ₹${Math.round(goalPaise / 100)}`;
     } else {
       document.getElementById('dream-empty').classList.remove('hidden');
       document.getElementById('dream-active').classList.add('hidden');
       document.getElementById('dream-edit-btn').classList.add('hidden');
     }
   } catch (e) {
-    // Dreams API may not exist yet, show empty state
+    // 404 means no active dream — show empty state
     document.getElementById('dream-empty').classList.remove('hidden');
+    document.getElementById('dream-active').classList.add('hidden');
     document.getElementById('dream-edit-btn').classList.add('hidden');
   }
 }
@@ -562,14 +565,14 @@ async function saveDream() {
   const title = document.getElementById('dream-title-input').value.trim();
   const description = document.getElementById('dream-desc-input').value.trim();
   const goalAmount = parseInt(document.getElementById('dream-goal-input').value) || 0;
-  if (!title || goalAmount < 100) { showToast('Enter a title and goal amount (min ₹100)'); return; }
+  if (!title || goalAmount < 100) { toast('Enter a title and goal amount (min ₹100)'); return; }
   try {
     await api('POST', '/dreams', { title, description, goalAmountPaise: goalAmount * 100 });
     hideDreamForm();
     loadDream(providerProfile?.id);
-    showToast('Dream saved! Tippers will see this.');
+    toast('Dream saved! Tippers will see this.');
   } catch (e) {
-    showToast(e.message || 'Failed to save dream');
+    toast(e.message || 'Failed to save dream');
   }
 }
 
@@ -596,9 +599,9 @@ async function loadReputation(providerId) {
 // ===== V5: INTENT BREAKDOWN =====
 async function loadIntents(providerId) {
   try {
-    const tips = await api('GET', '/tips/received?limit=100');
+    const tips = await api('GET', '/tips/provider?limit=100');
     const counts = { KINDNESS: 0, SPEED: 0, EXPERIENCE: 0, SUPPORT: 0 };
-    (tips.data || tips || []).forEach(t => {
+    (tips.tips || tips.data || tips || []).forEach(t => {
       if (t.intent && counts[t.intent] !== undefined) counts[t.intent]++;
     });
     document.getElementById('d-intent-kindness').textContent = counts.KINDNESS + ' kindness';
@@ -644,9 +647,9 @@ async function loadRecurringTips() {
 // ===== V5: WORKER RESPONSES (Thank-you loop) =====
 async function loadWorkerResponses(providerId) {
   try {
-    const tips = await api('GET', '/tips/received?limit=5');
+    const tips = await api('GET', '/tips/provider?limit=5');
     const list = document.getElementById('d-responses-list');
-    const tipsArr = tips.data || tips || [];
+    const tipsArr = tips.tips || tips.data || tips || [];
     const unreplied = tipsArr.filter(t => t.status === 'PAID' || t.status === 'SETTLED');
 
     if (unreplied.length === 0) {
@@ -678,10 +681,10 @@ async function loadWorkerResponses(providerId) {
 async function sendResponse(tipId, emoji) {
   try {
     await api('POST', `/tips/${tipId}/respond`, { type: 'emoji', emoji });
-    showToast('Thank-you sent! ' + emoji);
+    toast('Thank-you sent! ' + emoji);
     loadWorkerResponses(providerProfile?.id);
   } catch (e) {
-    showToast('Response sent! ' + emoji); // Mock success
+    toast('Response sent! ' + emoji); // Mock success
   }
 }
 
@@ -766,27 +769,53 @@ async function loadQrCodes() {
     const d = await api('GET', '/qrcodes/my');
     const codes = Array.isArray(d) ? d : (d.qrCodes || []);
     if (codes.length === 0) { grid.innerHTML = '<p class="muted">No QR codes yet. Click "+ New QR" to create one.</p>'; return; }
-    const tipBase = `${location.origin}/app/#tip/${providerProfile.id}`;
+    const tipBase = `${location.origin}/tip/${providerProfile.id}`;
     grid.innerHTML = codes.map(q => {
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(tipBase)}`;
+      // Use Razorpay-generated QR image if available, otherwise generate via qrserver
+      const qrUrl = q.qrImageUrl || `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(tipBase)}`;
+      const downloadUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(tipBase)}`;
       return `
       <div class="qr-card">
-        <img src="${qrUrl}" alt="QR Code" style="width:120px;height:120px;border-radius:8px;">
+        <img src="${qrUrl}" alt="QR Code" style="width:120px;height:120px;border-radius:8px;" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(tipBase)}'">
         <div class="qr-label">${q.locationLabel || 'QR Code'}</div>
         <div class="qr-scans">${q.scanCount || 0} scans</div>
+        <a href="${downloadUrl}" download="fliq-qr.png" style="font-size:11px;color:var(--pri);text-decoration:none;margin-top:4px;display:block;">⬇ Download</a>
       </div>`;
     }).join('');
   } catch (e) { grid.innerHTML = '<p class="muted">Could not load</p>'; }
 }
 
-async function newQr() {
-  const label = prompt('Location label (e.g. "Counter A", "Table 5"):');
-  if (!label) return;
+function newQr() {
+  const grid = document.getElementById('qr-grid');
+  // Show inline form instead of prompt()
+  grid.insertAdjacentHTML('afterbegin', `
+    <div id="qr-new-form" style="background:#F0EDFF;border-radius:12px;padding:16px;margin-bottom:12px;border:2px solid var(--pri);grid-column:1/-1;">
+      <p style="font-size:13px;font-weight:600;margin-bottom:10px;">📍 Where will this QR be placed?</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <input type="text" id="qr-label-input" placeholder="e.g. Counter A, Table 5, Main Entrance" class="input-sm" style="flex:1;min-width:160px;" maxlength="100" autofocus>
+        <button class="small-btn" onclick="submitNewQr()" style="background:var(--pri);color:white;">Create QR</button>
+        <button class="small-btn" onclick="document.getElementById('qr-new-form').remove()" style="background:#E9ECEF;color:var(--text2);">Cancel</button>
+      </div>
+    </div>`);
+  document.getElementById('qr-label-input').focus();
+  document.getElementById('qr-label-input').addEventListener('keydown', e => { if (e.key === 'Enter') submitNewQr(); });
+}
+
+async function submitNewQr() {
+  const input = document.getElementById('qr-label-input');
+  const label = input?.value.trim() || 'Default';
+  const formEl = document.getElementById('qr-new-form');
+  const btn = formEl?.querySelector('button');
+  if (btn) { btn.disabled = true; btn.textContent = 'Creating...'; }
   try {
     await api('POST', '/qrcodes', { locationLabel: label });
+    formEl?.remove();
     toast('QR code created!');
     loadQrCodes();
-  } catch (e) { toast('Error: ' + e.message); }
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Create QR'; }
+    toast('Error: ' + e.message);
+  }
 }
 
 async function loadProviderTips() {
@@ -1410,13 +1439,13 @@ async function loadTipperDemo() {
 }
 
 function openTipV5(idOrCode) {
-  if (!idOrCode) { showToast('Enter a provider ID or short code'); return; }
+  if (!idOrCode) { toast('Enter a provider ID or short code'); return; }
   // First try as payment link (short code), then as provider ID
   window.open(`/tip/${idOrCode}`, '_blank');
 }
 
 function openTipSPA(id) {
-  if (!id) { showToast('Enter a provider ID'); return; }
+  if (!id) { toast('Enter a provider ID'); return; }
   location.hash = `#tip/${id}`;
   checkRoute();
 }
@@ -1429,14 +1458,14 @@ async function createPool() {
   const name = document.getElementById('pool-name').value.trim();
   const splitMethod = document.getElementById('pool-split').value;
   const description = document.getElementById('pool-desc').value.trim();
-  if (!name) { showToast('Enter a pool name'); return; }
+  if (!name) { toast('Enter a pool name'); return; }
   try {
     await api('POST', '/tip-pools', { name, splitMethod, description });
     hidePoolForm();
     loadPools();
-    showToast('Tip pool created!');
+    toast('Tip pool created!');
   } catch (e) {
-    showToast(e.message || 'Failed to create pool');
+    toast(e.message || 'Failed to create pool');
   }
 }
 
@@ -1470,12 +1499,12 @@ let corpAllowances = [];
 function addCorpAllowance() {
   const phone = document.getElementById('corp-emp-phone').value.trim();
   const limit = parseInt(document.getElementById('corp-emp-limit').value) || 0;
-  if (!phone || limit < 100) { showToast('Enter phone and limit (min ₹100)'); return; }
+  if (!phone || limit < 100) { toast('Enter phone and limit (min ₹100)'); return; }
   corpAllowances.push({ phone, limit, used: 0 });
   document.getElementById('corp-emp-phone').value = '';
   document.getElementById('corp-emp-limit').value = '';
   renderCorpAllowances();
-  showToast('Employee allowance set');
+  toast('Employee allowance set');
 }
 
 function renderCorpAllowances() {
