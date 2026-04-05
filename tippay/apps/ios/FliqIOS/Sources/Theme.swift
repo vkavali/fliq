@@ -29,10 +29,10 @@ extension Color {
 
 // MARK: - Background
 
-/// App background — light gray matching fliq.co.in.
+/// App background — purple/indigo gradient matching fliq.co.in.
 struct GradientBackground: View {
     var body: some View {
-        Color.dsBackground.ignoresSafeArea()
+        LightBackground()
     }
 }
 

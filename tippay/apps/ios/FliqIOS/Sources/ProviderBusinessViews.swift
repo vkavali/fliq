@@ -75,192 +75,362 @@ struct ProviderHomeView: View {
 
     private let providerClient = ProviderClient()
 
+    private var paidTipsCount: Int {
+        tips.filter { ["PAID", "SETTLED"].contains($0.status.uppercased()) }.count
+    }
+
+    private var allTimeTipsAmount: Int {
+        tips.filter { ["PAID", "SETTLED"].contains($0.status.uppercased()) }
+            .reduce(0) { $0 + $1.amountPaise }
+    }
+
+    private var todayTipsAmount: Int {
+        let calendar = Calendar.current
+        return tips.filter { tip in
+            guard let str = tip.createdAt,
+                  let date = ISO8601DateFormatter().date(from: str) else { return false }
+            return calendar.isDateInToday(date) && ["PAID", "SETTLED"].contains(tip.status.uppercased())
+        }.reduce(0) { $0 + $1.amountPaise }
+    }
+
+    @ViewBuilder
+    private func providerInitialsCircle(name: String, size: CGFloat) -> some View {
+        ZStack {
+            Circle()
+                .fill(.white.opacity(0.25))
+                .frame(width: size, height: size)
+            Text(String(name.prefix(2)).uppercased())
+                .font(.system(size: size * 0.32, weight: .bold))
+                .foregroundStyle(.white)
+        }
+    }
+
+    @ViewBuilder
+    private func providerStatView(title: String, value: String) -> some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(.white)
+            Text(title)
+                .font(DS.Typography.micro)
+                .foregroundStyle(.white.opacity(0.7))
+        }
+        .frame(maxWidth: .infinity)
+    }
+
     var body: some View {
         TabView {
-            // ── Tab 1: Dashboard ──────────────────────────────────────────
+            // ── Tab 1: Home ──────────────────────────────────────────
             NavigationStack {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        if let error = errorMessage {
-                            FliqErrorBanner(message: error)
-                        }
-                        if isLoading {
-                            ProgressView().tint(Color.dsAccent).frame(maxWidth: .infinity, alignment: .center)
-                        }
-                        ProviderProfileSection(
-                            hasProfile: profile != nil,
-                            displayName: $displayName,
-                            category: $category,
-                            bio: $bio,
-                            upiVpa: $upiVpa,
-                            isSavingProfile: isSavingProfile,
-                            profile: profile,
-                            onSave: { Task { await saveProviderProfile() } }
-                        )
-                        if profile != nil {
-                            ProviderAnalyticsView(tips: tips, payouts: payouts, recurringTips: recurringTips)
-                            ProviderAffiliationsView(affiliations: affiliations)
-                        }
-                        if !invitations.isEmpty {
-                            RoleSectionContainer(title: "Business invitations") {
-                                ForEach(invitations) { invitation in
-                                    RoleItemCard {
-                                        DetailLine(label: "Business", value: invitation.businessName ?? "Business")
-                                        DetailLine(label: "Role", value: invitation.role)
-                                        if let expiresAt = invitation.expiresAt {
-                                            DetailLine(label: "Expires", value: roleHistoryDateText(expiresAt) ?? expiresAt)
+                ZStack(alignment: .top) {
+                    LightBackground()
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: DS.Spacing.lg) {
+
+                            // Error banner
+                            if let error = errorMessage {
+                                FliqErrorBanner(message: error)
+                            }
+
+                            if isLoading && profile == nil {
+                                HStack {
+                                    Spacer()
+                                    ProgressView().tint(.white)
+                                    Spacer()
+                                }
+                                .padding(.vertical, DS.Spacing.xl)
+                            } else if let profile = profile {
+
+                                // Provider header on gradient
+                                HStack(spacing: DS.Spacing.md) {
+                                    if let avatarUrl = profile.avatarUrl, let url = URL(string: avatarUrl) {
+                                        AsyncImage(url: url) { phase in
+                                            switch phase {
+                                            case .success(let img):
+                                                img.resizable().scaledToFill()
+                                                    .frame(width: 56, height: 56)
+                                                    .clipShape(Circle())
+                                            default:
+                                                providerInitialsCircle(name: profile.displayName, size: 56)
+                                            }
                                         }
-                                        HStack(spacing: 12) {
-                                            Button(action: {
-                                                Task { await respondToInvitation(invitationId: invitation.id, response: "ACCEPT") }
-                                            }) {
-                                                Text("Accept").frame(maxWidth: .infinity).padding(.vertical, 12)
+                                    } else {
+                                        providerInitialsCircle(name: profile.displayName, size: 56)
+                                    }
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(profile.displayName)
+                                            .font(DS.Typography.title2)
+                                            .foregroundStyle(.white)
+                                        if let cat = profile.category {
+                                            Text(cat.replacingOccurrences(of: "_", with: " ").capitalized)
+                                                .font(DS.Typography.caption)
+                                                .foregroundStyle(.white.opacity(0.75))
+                                        }
+                                    }
+                                    Spacer()
+                                }
+
+                                // Earnings stats card
+                                HStack(spacing: 0) {
+                                    providerStatView(title: "Today", value: roleAmountText(todayTipsAmount))
+                                    Rectangle().fill(.white.opacity(0.25)).frame(width: 1, height: 40)
+                                    providerStatView(title: "All-time", value: roleAmountText(allTimeTipsAmount))
+                                    Rectangle().fill(.white.opacity(0.25)).frame(width: 1, height: 40)
+                                    providerStatView(title: "Tips", value: "\(paidTipsCount)")
+                                }
+                                .padding(DS.Spacing.md)
+                                .background(.white.opacity(0.15))
+                                .cornerRadius(DS.CornerRadius.md)
+
+                                // Share tip link / QR button
+                                if let shareUrl = paymentLinks.first?.shareableUrl {
+                                    ShareLink(item: shareUrl) {
+                                        HStack(spacing: DS.Spacing.sm) {
+                                            Image(systemName: "square.and.arrow.up")
+                                                .font(.system(size: 15, weight: .semibold))
+                                            Text("Share My Tip Link")
+                                                .font(DS.Typography.headline)
+                                        }
+                                        .foregroundStyle(Color.dsAccent)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 14)
+                                        .background(.white)
+                                        .cornerRadius(DS.CornerRadius.sm)
+                                    }
+                                } else if let qrCode = qrCodes.first, let upiUrl = qrCode.upiUrl {
+                                    ShareLink(item: upiUrl) {
+                                        HStack(spacing: DS.Spacing.sm) {
+                                            Image(systemName: "qrcode")
+                                                .font(.system(size: 15, weight: .semibold))
+                                            Text("Share QR Code")
+                                                .font(DS.Typography.headline)
+                                        }
+                                        .foregroundStyle(Color.dsAccent)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 14)
+                                        .background(.white)
+                                        .cornerRadius(DS.CornerRadius.sm)
+                                    }
+                                }
+
+                                // Recent tips
+                                if tips.isEmpty {
+                                    FliqCard {
+                                        VStack(spacing: DS.Spacing.md) {
+                                            Image(systemName: "banknote")
+                                                .font(.system(size: 36))
+                                                .foregroundStyle(Color.dsTertiary)
+                                            Text("No tips yet")
+                                                .font(DS.Typography.bodyMedium)
+                                                .foregroundStyle(Color.dsSecondary)
+                                            Text("Share your QR code or payment link to start receiving tips")
+                                                .font(DS.Typography.caption)
+                                                .foregroundStyle(Color.dsTertiary)
+                                                .multilineTextAlignment(.center)
+                                        }
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, DS.Spacing.lg)
+                                    }
+                                } else {
+                                    Text("Recent tips")
+                                        .font(DS.Typography.title2)
+                                        .foregroundStyle(.white)
+                                    ForEach(tips.prefix(5)) { tip in
+                                        ProviderTipCard(tip: tip)
+                                    }
+                                }
+
+                                // Business invitations
+                                if !invitations.isEmpty {
+                                    Text("Business invitations")
+                                        .font(DS.Typography.title2)
+                                        .foregroundStyle(.white)
+                                    ForEach(invitations) { invitation in
+                                        FliqCard {
+                                            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                                                Text(invitation.businessName ?? "Business")
+                                                    .font(DS.Typography.headline)
+                                                    .foregroundStyle(Color.dsPrimary)
+                                                FliqDetailRow(label: "Role", value: invitation.role)
+                                                if let expiresAt = invitation.expiresAt {
+                                                    FliqDetailRow(label: "Expires", value: roleHistoryDateText(expiresAt) ?? expiresAt)
+                                                }
+                                                HStack(spacing: DS.Spacing.sm) {
+                                                    Button(action: {
+                                                        Task { await respondToInvitation(invitationId: invitation.id, response: "ACCEPT") }
+                                                    }) {
+                                                        Text("Accept")
+                                                            .font(DS.Typography.bodyMedium)
+                                                            .foregroundStyle(.white)
+                                                            .frame(maxWidth: .infinity)
+                                                            .padding(.vertical, 12)
+                                                            .background(Color.dsAccent)
+                                                            .cornerRadius(DS.CornerRadius.sm)
+                                                    }
+                                                    .buttonStyle(.plain)
+                                                    Button(action: {
+                                                        Task { await respondToInvitation(invitationId: invitation.id, response: "DECLINE") }
+                                                    }) {
+                                                        Text("Decline")
+                                                            .font(DS.Typography.bodyMedium)
+                                                            .foregroundStyle(Color.dsSecondary)
+                                                            .frame(maxWidth: .infinity)
+                                                            .padding(.vertical, 12)
+                                                            .overlay(RoundedRectangle(cornerRadius: DS.CornerRadius.sm).strokeBorder(Color.dsBorder))
+                                                    }
+                                                    .buttonStyle(.plain)
+                                                }
                                             }
-                                            .buttonStyle(FliqPrimaryButtonStyle(accent: .fliqMint))
-                                            Button(action: {
-                                                Task { await respondToInvitation(invitationId: invitation.id, response: "DECLINE") }
-                                            }) {
-                                                Text("Decline").frame(maxWidth: .infinity).padding(.vertical, 12)
-                                            }
-                                            .buttonStyle(NothingGhostButtonStyle())
                                         }
                                     }
                                 }
                             }
+
+                            Spacer(minLength: DS.Spacing.xxl)
                         }
+                        .padding(.horizontal, DS.Spacing.md)
+                        .padding(.top, DS.Spacing.sm)
+                        .padding(.bottom, DS.Spacing.lg)
                     }
-                    .padding(16)
                 }
-                .background(Color.clear)
-                .navigationTitle("Dashboard")
+                .navigationTitle("Home")
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(Color.dsSurface, for: .navigationBar)
-                .toolbarColorScheme(.light, for: .navigationBar)
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button(action: { Task { await loadProviderHome() } }) {
-                            Text(isLoading ? "Refreshing..." : "Refresh")
+                            Image(systemName: "arrow.clockwise")
+                                .foregroundStyle(.white)
                         }
                         .disabled(isLoading)
                     }
                 }
             }
-            .tabItem { Label("Dashboard", systemImage: "chart.bar.fill") }
+            .tabItem { Label("Home", systemImage: "house.fill") }
 
             // ── Tab 2: Tips ───────────────────────────────────────────────
             NavigationStack {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        if profile != nil {
-                            ProviderTipsSection(tips: tips)
-                            ProviderRecurringSupportSection(recurringTips: recurringTips)
-                            ProviderCompletionView(
-                                session: session,
-                                currentUpiVpa: upiVpa,
-                                latestTips: tips,
-                                onRefreshRequested: { Task { await loadProviderHome() } }
-                            )
-                        } else {
-                            Text("Complete your profile in the Dashboard tab to start receiving tips.")
-                                .font(.system(size: 15, weight: .medium, design: .rounded))
-                                .foregroundStyle(Color.fliqMuted)
-                                .padding()
+                ZStack(alignment: .top) {
+                    LightBackground()
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                            if profile != nil {
+                                ProviderTipsSection(tips: tips)
+                                ProviderRecurringSupportSection(recurringTips: recurringTips)
+                                ProviderCompletionView(
+                                    session: session,
+                                    currentUpiVpa: upiVpa,
+                                    latestTips: tips,
+                                    onRefreshRequested: { Task { await loadProviderHome() } }
+                                )
+                            } else {
+                                FliqCard {
+                                    Text("Complete your profile in the Home tab to start receiving tips.")
+                                        .font(DS.Typography.body)
+                                        .foregroundStyle(Color.dsSecondary)
+                                        .padding(.vertical, DS.Spacing.sm)
+                                }
+                            }
                         }
+                        .padding(DS.Spacing.md)
                     }
-                    .padding(16)
                 }
-                .background(Color.clear)
                 .navigationTitle("Tips")
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(Color.dsSurface, for: .navigationBar)
-                .toolbarColorScheme(.light, for: .navigationBar)
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
             }
             .tabItem { Label("Tips", systemImage: "banknote.fill") }
 
             // ── Tab 3: Collect ────────────────────────────────────────────
             NavigationStack {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        if profile != nil {
-                            ProviderAvatarView(
-                                session: session,
-                                currentAvatarUrl: profile?.avatarUrl,
-                                onRefreshRequested: { Task { await loadProviderHome() } }
-                            )
-                            ProviderQrSection(
-                                qrCodes: qrCodes,
-                                qrLocationLabel: $qrLocationLabel,
-                                isCreatingQR: isCreatingQR,
-                                onCreate: { Task { await createQRCode() } }
-                            )
-                            ProviderPaymentLinkSection(
-                                paymentLinks: paymentLinks,
-                                linkRole: $linkRole,
-                                linkWorkplace: $linkWorkplace,
-                                linkDescription: $linkDescription,
-                                linkSuggestedAmount: $linkSuggestedAmount,
-                                linkAllowCustomAmount: $linkAllowCustomAmount,
-                                isCreatingLink: isCreatingLink,
-                                onCreate: { Task { await createPaymentLink() } }
-                            )
-                            ProviderCollectionsView(session: session)
-                        } else {
-                            Text("Complete your profile in the Dashboard tab to manage QR codes and payment links.")
-                                .font(.system(size: 15, weight: .medium, design: .rounded))
-                                .foregroundStyle(Color.fliqMuted)
-                                .padding()
+                ZStack(alignment: .top) {
+                    LightBackground()
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                            if profile != nil {
+                                ProviderAvatarView(
+                                    session: session,
+                                    currentAvatarUrl: profile?.avatarUrl,
+                                    onRefreshRequested: { Task { await loadProviderHome() } }
+                                )
+                                ProviderQrSection(
+                                    qrCodes: qrCodes,
+                                    qrLocationLabel: $qrLocationLabel,
+                                    isCreatingQR: isCreatingQR,
+                                    onCreate: { Task { await createQRCode() } }
+                                )
+                                ProviderPaymentLinkSection(
+                                    paymentLinks: paymentLinks,
+                                    linkRole: $linkRole,
+                                    linkWorkplace: $linkWorkplace,
+                                    linkDescription: $linkDescription,
+                                    linkSuggestedAmount: $linkSuggestedAmount,
+                                    linkAllowCustomAmount: $linkAllowCustomAmount,
+                                    isCreatingLink: isCreatingLink,
+                                    onCreate: { Task { await createPaymentLink() } }
+                                )
+                                ProviderCollectionsView(session: session)
+                            } else {
+                                FliqCard {
+                                    Text("Complete your profile in the Home tab to manage QR codes and payment links.")
+                                        .font(DS.Typography.body)
+                                        .foregroundStyle(Color.dsSecondary)
+                                        .padding(.vertical, DS.Spacing.sm)
+                                }
+                            }
                         }
+                        .padding(DS.Spacing.md)
                     }
-                    .padding(16)
                 }
-                .background(Color.clear)
                 .navigationTitle("Collect")
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(Color.dsSurface, for: .navigationBar)
-                .toolbarColorScheme(.light, for: .navigationBar)
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
             }
             .tabItem { Label("Collect", systemImage: "qrcode") }
 
             // ── Tab 4: Profile ────────────────────────────────────────────
             NavigationStack {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        if profile != nil {
-                            ProviderDreamSection(
-                                dream: dream,
-                                dreamTitle: $dreamTitle,
-                                dreamDescription: $dreamDescription,
-                                dreamCategory: $dreamCategory,
-                                dreamGoalAmount: $dreamGoalAmount,
-                                isSavingDream: isSavingDream,
-                                onSave: { Task { await saveDream() } }
-                            )
-                            ProviderPayoutSection(
-                                payouts: payouts,
-                                payoutAmountRupees: $payoutAmountRupees,
-                                isRequestingPayout: isRequestingPayout,
-                                onRequest: { Task { await requestPayout() } }
-                            )
+                ZStack(alignment: .top) {
+                    LightBackground()
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                            if profile != nil {
+                                ProviderDreamSection(
+                                    dream: dream,
+                                    dreamTitle: $dreamTitle,
+                                    dreamDescription: $dreamDescription,
+                                    dreamCategory: $dreamCategory,
+                                    dreamGoalAmount: $dreamGoalAmount,
+                                    isSavingDream: isSavingDream,
+                                    onSave: { Task { await saveDream() } }
+                                )
+                                ProviderPayoutSection(
+                                    payouts: payouts,
+                                    payoutAmountRupees: $payoutAmountRupees,
+                                    isRequestingPayout: isRequestingPayout,
+                                    onRequest: { Task { await requestPayout() } }
+                                )
+                            }
+                            Button("Sign Out", action: onLogout)
+                                .font(DS.Typography.bodyMedium)
+                                .foregroundStyle(Color.dsError)
                         }
-                        Button("Log Out", action: onLogout)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .buttonStyle(.borderless)
-                            .foregroundStyle(Color.fliqMuted)
+                        .padding(DS.Spacing.md)
                     }
-                    .padding(16)
                 }
-                .background(Color.clear)
                 .navigationTitle("Profile")
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(Color.dsSurface, for: .navigationBar)
-                .toolbarColorScheme(.light, for: .navigationBar)
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
             }
             .tabItem { Label("Profile", systemImage: "person.fill") }
         }
         .tint(Color.dsAccent)
-        .toolbarBackground(Color.dsSurface, for: .tabBar)
-        .toolbarColorScheme(.light, for: .tabBar)
+        .toolbarBackground(.ultraThinMaterial, for: .tabBar)
+        .toolbarColorScheme(.dark, for: .tabBar)
         .task(id: session.user.id) {
             await loadProviderHome()
         }
@@ -464,6 +634,67 @@ struct ProviderHomeView: View {
         } catch {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? "Unable to respond to the invitation right now."
         }
+    }
+}
+
+// MARK: - Provider Tip Card (used in Home dashboard)
+
+private struct ProviderTipCard: View {
+    let tip: ProviderTipItem
+
+    private var statusColor: Color {
+        switch tip.status.uppercased() {
+        case "PAID", "SETTLED": return .dsSuccess
+        case "INITIATED", "PENDING": return .dsWarning
+        case "FAILED": return .dsError
+        default: return .dsSecondary
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: DS.Spacing.md) {
+            ZStack {
+                RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                    .fill(statusColor.opacity(0.12))
+                    .frame(width: 40, height: 40)
+                Image(systemName: tip.status.uppercased() == "PAID" || tip.status.uppercased() == "SETTLED"
+                      ? "checkmark.circle.fill" : "clock.fill")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(statusColor)
+            }
+            VStack(alignment: .leading, spacing: 3) {
+                Text(tip.customerName ?? "Anonymous")
+                    .font(DS.Typography.bodyMedium)
+                    .foregroundStyle(Color.dsPrimary)
+                HStack(spacing: DS.Spacing.xs) {
+                    if let intent = tip.intent {
+                        Text(intent.capitalized)
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(Color.dsSecondary)
+                        Text("·")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(Color.dsTertiary)
+                    }
+                    if let date = roleHistoryDateText(tip.createdAt) {
+                        Text(date)
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(Color.dsSecondary)
+                    }
+                }
+            }
+            Spacer()
+            VStack(alignment: .trailing, spacing: 3) {
+                Text(roleAmountText(tip.amountPaise))
+                    .font(DS.Typography.bodyMedium)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.dsPrimary)
+                FliqStatusBadge(status: tip.status)
+            }
+        }
+        .padding(DS.Spacing.md)
+        .background(Color.dsSurface)
+        .cornerRadius(DS.CornerRadius.card)
+        .shadow(color: Color.dsPrimary.opacity(0.05), radius: 6, x: 0, y: 2)
     }
 }
 

@@ -77,11 +77,17 @@ enum DS {
     }
 }
 
-// MARK: - Light App Background
+// MARK: - App Gradient Background
+// Purple/indigo gradient matching fliq.co.in
 
 struct LightBackground: View {
     var body: some View {
-        Color.dsBackground.ignoresSafeArea()
+        LinearGradient(
+            colors: [Color(hex: "4F46E5"), Color(hex: "7C3AED")],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        .ignoresSafeArea()
     }
 }
 

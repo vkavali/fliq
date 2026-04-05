@@ -50,15 +50,15 @@ struct RootView: View {
 
     var body: some View {
         ZStack {
-            Color.dsBackground.ignoresSafeArea()
+            LightBackground()
 
             if viewModel.isLoading && viewModel.stage != .home {
                 VStack(spacing: 14) {
                     ProgressView()
-                        .tint(Color.dsAccent)
+                        .tint(.white)
                     Text("Loading…")
                         .font(DS.Typography.caption)
-                        .foregroundStyle(Color.dsSecondary)
+                        .foregroundStyle(.white.opacity(0.75))
                 }
             } else if viewModel.stage == .home, let session = viewModel.session {
                 homeContent(session: session)
@@ -165,6 +165,8 @@ private struct CustomerTabView: View {
         TabView {
             // ── Tab 1: Tip ────────────────────────────────────────────────
             NavigationStack {
+                ZStack(alignment: .top) {
+                    LightBackground()
                 ScrollView {
                     VStack(alignment: .leading, spacing: DS.Spacing.lg) {
 
@@ -172,10 +174,10 @@ private struct CustomerTabView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(displayName.isEmpty ? greeting : "\(greeting), \(displayName.components(separatedBy: " ").first ?? displayName)")
                                 .font(DS.Typography.title)
-                                .foregroundStyle(Color.dsPrimary)
+                                .foregroundStyle(.white)
                             Text("Tip someone who made your day")
                                 .font(DS.Typography.body)
-                                .foregroundStyle(Color.dsSecondary)
+                                .foregroundStyle(.white.opacity(0.75))
                         }
                         .padding(.top, DS.Spacing.sm)
 
@@ -214,7 +216,7 @@ private struct CustomerTabView: View {
                         VStack(alignment: .leading, spacing: DS.Spacing.sm) {
                             Text("Find a provider")
                                 .font(DS.Typography.title2)
-                                .foregroundStyle(Color.dsPrimary)
+                                .foregroundStyle(.white)
 
                             HStack(spacing: DS.Spacing.sm) {
                                 FliqTextField(
@@ -257,7 +259,7 @@ private struct CustomerTabView: View {
                                 HStack {
                                     Text("Recent tips")
                                         .font(DS.Typography.title2)
-                                        .foregroundStyle(Color.dsPrimary)
+                                        .foregroundStyle(.white)
                                     Spacer()
                                 }
                                 ForEach(Array(viewModel.customerTipHistory.prefix(3))) { tip in
@@ -277,11 +279,11 @@ private struct CustomerTabView: View {
                     .padding(.top, DS.Spacing.md)
                     .padding(.bottom, DS.Spacing.lg)
                 }
-                .background(Color.dsBackground)
+                }
                 .navigationTitle("Fliq")
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(Color.dsSurface, for: .navigationBar)
-                .toolbarColorScheme(.light, for: .navigationBar)
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
             }
             .tabItem { Label("Tip", systemImage: "heart.fill") }
             .sheet(isPresented: $viewModel.isScannerPresented) {
@@ -297,65 +299,66 @@ private struct CustomerTabView: View {
 
             // ── Tab 2: Activity ───────────────────────────────────────────
             NavigationStack {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: DS.Spacing.lg) {
+                ZStack(alignment: .top) {
+                    LightBackground()
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: DS.Spacing.lg) {
 
-                        // Offline queue — only shown if there are pending tips
-                        if !viewModel.pendingTipDrafts.isEmpty {
-                            PendingTipQueueSection(viewModel: viewModel)
+                            // Offline queue — only shown if there are pending tips
+                            if !viewModel.pendingTipDrafts.isEmpty {
+                                PendingTipQueueSection(viewModel: viewModel)
+                            }
+
+                            // Tip history
+                            CustomerHistorySection(viewModel: viewModel)
+
+                            Spacer(minLength: DS.Spacing.xxl)
                         }
-
-                        // Tip history
-                        CustomerHistorySection(viewModel: viewModel)
-
-                        Spacer(minLength: DS.Spacing.xxl)
+                        .padding(.horizontal, DS.Spacing.md)
+                        .padding(.top, DS.Spacing.md)
+                        .padding(.bottom, DS.Spacing.lg)
                     }
-                    .padding(.horizontal, DS.Spacing.md)
-                    .padding(.top, DS.Spacing.md)
-                    .padding(.bottom, DS.Spacing.lg)
                 }
-                .background(Color.dsBackground)
                 .navigationTitle("Activity")
                 .navigationBarTitleDisplayMode(.large)
-                .toolbarBackground(Color.dsSurface, for: .navigationBar)
-                .toolbarColorScheme(.light, for: .navigationBar)
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
             }
             .tabItem { Label("Activity", systemImage: "clock.fill") }
 
             // ── Tab 3: Profile ────────────────────────────────────────────
             NavigationStack {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: DS.Spacing.lg) {
-                        CustomerProfileEditorCard(viewModel: viewModel)
+                ZStack(alignment: .top) {
+                    LightBackground()
+                    ScrollView {
+                        VStack(spacing: DS.Spacing.lg) {
+                            CustomerProfileCard(viewModel: viewModel)
 
-                        Button(action: { viewModel.logout() }) {
-                            Text("Sign Out")
-                                .font(DS.Typography.bodyMedium)
-                                .foregroundStyle(Color.dsError)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 15)
-                                .background(Color.dsErrorTint)
-                                .cornerRadius(DS.CornerRadius.sm)
+                            Button(action: { viewModel.logout() }) {
+                                Text("Sign Out")
+                                    .font(DS.Typography.bodyMedium)
+                                    .foregroundStyle(Color.dsError)
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.bottom, DS.Spacing.sm)
+
+                            Spacer(minLength: DS.Spacing.xxl)
                         }
-                        .buttonStyle(.plain)
-
-                        Spacer(minLength: DS.Spacing.xxl)
+                        .padding(.horizontal, DS.Spacing.md)
+                        .padding(.top, DS.Spacing.md)
+                        .padding(.bottom, DS.Spacing.lg)
                     }
-                    .padding(.horizontal, DS.Spacing.md)
-                    .padding(.top, DS.Spacing.md)
-                    .padding(.bottom, DS.Spacing.lg)
                 }
-                .background(Color.dsBackground)
                 .navigationTitle("Profile")
                 .navigationBarTitleDisplayMode(.large)
-                .toolbarBackground(Color.dsSurface, for: .navigationBar)
-                .toolbarColorScheme(.light, for: .navigationBar)
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
             }
             .tabItem { Label("Profile", systemImage: "person.fill") }
         }
         .tint(Color.dsAccent)
-        .toolbarBackground(Color.dsSurface, for: .tabBar)
-        .toolbarColorScheme(.light, for: .tabBar)
+        .toolbarBackground(.ultraThinMaterial, for: .tabBar)
+        .toolbarColorScheme(.dark, for: .tabBar)
     }
 }
 
@@ -864,86 +867,104 @@ private struct PendingTipQueueSection: View {
     }
 }
 
-// MARK: - Customer Profile Editor
+// MARK: - Customer Profile Card (read-only)
 
-private struct CustomerProfileEditorCard: View {
+private struct CustomerProfileCard: View {
     @ObservedObject var viewModel: AppViewModel
 
+    private var initials: String {
+        let name = viewModel.profileName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return "?" }
+        let parts = name.components(separatedBy: " ").filter { !$0.isEmpty }
+        if parts.count >= 2 {
+            return String((parts[0].first.map(String.init) ?? "") + (parts[1].first.map(String.init) ?? "")).uppercased()
+        }
+        return String(name.prefix(2)).uppercased()
+    }
+
     var body: some View {
-        FliqCard {
-            VStack(alignment: .leading, spacing: DS.Spacing.md) {
-                HStack(spacing: DS.Spacing.md) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.dsAccentTint)
-                            .frame(width: 52, height: 52)
-                        Text(viewModel.profileName.isEmpty ? "?" : String(viewModel.profileName.prefix(1)).uppercased())
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundStyle(Color.dsAccent)
-                    }
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(viewModel.profileName.isEmpty ? "Your Profile" : viewModel.profileName)
-                            .font(DS.Typography.headline)
-                            .foregroundStyle(Color.dsPrimary)
-                        if !viewModel.profilePhone.isEmpty {
-                            Text(viewModel.profilePhone)
-                                .font(DS.Typography.caption)
-                                .foregroundStyle(Color.dsSecondary)
-                        }
-                    }
-                    Spacer()
-                }
-
-                FliqDivider()
-
-                VStack(spacing: DS.Spacing.sm) {
-                    FliqTextField(placeholder: "Full name", text: $viewModel.profileName)
-                    FliqTextField(placeholder: "Email", text: $viewModel.profileEmail, keyboardType: .emailAddress)
-                    FliqTextField(placeholder: "Phone", text: $viewModel.profilePhone, keyboardType: .phonePad)
-                    FliqTextField(placeholder: "Language (en, hi, ta, te, kn, mr)", text: $viewModel.profileLanguage)
-                }
-
-                HStack(spacing: DS.Spacing.sm) {
-                    Button(action: { Task { await viewModel.refreshCustomerProfile() } }) {
-                        HStack {
-                            if viewModel.isLoadingCustomerProfile { ProgressView().controlSize(.small).tint(Color.dsAccent) }
-                            Text("Refresh")
-                        }
-                        .font(DS.Typography.bodyMedium)
-                        .foregroundStyle(Color.dsAccent)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 13)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
-                                .strokeBorder(Color.dsAccent, lineWidth: 1.5)
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(viewModel.isLoadingCustomerProfile || viewModel.isSavingCustomerProfile)
-
-                    Button(action: { Task { await viewModel.saveCustomerProfile() } }) {
-                        HStack {
-                            if viewModel.isSavingCustomerProfile { ProgressView().controlSize(.small).tint(.white) }
-                            Text("Save")
-                        }
-                        .font(DS.Typography.bodyMedium)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 13)
-                        .background(
-                            RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+        VStack(spacing: DS.Spacing.lg) {
+            // Avatar + name + role
+            FliqCard {
+                VStack(spacing: DS.Spacing.lg) {
+                    VStack(spacing: DS.Spacing.sm) {
+                        ZStack {
+                            Circle()
                                 .fill(Color.dsAccent)
-                        )
+                                .frame(width: 80, height: 80)
+                            Text(initials)
+                                .font(.system(size: 30, weight: .bold))
+                                .foregroundStyle(.white)
+                        }
+                        VStack(spacing: 6) {
+                            Text(viewModel.profileName.isEmpty ? "Fliq User" : viewModel.profileName)
+                                .font(DS.Typography.title)
+                                .foregroundStyle(Color.dsPrimary)
+                            if !viewModel.profilePhone.isEmpty {
+                                Text(viewModel.profilePhone)
+                                    .font(DS.Typography.body)
+                                    .foregroundStyle(Color.dsSecondary)
+                            }
+                            Text("Customer")
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(Color.dsAccent)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 4)
+                                .background(Color.dsAccentTint)
+                                .cornerRadius(20)
+                        }
                     }
-                    .buttonStyle(.plain)
-                    .disabled(viewModel.isLoadingCustomerProfile || viewModel.isSavingCustomerProfile)
-                }
+                    .frame(maxWidth: .infinity)
 
-                if let error = viewModel.errorMessage {
-                    FliqErrorBanner(message: error)
+                    if viewModel.isLoadingCustomerProfile {
+                        HStack { Spacer(); ProgressView().tint(Color.dsAccent); Spacer() }
+                    }
                 }
             }
+
+            // Settings section
+            FliqCard {
+                VStack(spacing: 0) {
+                    ProfileSettingsRow(icon: "globe", label: "Language", value: viewModel.profileLanguage.isEmpty ? "English" : viewModel.profileLanguage.uppercased())
+                    FliqDivider()
+                    ProfileSettingsRow(icon: "bell", label: "Notifications", value: "On")
+                    FliqDivider()
+                    ProfileSettingsRow(icon: "questionmark.circle", label: "Help & Support", value: "")
+                }
+            }
+
+            if let error = viewModel.errorMessage {
+                FliqErrorBanner(message: error)
+            }
         }
+    }
+}
+
+private struct ProfileSettingsRow: View {
+    let icon: String
+    let label: String
+    let value: String
+
+    var body: some View {
+        HStack(spacing: DS.Spacing.md) {
+            Image(systemName: icon)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(Color.dsAccent)
+                .frame(width: 22)
+            Text(label)
+                .font(DS.Typography.body)
+                .foregroundStyle(Color.dsPrimary)
+            Spacer()
+            if !value.isEmpty {
+                Text(value)
+                    .font(DS.Typography.footnote)
+                    .foregroundStyle(Color.dsSecondary)
+            }
+            Image(systemName: "chevron.right")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Color.dsTertiary)
+        }
+        .padding(.vertical, DS.Spacing.sm + 2)
     }
 }
 
@@ -957,12 +978,12 @@ private struct CustomerHistorySection: View {
             HStack {
                 Text("Tip history")
                     .font(DS.Typography.title2)
-                    .foregroundStyle(Color.dsPrimary)
+                    .foregroundStyle(.white)
                 Spacer()
                 Button(action: { Task { await viewModel.refreshCustomerHistory() } }) {
                     Image(systemName: "arrow.clockwise")
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(viewModel.isLoadingCustomerHistory ? Color.dsTertiary : Color.dsAccent)
+                        .foregroundStyle(viewModel.isLoadingCustomerHistory ? .white.opacity(0.4) : .white.opacity(0.85))
                 }
                 .buttonStyle(.plain)
                 .disabled(viewModel.isLoadingCustomerHistory)
@@ -976,19 +997,22 @@ private struct CustomerHistorySection: View {
                 }
                 .padding(.vertical, DS.Spacing.xl)
             } else if viewModel.customerTipHistory.isEmpty {
-                VStack(spacing: DS.Spacing.sm) {
-                    Image(systemName: "heart")
-                        .font(.system(size: 32))
-                        .foregroundStyle(Color.dsTertiary)
-                    Text("No tips yet")
-                        .font(DS.Typography.bodyMedium)
-                        .foregroundStyle(Color.dsSecondary)
-                    Text("Your tips will appear here")
-                        .font(DS.Typography.caption)
-                        .foregroundStyle(Color.dsTertiary)
+                FliqCard {
+                    VStack(spacing: DS.Spacing.sm) {
+                        Image(systemName: "heart")
+                            .font(.system(size: 32))
+                            .foregroundStyle(Color.dsTertiary)
+                        Text("No activity yet")
+                            .font(DS.Typography.bodyMedium)
+                            .foregroundStyle(Color.dsSecondary)
+                        Text("Your tips will appear here once you start tipping")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(Color.dsTertiary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, DS.Spacing.xl)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, DS.Spacing.xl)
             } else {
                 ForEach(viewModel.customerTipHistory) { tip in
                     TipHistoryRow(tip: tip)
@@ -1103,25 +1127,25 @@ private struct WhatsNewView: View {
 
     var body: some View {
         ZStack {
-            Color.dsBackground.ignoresSafeArea()
+            LightBackground()
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("What's New")
                                 .font(DS.Typography.title)
-                                .foregroundStyle(Color.dsPrimary)
+                                .foregroundStyle(.white)
                             Text("Recent updates")
                                 .font(DS.Typography.body)
-                                .foregroundStyle(Color.dsSecondary)
+                                .foregroundStyle(.white.opacity(0.75))
                         }
                         Spacer()
                         Button(action: { dismiss() }) {
                             Image(systemName: "xmark")
                                 .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(Color.dsSecondary)
+                                .foregroundStyle(.white.opacity(0.85))
                                 .padding(DS.Spacing.sm)
-                                .background(Color.dsBorderLight)
+                                .background(.white.opacity(0.15))
                                 .cornerRadius(DS.CornerRadius.sm)
                         }
                         .buttonStyle(.plain)
@@ -1132,17 +1156,17 @@ private struct WhatsNewView: View {
                         HStack(alignment: .top, spacing: DS.Spacing.md) {
                             Image(systemName: icon)
                                 .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(Color.dsAccent)
+                                .foregroundStyle(.white)
                                 .frame(width: 36, height: 36)
-                                .background(Color.dsAccentTint)
+                                .background(.white.opacity(0.2))
                                 .cornerRadius(DS.CornerRadius.sm)
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(title)
                                     .font(DS.Typography.bodyMedium)
-                                    .foregroundStyle(Color.dsPrimary)
+                                    .foregroundStyle(.white)
                                 Text(desc)
                                     .font(DS.Typography.footnote)
-                                    .foregroundStyle(Color.dsSecondary)
+                                    .foregroundStyle(.white.opacity(0.75))
                                     .lineSpacing(3)
                             }
                         }
@@ -1220,7 +1244,7 @@ private struct HeroSection: View {
 
                 Text("Fliq")
                     .font(.system(size: 22, weight: .black))
-                    .foregroundStyle(Color.dsAccent)
+                    .foregroundStyle(.white)
             }
             .padding(.bottom, DS.Spacing.xl)
 
@@ -1228,17 +1252,17 @@ private struct HeroSection: View {
             VStack(alignment: .leading, spacing: 0) {
                 Text("Every tip tells a")
                     .font(.system(size: 38, weight: .black))
-                    .foregroundStyle(Color.dsPrimary)
+                    .foregroundStyle(.white)
                     .lineSpacing(2)
                 Text("story.")
                     .font(.system(size: 48, weight: .black))
-                    .foregroundStyle(Color.dsAccent)
+                    .foregroundStyle(.white)
             }
             .padding(.bottom, DS.Spacing.lg)
 
             Text("Fliq transforms tipping into meaningful appreciation. Workers define dreams, tippers see impact — all on UPI, zero friction.")
                 .font(DS.Typography.body)
-                .foregroundStyle(Color.dsSecondary)
+                .foregroundStyle(.white.opacity(0.8))
                 .lineSpacing(5)
                 .padding(.bottom, DS.Spacing.xl)
 
@@ -1403,10 +1427,10 @@ private struct RoleSectionHeader: View {
         VStack(alignment: .leading, spacing: DS.Spacing.xs) {
             Text("Choose your role")
                 .font(DS.Typography.title2)
-                .foregroundStyle(Color.dsPrimary)
+                .foregroundStyle(.white)
             Text("How would you like to use Fliq?")
                 .font(DS.Typography.body)
-                .foregroundStyle(Color.dsSecondary)
+                .foregroundStyle(.white.opacity(0.75))
         }
     }
 }
