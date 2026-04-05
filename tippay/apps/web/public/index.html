@@ -237,6 +237,9 @@
 
   <!-- ==================== CUSTOMER TIP PAGE (No Login — Zero Friction) ==================== -->
   <div id="tip-page" class="page hidden">
+    <div style="position:fixed;top:12px;left:12px;z-index:10;">
+      <a onclick="goTo('landing')" style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.9);backdrop-filter:blur(8px);border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;text-decoration:none;">← Home</a>
+    </div>
     <div class="tip-container">
       <div class="tip-header">
         <div class="tip-provider-avatar" id="tip-provider-avatar">?</div>
@@ -293,7 +296,7 @@
         <button class="pay-btn outline" onclick="resetTip()">Tip Again</button>
       </div>
       <div id="tip-error" class="error-box hidden"></div>
-      <div class="tip-footer"><span>Powered by</span><img src="logo-full.png" alt="Fliq" class="tip-footer-logo"></div>
+      <div class="tip-footer"><span>Powered by</span><a onclick="goTo('landing')" style="cursor:pointer;display:inline-flex;align-items:center;text-decoration:none;"><img src="logo-full.png" alt="Fliq" class="tip-footer-logo"></a></div>
     </div>
   </div>
 
@@ -435,7 +438,7 @@
   <!-- ==================== PROVIDER DASHBOARD ==================== -->
   <div id="dashboard-page" class="page hidden">
     <nav class="topbar"><div class="topbar-inner">
-      <div class="topbar-brand"><img src="logo-full.png" alt="Fliq" class="topbar-logo"></div>
+      <div class="topbar-brand"><a onclick="goTo('landing')" style="cursor:pointer;display:flex;align-items:center;text-decoration:none;"><img src="logo-full.png" alt="Fliq" class="topbar-logo"></a></div>
       <div class="topbar-right">
         <span id="dash-phone" class="topbar-phone"></span>
         <button class="topbar-logout" onclick="logout()">Logout</button>
@@ -598,7 +601,8 @@
       </div>
 
       <!-- Existing sections -->
-      <div class="section"><div class="section-header"><h3>📱 Your QR Codes</h3><button class="small-btn" onclick="newQr()">+ New QR</button></div>
+      <div class="section">
+        <div class="section-header"><h3>📱 Your QR Code</h3><a onclick="newQr()" style="font-size:12px;color:var(--pri);cursor:pointer;text-decoration:underline;font-weight:600;">+ Create another</a></div>
         <div id="qr-grid" class="qr-grid"><p class="muted">Loading...</p></div>
       </div>
       <div class="section"><div class="section-header"><h3>🔗 Your Tip Links</h3></div>
@@ -646,9 +650,10 @@
   <!-- ==================== FLIQ FOR BUSINESS ==================== -->
   <div id="business-page" class="page hidden">
     <nav class="topbar"><div class="topbar-inner">
-      <div class="topbar-brand"><img src="logo-full.png" alt="Fliq" class="topbar-logo"><span class="biz-badge">for Business</span></div>
+      <div class="topbar-brand"><a onclick="goTo('landing')" style="cursor:pointer;display:flex;align-items:center;text-decoration:none;"><img src="logo-full.png" alt="Fliq" class="topbar-logo"></a><span class="biz-badge">for Business</span></div>
       <div class="topbar-right">
         <span id="biz-phone" class="topbar-phone"></span>
+        <button class="topbar-btn" onclick="goTo('landing')">← Home</button>
         <button class="topbar-btn" onclick="goTo('dashboard')">Provider View</button>
         <button class="topbar-logout" onclick="logout()">Logout</button>
       </div>
@@ -843,7 +848,7 @@
   <!-- ==================== TIPPER PORTAL — Manage Subscriptions ==================== -->
   <div id="tipper-portal-page" class="page hidden">
     <nav class="topbar"><div class="topbar-inner">
-      <div class="topbar-brand"><img src="logo-full.png" alt="Fliq" class="topbar-logo"><span style="background:linear-gradient(135deg,#FDCB6E,#FF8F00);color:white;font-size:9px;font-weight:800;padding:2px 10px;border-radius:10px;margin-left:8px;">MY TIPS</span></div>
+      <div class="topbar-brand"><a onclick="goTo('landing')" style="cursor:pointer;display:flex;align-items:center;text-decoration:none;"><img src="logo-full.png" alt="Fliq" class="topbar-logo"></a><span style="background:linear-gradient(135deg,#FDCB6E,#FF8F00);color:white;font-size:9px;font-weight:800;padding:2px 10px;border-radius:10px;margin-left:8px;">MY TIPS</span></div>
       <div class="topbar-right">
         <button class="topbar-btn" onclick="goTo('landing')">← Home</button>
         <button id="tipper-logout-btn" class="topbar-logout hidden" onclick="tipperLogout()">Logout</button>
@@ -894,6 +899,35 @@
           <p style="font-size:13px;color:var(--text2);" id="tipper-phone-label"></p>
         </div>
 
+        <!-- Impact Summary -->
+        <div id="tipper-impact-banner" class="hidden" style="background:linear-gradient(135deg,#E8FFF8,#F0EDFF);border:1px solid rgba(108,92,231,0.15);border-radius:14px;padding:16px 20px;margin-bottom:20px;text-align:center;">
+          <div style="font-size:28px;margin-bottom:6px;">🌟</div>
+          <div id="tipper-impact-text" style="font-size:15px;font-weight:700;color:var(--text);"></div>
+          <div id="tipper-impact-sub" style="font-size:12px;color:var(--text2);margin-top:4px;"></div>
+        </div>
+
+        <!-- Search Providers -->
+        <div style="background:white;border-radius:16px;padding:20px;border:1px solid var(--border);margin-bottom:20px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+            <span style="font-size:18px;">🔍</span>
+            <span style="font-size:15px;font-weight:700;">Find a Provider</span>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="tipper-search-input" class="input-full" placeholder="Search by name…" style="flex:1;margin:0;" oninput="debounceProviderSearch()" onkeydown="if(event.key==='Enter')searchProviders()">
+            <button onclick="searchProviders()" style="background:var(--pri);color:white;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;">Search</button>
+          </div>
+          <div id="tipper-search-results" style="margin-top:12px;"></div>
+        </div>
+
+        <!-- Providers Tipped Before -->
+        <div id="tipper-providers-section" class="hidden" style="background:white;border-radius:16px;padding:20px;border:1px solid var(--border);margin-bottom:20px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+            <span style="font-size:18px;">⭐</span>
+            <span style="font-size:15px;font-weight:700;">Providers You've Tipped</span>
+          </div>
+          <div id="tipper-providers-list" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
+        </div>
+
         <!-- Recurring Subscriptions -->
         <div style="background:white;border-radius:16px;padding:20px;border:1px solid var(--border);margin-bottom:20px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
@@ -930,7 +964,7 @@
   <!-- ==================== TIPPER DEMO ==================== -->
   <div id="tipper-demo-page" class="page hidden">
     <nav class="topbar"><div class="topbar-inner">
-      <div class="topbar-brand"><img src="logo-full.png" alt="Fliq" class="topbar-logo"><span style="background:var(--pri);color:white;font-size:9px;font-weight:800;padding:2px 10px;border-radius:10px;margin-left:8px;">LIVE DEMO</span></div>
+      <div class="topbar-brand"><a onclick="goTo('landing')" style="cursor:pointer;display:flex;align-items:center;text-decoration:none;"><img src="logo-full.png" alt="Fliq" class="topbar-logo"></a><span style="background:var(--pri);color:white;font-size:9px;font-weight:800;padding:2px 10px;border-radius:10px;margin-left:8px;">LIVE DEMO</span></div>
       <div class="topbar-right">
         <span style="font-size:13px;color:#636E72;">✨ Experience the tip flow</span>
         <button class="topbar-btn" onclick="goTo('landing')">← Back</button>
@@ -981,7 +1015,7 @@
   <nav class="nav" style="position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.92);backdrop-filter:blur(16px);border-bottom:1px solid rgba(0,0,0,0.06);">
     <div class="nav-inner" style="max-width:1200px;margin:0 auto;padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;">
       <div class="nav-brand" style="display:flex;align-items:center;gap:10px;">
-        <a href="javascript:void(0)" onclick="goTo('landing')" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+        <a href="#" onclick="goTo('landing')" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
           <img src="logo-full.png" alt="Fliq" style="height:44px;">
           <span style="background:var(--green);color:white;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;">V5</span>
         </a>
@@ -989,9 +1023,9 @@
       <div class="nav-links-desktop" style="display:flex;align-items:center;gap:24px;">
         <a href="#pillars" class="nav-text-link" style="color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;">Features</a>
         <a href="#how" class="nav-text-link" style="color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;">How it Works</a>
-        <a href="javascript:void(0)" onclick="goTo('tipper-demo')" class="nav-text-link" style="background:var(--pri-bg);color:var(--pri);border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;">✨ Demo</a>
-        <a href="javascript:void(0)" onclick="goTo('login')" style="background:var(--pri);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;">Login</a>
-        <a href="javascript:void(0)" onclick="goToBusiness()" style="background:linear-gradient(135deg,#00B894,#00A381);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;">🏢 Business</a>
+        <a href="#" onclick="goTo('tipper-demo')" class="nav-text-link" style="background:var(--pri-bg);color:var(--pri);border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;">✨ Demo</a>
+        <a href="#" onclick="goTo('login')" style="background:var(--pri);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;">Login</a>
+        <a href="#" onclick="goToBusiness()" style="background:linear-gradient(135deg,#00B894,#00A381);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;">🏢 Business</a>
       </div>
     </div>
   </nav>
@@ -1004,7 +1038,7 @@
         <h1 style="font-size:56px;font-weight:900;color:white;line-height:1.08;margin-bottom:20px;letter-spacing:-1px;">Every tip tells a <span style="background:linear-gradient(135deg,#FDCB6E,#00B894);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">story</span></h1>
         <p style="font-size:19px;color:rgba(255,255,255,0.8);line-height:1.7;margin-bottom:36px;">Fliq transforms tipping from a transaction into meaningful appreciation. Workers define dreams, tippers see impact, trust is portable — all on UPI, zero friction.</p>
         <div style="display:flex;gap:14px;flex-wrap:wrap;">
-          <a href="javascript:void(0)" onclick="goTo('tipper-demo')" style="padding:16px 32px;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;text-decoration:none;background:white;color:var(--pri);box-shadow:0 4px 24px rgba(0,0,0,0.15);display:inline-flex;align-items:center;gap:8px;">Try Demo →</a>
+          <a href="#" onclick="goTo('tipper-demo')" style="padding:16px 32px;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;text-decoration:none;background:white;color:var(--pri);box-shadow:0 4px 24px rgba(0,0,0,0.15);display:inline-flex;align-items:center;gap:8px;">Try Demo →</a>
           <a href="#pillars" style="padding:16px 32px;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;text-decoration:none;background:transparent;color:white;border:2px solid rgba(255,255,255,0.3);display:inline-flex;align-items:center;gap:8px;">See What's New</a>
         </div>
       </div>
@@ -1151,7 +1185,7 @@
           <div style="font-size:48px;margin-bottom:12px;">👨‍💼</div>
           <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">For Providers</h3>
           <p style="font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Sign up, create your profile, and get a unique QR code and tip link. Share it with your customers — done.</p>
-          <a href="javascript:void(0)" onclick="goTo('login')" style="display:inline-block;padding:10px 24px;border-radius:8px;background:var(--pri);color:white;font-size:14px;font-weight:600;text-decoration:none;">Register as Provider →</a>
+          <a href="#" onclick="goTo('login')" style="display:inline-block;padding:10px 24px;border-radius:8px;background:var(--pri);color:white;font-size:14px;font-weight:600;text-decoration:none;">Register as Provider →</a>
         </div>
         <div style="background:white;border-radius:var(--r);padding:32px 24px;text-align:center;box-shadow:var(--shadow);border:1px solid var(--border);">
           <div style="font-size:48px;margin-bottom:12px;">📱</div>
@@ -1159,14 +1193,14 @@
           <p style="font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Scan any Fliq QR code or open a shared tip link. Choose an amount, see the impact, and pay via UPI. No app needed.</p>
           <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
             <span style="display:inline-block;padding:10px 24px;border-radius:8px;background:var(--green-bg);color:var(--green);font-size:14px;font-weight:600;">Just Scan & Tip — No Login</span>
-            <a href="javascript:void(0)" onclick="goTo('tipper-portal')" style="display:inline-block;padding:10px 24px;border-radius:8px;background:var(--pri-bg);color:var(--pri);font-size:14px;font-weight:600;text-decoration:none;">Manage My Tips →</a>
+            <a href="#" onclick="goTo('tipper-portal')" style="display:inline-block;padding:10px 24px;border-radius:8px;background:var(--pri-bg);color:var(--pri);font-size:14px;font-weight:600;text-decoration:none;">Manage My Tips →</a>
           </div>
         </div>
         <div style="background:white;border-radius:var(--r);padding:32px 24px;text-align:center;box-shadow:var(--shadow);border:1px solid var(--border);">
           <div style="font-size:48px;margin-bottom:12px;">🏢</div>
           <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">For Businesses</h3>
           <p style="font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Manage your team's tips from a single dashboard. Set budgets, track performance, and print bulk QR codes.</p>
-          <a href="javascript:void(0)" onclick="goToBusiness()" style="display:inline-block;padding:10px 24px;border-radius:8px;background:var(--pri-bg);color:var(--pri);font-size:14px;font-weight:600;text-decoration:none;">Business Dashboard →</a>
+          <a href="#" onclick="goToBusiness()" style="display:inline-block;padding:10px 24px;border-radius:8px;background:var(--pri-bg);color:var(--pri);font-size:14px;font-weight:600;text-decoration:none;">Business Dashboard →</a>
         </div>
       </div>
     </div>
@@ -1183,7 +1217,7 @@
         <div style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.9);font-size:15px;">✅ Instant UPI payouts</div>
         <div style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.9);font-size:15px;">✅ Zero commission under ₹100</div>
       </div>
-      <a href="javascript:void(0)" onclick="goTo('login')" style="display:inline-block;padding:18px 40px;border-radius:10px;font-size:18px;font-weight:700;cursor:pointer;text-decoration:none;background:white;color:var(--pri);box-shadow:0 4px 24px rgba(0,0,0,0.15);">Get Started as a Provider →</a>
+      <a href="#" onclick="goTo('login')" style="display:inline-block;padding:18px 40px;border-radius:10px;font-size:18px;font-weight:700;cursor:pointer;text-decoration:none;background:white;color:var(--pri);box-shadow:0 4px 24px rgba(0,0,0,0.15);">Get Started as a Provider →</a>
     </div>
   </section>
 
@@ -1191,13 +1225,13 @@
   <footer style="background:#111;padding:48px 24px;text-align:center;">
     <div style="max-width:1200px;margin:0 auto;">
       <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;">
-        <img src="logo-full.png" alt="Fliq" style="height:36px;filter:brightness(0) invert(1);">
+        <a href="#" onclick="goTo('landing')" style="display:flex;align-items:center;text-decoration:none;"><img src="logo-full.png" alt="Fliq" style="height:36px;filter:brightness(0) invert(1);"></a>
         <span style="color:rgba(255,255,255,0.5);">— Human Value Infrastructure</span>
       </div>
       <p style="color:rgba(255,255,255,0.4);font-size:14px;margin-bottom:20px;">Built for India. UPI-native. Zero friction.</p>
       <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;">
-        <a href="javascript:void(0)" onclick="goTo('login')" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">Login</a>
-        <a href="javascript:void(0)" onclick="goTo('tipper-portal')" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">My Tips</a>
+        <a href="#" onclick="goTo('login')" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">Login</a>
+        <a href="#" onclick="goTo('tipper-portal')" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">My Tips</a>
         <a href="#pillars" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">Features</a>
         <a href="#how" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">How it Works</a>
         <a href="/api/docs" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">API Docs</a>

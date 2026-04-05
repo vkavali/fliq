@@ -8,6 +8,7 @@ let user = null;
 let providerProfile = null;
 let pendingRedirect = null;
 let tipState = { providerId: null, provider: null, amount: 10000, rating: 5 };
+let _qrLoadedForProvider = null;
 
 // ===== Routing =====
 function goTo(page) {
@@ -765,23 +766,58 @@ async function loadTipLinks() {
 
 async function loadQrCodes() {
   const grid = document.getElementById('qr-grid');
+  // Cache: skip re-render if already loaded for this provider (prevents flickering)
+  const currentProviderId = providerProfile?.id;
+  if (_qrLoadedForProvider === currentProviderId && grid.querySelector('img')) return;
   try {
     const d = await api('GET', '/qrcodes/my');
-    const codes = Array.isArray(d) ? d : (d.qrCodes || []);
-    if (codes.length === 0) { grid.innerHTML = '<p class="muted">No QR codes yet. Click "+ New QR" to create one.</p>'; return; }
+    let codes = Array.isArray(d) ? d : (d.qrCodes || []);
+
+    // Auto-create default QR if provider has none
+    if (codes.length === 0) {
+      grid.innerHTML = '<p class="muted">Setting up your QR code…</p>';
+      try {
+        const name = providerProfile?.displayName || providerProfile?.user?.name || 'My QR';
+        await api('POST', '/qrcodes', { locationLabel: name });
+        const d2 = await api('GET', '/qrcodes/my');
+        codes = Array.isArray(d2) ? d2 : (d2.qrCodes || []);
+      } catch (e) {
+        grid.innerHTML = '<p class="muted">Could not create QR. Try "+ Create another" above.</p>';
+        return;
+      }
+    }
+
     const tipBase = `${location.origin}/tip/${providerProfile.id}`;
-    grid.innerHTML = codes.map(q => {
-      // Use Razorpay-generated QR image if available, otherwise generate via qrserver
-      const qrUrl = q.qrImageUrl || `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(tipBase)}`;
-      const downloadUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(tipBase)}`;
-      return `
-      <div class="qr-card">
-        <img src="${qrUrl}" alt="QR Code" style="width:120px;height:120px;border-radius:8px;" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(tipBase)}'">
-        <div class="qr-label">${q.locationLabel || 'QR Code'}</div>
-        <div class="qr-scans">${q.scanCount || 0} scans</div>
-        <a href="${downloadUrl}" download="fliq-qr.png" style="font-size:11px;color:var(--pri);text-decoration:none;margin-top:4px;display:block;">⬇ Download</a>
+    const [primary, ...rest] = codes;
+
+    // Show primary QR prominently
+    const primaryQrUrl = primary.qrImageUrl || `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(tipBase)}`;
+    const primaryDownload = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(tipBase)}`;
+    let html = `
+      <div style="background:linear-gradient(135deg,#F0EDFF,#E8FFF8);border-radius:16px;padding:24px;text-align:center;margin-bottom:12px;border:2px solid rgba(108,92,231,0.15);">
+        <img src="${primaryQrUrl}" alt="Your QR Code" style="width:180px;height:180px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.12);" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(tipBase)}'">
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-top:12px;">${primary.locationLabel || 'My QR Code'}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px;">${primary.scanCount || 0} scans</div>
+        <a href="${primaryDownload}" download="fliq-qr.png" style="display:inline-block;margin-top:12px;background:var(--pri);color:white;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:600;text-decoration:none;">⬇ Download QR</a>
       </div>`;
-    }).join('');
+
+    // Show additional QRs smaller
+    if (rest.length > 0) {
+      html += `<div class="qr-grid" style="margin-top:8px;">` + rest.map(q => {
+        const qrUrl = q.qrImageUrl || `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(tipBase)}`;
+        const dlUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(tipBase)}`;
+        return `
+        <div class="qr-card">
+          <img src="${qrUrl}" alt="QR Code" style="width:100px;height:100px;border-radius:8px;" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(tipBase)}'">
+          <div class="qr-label">${q.locationLabel || 'QR Code'}</div>
+          <div class="qr-scans">${q.scanCount || 0} scans</div>
+          <a href="${dlUrl}" download="fliq-qr.png" style="font-size:11px;color:var(--pri);text-decoration:none;margin-top:4px;display:block;">⬇ Download</a>
+        </div>`;
+      }).join('') + `</div>`;
+    }
+
+    grid.innerHTML = html;
+    _qrLoadedForProvider = currentProviderId;
   } catch (e) { grid.innerHTML = '<p class="muted">Could not load</p>'; }
 }
 
@@ -1614,6 +1650,8 @@ async function tipperVerifyOtp() {
     // Load data
     loadTipperSubscriptions();
     loadTipperHistory();
+    loadTipperImpact();
+    loadTipperProviders();
   } catch (e) {
     errEl.textContent = e.message || 'Invalid OTP. Please try again.';
     errEl.classList.remove('hidden');
@@ -1725,6 +1763,70 @@ async function tipperCancelSub(id) {
     loadTipperSubscriptions();
   } catch (e) {
     toast('Failed to cancel: ' + (e.message || 'Error'));
+  }
+}
+
+async function loadTipperImpact() {
+  try {
+    const result = await tipperApi('GET', '/tips/customer?limit=100');
+    const tips = result.data || result || [];
+    if (!tips || tips.length === 0) return;
+    const count = tips.length;
+    const total = tips.reduce((sum, t) => sum + Number(t.amountPaise || 0), 0);
+    document.getElementById('tipper-impact-text').textContent = `You've sent ${count} tip${count !== 1 ? 's' : ''} to India's service workers!`;
+    document.getElementById('tipper-impact-sub').textContent = `Total given: ₹${Math.round(total / 100).toLocaleString('en-IN')} across ${count} transaction${count !== 1 ? 's' : ''}`;
+    document.getElementById('tipper-impact-banner').classList.remove('hidden');
+  } catch (e) {
+    // Impact stats not available
+  }
+}
+
+async function loadTipperProviders() {
+  try {
+    const result = await tipperApi('GET', '/tips/customer?limit=100');
+    const tips = result.data || result || [];
+    if (!tips || tips.length === 0) return;
+    const seen = new Map();
+    tips.forEach(t => {
+      const pid = t.providerId || t.provider?.id;
+      const name = t.provider?.displayName || t.provider?.user?.name || 'Provider';
+      if (pid && !seen.has(pid)) seen.set(pid, { id: pid, name });
+    });
+    if (seen.size === 0) return;
+    const list = document.getElementById('tipper-providers-list');
+    list.innerHTML = Array.from(seen.values()).map(p => `
+      <button onclick="window.open('/tip/${p.id}','_blank')" style="background:var(--pri-bg);color:var(--pri);border:1px solid rgba(108,92,231,0.2);border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">${p.name}</button>
+    `).join('');
+    document.getElementById('tipper-providers-section').classList.remove('hidden');
+  } catch (e) {
+    // Provider history not available
+  }
+}
+
+let _searchDebounce = null;
+function debounceProviderSearch() {
+  clearTimeout(_searchDebounce);
+  _searchDebounce = setTimeout(searchProviders, 400);
+}
+
+async function searchProviders() {
+  const q = document.getElementById('tipper-search-input').value.trim();
+  const results = document.getElementById('tipper-search-results');
+  if (!q) { results.innerHTML = ''; return; }
+  results.innerHTML = '<p style="font-size:12px;color:var(--text2);">Searching...</p>';
+  try {
+    const data = await tipperApi('GET', `/providers/search?q=${encodeURIComponent(q)}&limit=5`);
+    const providers = data.providers || data.data || data || [];
+    if (!Array.isArray(providers) || providers.length === 0) {
+      results.innerHTML = '<p style="font-size:12px;color:var(--text2);">No providers found</p>';
+      return;
+    }
+    results.innerHTML = providers.map(p => {
+      const name = p.displayName || p.name || 'Provider';
+      return `<button onclick="window.open('/tip/${p.id}','_blank')" style="display:block;width:100%;text-align:left;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text);font-family:inherit;">${name} <span style="font-size:11px;color:var(--text2);font-weight:400;">${p.category || ''}</span></button>`;
+    }).join('');
+  } catch (e) {
+    results.innerHTML = '<p style="font-size:12px;color:var(--text2);">Search unavailable</p>';
   }
 }
 
