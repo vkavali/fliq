@@ -141,7 +141,7 @@ final class AppViewModel: ObservableObject {
             if verified.user.type == NativeRole.customer.rawValue {
                 applyCustomerProfile(verified.user)
             }
-            statusMessage = "Signed in as \(verified.user.type)."
+            statusMessage = "Signed in as \(selectedRole.rawValue)."
             stage = .home
             await pushCoordinator.syncTokenIfPossible(session: verified)
         } catch {
