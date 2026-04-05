@@ -34,11 +34,9 @@ struct CustomerJarView: View {
                 .font(.system(size: 24, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
 
-            StatusCard(
-                title: errorMessage == nil ? "Current status" : "Error",
-                message: errorMessage ?? statusMessage,
-                isError: errorMessage != nil
-            )
+            if let errorMessage {
+                FliqErrorBanner(message: errorMessage)
+            }
 
             AdvancedNativeCard(title: "Resolve a jar") {
                 TextField("Jar short code", text: $shortCode)
@@ -460,11 +458,9 @@ struct ProviderCollectionsView: View {
                 .font(.system(size: 24, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
 
-            StatusCard(
-                title: errorMessage == nil ? "Current status" : "Error",
-                message: errorMessage ?? statusMessage,
-                isError: errorMessage != nil
-            )
+            if let errorMessage {
+                FliqErrorBanner(message: errorMessage)
+            }
 
             Button(action: {
                 Task { await refreshCollections() }

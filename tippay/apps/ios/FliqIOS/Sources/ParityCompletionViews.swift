@@ -37,11 +37,9 @@ struct CustomerRetentionView: View {
                 .font(.system(size: 24, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
 
-            StatusCard(
-                title: errorMessage == nil ? "Current status" : "Error",
-                message: errorMessage ?? statusMessage,
-                isError: errorMessage != nil
-            )
+            if let errorMessage {
+                FliqErrorBanner(message: errorMessage)
+            }
 
             if isLoading {
                 ProgressView()
@@ -673,11 +671,9 @@ struct BusinessExportView: View {
                 .font(.system(size: 24, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
 
-            StatusCard(
-                title: errorMessage == nil ? "Current status" : "Error",
-                message: errorMessage ?? statusMessage,
-                isError: errorMessage != nil
-            )
+            if let errorMessage {
+                FliqErrorBanner(message: errorMessage)
+            }
 
             Button(action: {
                 Task { await loadExportPreview() }

@@ -328,6 +328,9 @@ private struct CustomerTabView: View {
                                 PendingTipQueueSection(viewModel: viewModel)
                             }
 
+                            // Recurring subscriptions
+                            CustomerSubscriptionsSection(session: session)
+
                             // Tip history
                             CustomerHistorySection(viewModel: viewModel)
 
@@ -1306,13 +1309,13 @@ private struct HeroSection: View {
                 Button(action: { showDemo = true }) {
                     Text("Try Demo")
                         .font(DS.Typography.bodyMedium)
-                        .foregroundStyle(Color.dsAccent)
+                        .foregroundStyle(.white)
                         .padding(.horizontal, DS.Spacing.lg)
                         .padding(.vertical, 13)
                         .frame(maxWidth: .infinity)
                         .overlay(
                             RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
-                                .strokeBorder(Color.dsAccent, lineWidth: 1.5)
+                                .strokeBorder(.white.opacity(0.75), lineWidth: 1.5)
                         )
                 }
                 .buttonStyle(.plain)
@@ -1320,11 +1323,11 @@ private struct HeroSection: View {
                 Button(action: { showWhatsNew = true }) {
                     Text("What's New")
                         .font(DS.Typography.bodyMedium)
-                        .foregroundStyle(Color.dsSecondary)
+                        .foregroundStyle(.white.opacity(0.9))
                         .padding(.horizontal, DS.Spacing.lg)
                         .padding(.vertical, 13)
                         .frame(maxWidth: .infinity)
-                        .background(Color.dsBorderLight)
+                        .background(.white.opacity(0.15))
                         .cornerRadius(DS.CornerRadius.sm)
                 }
                 .buttonStyle(.plain)
@@ -2042,6 +2045,163 @@ private struct DemoSuccessView: View {
 
 private func historyAmountText(_ tip: CustomerTipHistoryItem) -> String {
     String(format: "₹%.0f", Double(tip.amountPaise) / 100.0)
+}
+
+// MARK: - Customer Subscriptions Section
+
+private struct CustomerSubscriptionsSection: View {
+    let session: AuthSession
+
+    @State private var recurringTips: [NativeRecurringTip] = []
+    @State private var isLoading = false
+    @State private var isUpdating = false
+    @State private var errorMessage: String?
+
+    private let parityClient = ParityCompletionClient()
+
+    private var activeOrPaused: [NativeRecurringTip] {
+        recurringTips.filter { $0.status == "ACTIVE" || $0.status == "PAUSED" }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+            HStack {
+                Text("Your subscriptions")
+                    .font(DS.Typography.title2)
+                    .foregroundStyle(.white)
+                Spacer()
+                Button(action: { Task { await loadSubscriptions() } }) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(isLoading ? .white.opacity(0.4) : .white.opacity(0.85))
+                }
+                .buttonStyle(.plain)
+                .disabled(isLoading)
+            }
+
+            if let errorMessage {
+                FliqErrorBanner(message: errorMessage)
+            }
+
+            if isLoading && recurringTips.isEmpty {
+                HStack { Spacer(); ProgressView().tint(.white); Spacer() }
+                    .padding(.vertical, DS.Spacing.lg)
+            } else if activeOrPaused.isEmpty {
+                FliqCard {
+                    VStack(spacing: DS.Spacing.sm) {
+                        Image(systemName: "repeat.circle")
+                            .font(.system(size: 32))
+                            .foregroundStyle(Color.dsTertiary)
+                        Text("No active subscriptions")
+                            .font(DS.Typography.bodyMedium)
+                            .foregroundStyle(Color.dsSecondary)
+                        Text("Subscribe to auto-tip your favourite workers monthly")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(Color.dsTertiary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, DS.Spacing.md)
+                }
+            } else {
+                ForEach(activeOrPaused) { tip in
+                    FliqCard {
+                        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(tip.providerName ?? "Worker")
+                                        .font(DS.Typography.bodyMedium)
+                                        .foregroundStyle(Color.dsPrimary)
+                                    Text("₹\(tip.amountPaise / 100) / \(tip.frequency.lowercased())")
+                                        .font(DS.Typography.caption)
+                                        .foregroundStyle(Color.dsSecondary)
+                                }
+                                Spacer()
+                                FliqStatusBadge(status: tip.status)
+                            }
+                            if let nextCharge = tip.nextChargeDate,
+                               let formatted = historyDateText(nextCharge) {
+                                Text("Next charge: \(formatted)")
+                                    .font(DS.Typography.micro)
+                                    .foregroundStyle(Color.dsTertiary)
+                            }
+                            FliqDivider()
+                            HStack(spacing: DS.Spacing.sm) {
+                                Button(action: { Task { await toggleSubscription(tip) } }) {
+                                    Text(tip.status == "PAUSED" ? "Resume" : "Pause")
+                                        .font(DS.Typography.caption)
+                                        .foregroundStyle(Color.dsAccent)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 8)
+                                        .overlay(RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                                            .strokeBorder(Color.dsAccent, lineWidth: 1))
+                                }
+                                .buttonStyle(.plain)
+                                .disabled(isUpdating)
+
+                                Button(action: { Task { await cancelSubscription(tip.id) } }) {
+                                    Text("Cancel")
+                                        .font(DS.Typography.caption)
+                                        .foregroundStyle(Color.dsError)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 8)
+                                        .overlay(RoundedRectangle(cornerRadius: DS.CornerRadius.sm)
+                                            .strokeBorder(Color.dsError.opacity(0.6), lineWidth: 1))
+                                }
+                                .buttonStyle(.plain)
+                                .disabled(isUpdating)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .task(id: session.user.id) {
+            await loadSubscriptions()
+        }
+    }
+
+    @MainActor
+    private func loadSubscriptions() async {
+        isLoading = true
+        errorMessage = nil
+        do {
+            recurringTips = try await parityClient.getMyRecurringTips(accessToken: session.accessToken)
+        } catch {
+            errorMessage = (error as? LocalizedError)?.errorDescription ?? "Couldn't load your subscriptions."
+        }
+        isLoading = false
+    }
+
+    @MainActor
+    private func toggleSubscription(_ tip: NativeRecurringTip) async {
+        isUpdating = true
+        errorMessage = nil
+        do {
+            if tip.status == "PAUSED" {
+                try await parityClient.resumeRecurringTip(accessToken: session.accessToken, recurringTipId: tip.id)
+            } else {
+                try await parityClient.pauseRecurringTip(accessToken: session.accessToken, recurringTipId: tip.id)
+            }
+            await loadSubscriptions()
+        } catch {
+            errorMessage = (error as? LocalizedError)?.errorDescription ?? "Couldn't update subscription."
+        }
+        isUpdating = false
+    }
+
+    @MainActor
+    private func cancelSubscription(_ id: String) async {
+        isUpdating = true
+        errorMessage = nil
+        do {
+            try await parityClient.cancelRecurringTip(accessToken: session.accessToken, recurringTipId: id)
+            recurringTips.removeAll { $0.id == id }
+        } catch {
+            errorMessage = (error as? LocalizedError)?.errorDescription ?? "Couldn't cancel subscription."
+        }
+        isUpdating = false
+    }
 }
 
 func historyAmountPaiseText(_ amountPaise: Int) -> String {
