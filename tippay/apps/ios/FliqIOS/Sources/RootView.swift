@@ -640,7 +640,7 @@ private struct PhoneWidget: View {
                         .font(.system(size: 13, weight: .bold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 11)
-                        .foregroundStyle(selectedAmount == amount ? Color.fliqTeal : .white.opacity(0.5))
+                        .foregroundStyle(selectedAmount == amount ? Color.fliqTeal : Color(hex: "6B7280"))
                         .background(selectedAmount == amount ? Color(hex: "E0F2FE") : Color(hex: "F3F4F6"))
                         .cornerRadius(8)
                         .overlay(
@@ -826,7 +826,7 @@ private struct AuthCard: View {
                         } label: {
                             Text(label)
                                 .font(.system(size: 13, weight: selectedCountryCode == code ? .bold : .regular))
-                                .foregroundStyle(selectedCountryCode == code ? role.accent : .white.opacity(0.5))
+                                .foregroundStyle(selectedCountryCode == code ? role.accent : Color(hex: "6B7280"))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 11)
                                 .background(role.accent.opacity(selectedCountryCode == code ? 0.15 : 0.0))
@@ -1874,7 +1874,7 @@ struct DemoTipView: View {
                                     }
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
-                                    .foregroundStyle(selectedAmount == amount ? Color.fliqTeal : .white.opacity(0.5))
+                                    .foregroundStyle(selectedAmount == amount ? Color.fliqTeal : Color(hex: "6B7280"))
                                     .background(selectedAmount == amount ? Color(hex: "E0F2FE") : Color(hex: "F3F4F6"))
                                     .cornerRadius(12)
                                     .overlay(
