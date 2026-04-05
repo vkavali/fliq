@@ -213,6 +213,39 @@ struct ProviderHomeView: View {
                                     }
                                 }
 
+                                // Subscribers card
+                                let activeSubscriberCount = recurringTips.filter { $0.status == "ACTIVE" }.count
+                                FliqCard {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("Subscribers")
+                                                .font(DS.Typography.headline)
+                                                .foregroundStyle(Color.dsPrimary)
+                                            if activeSubscriberCount == 0 {
+                                                Text("No subscribers yet")
+                                                    .font(DS.Typography.caption)
+                                                    .foregroundStyle(Color.dsSecondary)
+                                                Text("Share your tip link to get recurring support")
+                                                    .font(DS.Typography.caption)
+                                                    .foregroundStyle(Color.dsTertiary)
+                                            } else {
+                                                Text("\(activeSubscriberCount) active subscriber\(activeSubscriberCount == 1 ? "" : "s")")
+                                                    .font(DS.Typography.caption)
+                                                    .foregroundStyle(Color.dsSuccess)
+                                            }
+                                        }
+                                        Spacer()
+                                        ZStack {
+                                            Circle()
+                                                .fill(activeSubscriberCount > 0 ? Color.dsSuccessTint : Color.dsAccentTint)
+                                                .frame(width: 44, height: 44)
+                                            Text("\(activeSubscriberCount)")
+                                                .font(.system(size: 18, weight: .bold))
+                                                .foregroundStyle(activeSubscriberCount > 0 ? Color.dsSuccess : Color.dsAccent)
+                                        }
+                                    }
+                                }
+
                                 // Recent tips
                                 if tips.isEmpty {
                                     FliqCard {
@@ -398,6 +431,43 @@ struct ProviderHomeView: View {
                     ScrollView {
                         VStack(alignment: .leading, spacing: DS.Spacing.md) {
                             if profile != nil {
+                                // Account status card
+                                FliqCard {
+                                    VStack(spacing: 0) {
+                                        HStack {
+                                            Image(systemName: "checkmark.shield")
+                                                .font(.system(size: 14, weight: .medium))
+                                                .foregroundStyle(Color.dsAccent)
+                                                .frame(width: 22)
+                                            Text("KYC Status")
+                                                .font(DS.Typography.body)
+                                                .foregroundStyle(Color.dsPrimary)
+                                            Spacer()
+                                            let kycStatus = profile?.user?.kycStatus ?? ""
+                                            Text(kycStatus.isEmpty ? "Not verified" : kycStatus.capitalized)
+                                                .font(DS.Typography.footnote)
+                                                .foregroundStyle(kycStatus.uppercased() == "VERIFIED" ? Color.dsSuccess : Color.dsSecondary)
+                                        }
+                                        .padding(.vertical, DS.Spacing.sm + 2)
+                                        FliqDivider()
+                                        HStack {
+                                            Image(systemName: "indianrupeesign.circle")
+                                                .font(.system(size: 14, weight: .medium))
+                                                .foregroundStyle(Color.dsAccent)
+                                                .frame(width: 22)
+                                            Text("UPI / Bank")
+                                                .font(DS.Typography.body)
+                                                .foregroundStyle(Color.dsPrimary)
+                                            Spacer()
+                                            Text(upiVpa.isEmpty ? "Not linked" : upiVpa)
+                                                .font(DS.Typography.footnote)
+                                                .foregroundStyle(upiVpa.isEmpty ? Color.dsSecondary : Color.dsPrimary)
+                                                .lineLimit(1)
+                                        }
+                                        .padding(.vertical, DS.Spacing.sm + 2)
+                                    }
+                                }
+
                                 ProviderDreamSection(
                                     dream: dream,
                                     dreamTitle: $dreamTitle,

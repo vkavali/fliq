@@ -254,7 +254,7 @@ private struct CustomerTabView: View {
                         CustomerTipSuccessSection(viewModel: viewModel)
 
                         // Recent activity preview (last 3)
-                        if !viewModel.customerTipHistory.isEmpty && viewModel.selectedProvider == nil {
+                        if viewModel.selectedProvider == nil {
                             VStack(alignment: .leading, spacing: DS.Spacing.sm) {
                                 HStack {
                                     Text("Recent tips")
@@ -262,8 +262,27 @@ private struct CustomerTabView: View {
                                         .foregroundStyle(.white)
                                     Spacer()
                                 }
-                                ForEach(Array(viewModel.customerTipHistory.prefix(3))) { tip in
-                                    TipHistoryRow(tip: tip)
+                                if viewModel.customerTipHistory.isEmpty {
+                                    FliqCard {
+                                        VStack(spacing: DS.Spacing.sm) {
+                                            Image(systemName: "qrcode.viewfinder")
+                                                .font(.system(size: 32))
+                                                .foregroundStyle(Color.dsTertiary)
+                                            Text("No tips yet")
+                                                .font(DS.Typography.bodyMedium)
+                                                .foregroundStyle(Color.dsSecondary)
+                                            Text("Scan a QR code to send your first tip")
+                                                .font(DS.Typography.caption)
+                                                .foregroundStyle(Color.dsTertiary)
+                                                .multilineTextAlignment(.center)
+                                        }
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, DS.Spacing.lg)
+                                    }
+                                } else {
+                                    ForEach(Array(viewModel.customerTipHistory.prefix(3))) { tip in
+                                        TipHistoryRow(tip: tip)
+                                    }
                                 }
                             }
                         }
@@ -368,7 +387,24 @@ private struct ProviderResultsSection: View {
     @ObservedObject var viewModel: AppViewModel
 
     var body: some View {
-        if !viewModel.providerResults.isEmpty {
+        if viewModel.hasSearchedProviders && !viewModel.isSearchingProviders && viewModel.providerResults.isEmpty {
+            FliqCard {
+                VStack(spacing: DS.Spacing.sm) {
+                    Image(systemName: "person.slash")
+                        .font(.system(size: 28))
+                        .foregroundStyle(Color.dsTertiary)
+                    Text("No providers found")
+                        .font(DS.Typography.bodyMedium)
+                        .foregroundStyle(Color.dsSecondary)
+                    Text("Try a different name or phone number")
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(Color.dsTertiary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, DS.Spacing.lg)
+            }
+        } else if !viewModel.providerResults.isEmpty {
             VStack(alignment: .leading, spacing: DS.Spacing.sm) {
                 Text("\(viewModel.providerResults.count) result\(viewModel.providerResults.count == 1 ? "" : "s")")
                     .font(DS.Typography.caption)

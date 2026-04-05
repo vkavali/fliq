@@ -188,6 +188,19 @@ function renderLanding(data, pub) {
     document.getElementById('rep-section').classList.remove('hidden');
   }
 
+  // Subscribers
+  const subCount = pub?.stats?.subscriberCount || pub?.subscriberCount || pub?.stats?.activeSubscribers || 0;
+  const subEl = document.getElementById('subscribers-text');
+  if (subCount > 0) {
+    subEl.textContent = `🔄 ${subCount} subscriber${subCount === 1 ? '' : 's'}`;
+    subEl.style.color = 'var(--green)';
+    subEl.style.fontWeight = '600';
+  } else {
+    subEl.textContent = 'No subscribers yet — share your tip link to get started';
+    subEl.style.color = 'var(--muted)';
+    subEl.style.fontWeight = 'normal';
+  }
+
   // Dream
   if (pub?.dream) {
     const d = pub.dream;

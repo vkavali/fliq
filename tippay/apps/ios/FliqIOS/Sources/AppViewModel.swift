@@ -56,6 +56,7 @@ final class AppViewModel: ObservableObject {
     @Published var isResolvingScannedCode = false
     @Published var customerHistoryCurrentPage = 1
     @Published var customerHistoryHasMore = false
+    @Published var hasSearchedProviders = false
 
     private let client = AuthClient()
     private let customerClient = CustomerClient()
@@ -191,6 +192,7 @@ final class AppViewModel: ObservableObject {
 
         do {
             providerResults = try await customerClient.searchProviders(query: trimmedQuery)
+            hasSearchedProviders = true
             statusMessage = ""
         } catch {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? "Unable to search providers right now."
@@ -622,6 +624,7 @@ final class AppViewModel: ObservableObject {
     private func resetCustomerFlow() {
         providerQuery = ""
         providerResults = []
+        hasSearchedProviders = false
         selectedProvider = nil
         selectedEntryContext = nil
         resolutionInput = ""
