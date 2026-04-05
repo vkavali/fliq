@@ -940,6 +940,7 @@ struct ProviderHomeView: View {
         profileMessage = nil
 
         do {
+            let isNew = dream == nil
             dream = try await providerClient.saveDream(
                 accessToken: session.accessToken,
                 existingDreamId: dream?.id,
@@ -948,7 +949,7 @@ struct ProviderHomeView: View {
                 category: dreamCategory,
                 goalAmountPaise: goalAmount * 100
             )
-            profileMessage = dream != nil ? "Dream updated." : "Dream created!"
+            profileMessage = isNew ? "Dream created! Your tippers can now see it." : "Dream updated."
             profileIsError = false
         } catch {
             let raw = (error as? LocalizedError)?.errorDescription ?? ""
