@@ -261,6 +261,8 @@ struct ProviderHomeView: View {
             .tabItem { Label("Profile", systemImage: "person.fill") }
         }
         .tint(Color.fliqMint)
+        .toolbarBackground(.ultraThinMaterial, for: .tabBar)
+        .toolbarColorScheme(.dark, for: .tabBar)
         .task(id: session.user.id) {
             await loadProviderHome()
         }
@@ -798,6 +800,8 @@ struct BusinessHomeView: View {
             .tabItem { Label("Settings", systemImage: "gear") }
         }
         .tint(Color.fliqLilac)
+        .toolbarBackground(.ultraThinMaterial, for: .tabBar)
+        .toolbarColorScheme(.dark, for: .tabBar)
         .task(id: session.user.id) {
             await loadBusinessHome()
         }
@@ -940,7 +944,7 @@ private struct ProviderProfileSection: View {
     var body: some View {
         RoleSectionContainer(title: hasProfile ? "Profile" : "Provider onboarding") {
             if let profile {
-                DetailLine(label: "Provider ID", value: profile.id)
+                DetailLine(label: "Provider ID", value: String(profile.id.prefix(8)).uppercased())
                 DetailLine(label: "KYC", value: profile.user?.kycStatus ?? "PENDING")
                 DetailLine(label: "Rating", value: roleScoreText(profile.ratingAverage))
                 DetailLine(label: "Tips received", value: String(profile.totalTipsReceived))
@@ -1465,12 +1469,20 @@ private struct RoleChoiceSection: View {
             ForEach(Array(options.chunked(into: 3).enumerated()), id: \.offset) { chunk in
                 HStack(spacing: 10) {
                     ForEach(chunk.element, id: \.self) { option in
+                        let isSelected = selected == option
                         Button(action: { selected = option }) {
-                            Text(selected == option ? "\(option)*" : option)
+                            Text(isSelected ? "✓ \(option)" : option)
+                                .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+                                .foregroundStyle(isSelected ? Color.fliqTeal : Color.white.opacity(0.75))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
+                                .background(Color.fliqTeal.opacity(isSelected ? 0.18 : 0.0))
+                                .cornerRadius(8)
+                                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(
+                                    isSelected ? Color.fliqTeal.opacity(0.5) : Color.white.opacity(0.2),
+                                    lineWidth: 1))
                         }
-                        .buttonStyle(NothingGhostButtonStyle())
+                        .buttonStyle(.plain)
                     }
                 }
             }

@@ -305,6 +305,7 @@ private struct CustomerTabView: View {
         }
         .tint(Color.fliqTeal)
         .toolbarBackground(.ultraThinMaterial, for: .tabBar)
+        .toolbarColorScheme(.dark, for: .tabBar)
     }
 }
 
@@ -1403,7 +1404,7 @@ private struct CustomerProfileEditorCard: View {
                 DarkSectionHeader(label: "PROFILE", title: "Your details")
 
                 if let profile = viewModel.customerProfile {
-                    DetailLine(label: "CUSTOMER ID", value: profile.id)
+                    DetailLine(label: "CUSTOMER ID", value: String(profile.id.prefix(8)).uppercased())
                 }
 
                 DarkTextField(placeholder: "Name", text: $viewModel.profileName)
