@@ -86,7 +86,7 @@ final class AppViewModel: ObservableObject {
             if restored.user.type == NativeRole.customer.rawValue {
                 applyCustomerProfile(restored.user)
             }
-            statusMessage = "Session restored. Signed in as \(selectedRole?.rawValue.capitalized ?? restored.user.type)."
+            statusMessage = ""
             await pushCoordinator.syncTokenIfPossible(session: restored)
         }
         isLoading = false
@@ -141,7 +141,7 @@ final class AppViewModel: ObservableObject {
             if verified.user.type == NativeRole.customer.rawValue {
                 applyCustomerProfile(verified.user)
             }
-            statusMessage = "Signed in as \(selectedRole.rawValue.capitalized)."
+            statusMessage = ""
             stage = .home
             await pushCoordinator.syncTokenIfPossible(session: verified)
         } catch {

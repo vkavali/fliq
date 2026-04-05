@@ -169,10 +169,6 @@ private struct CustomerTabView: View {
             NavigationStack {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
-                        DarkSectionHeader(label: "CUSTOMER HOME", title: "Welcome back")
-                        if let name = session.user.name {
-                            DetailLine(label: "SIGNED IN AS", value: name)
-                        }
                         Button("Log Out →") { viewModel.logout() }
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(.white.opacity(0.5))
@@ -964,12 +960,6 @@ private struct CustomerHomeCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            DarkSectionHeader(label: "CUSTOMER HOME", title: "Welcome back")
-
-            if let name = session.user.name {
-                DetailLine(label: "SIGNED IN AS", value: name)
-            }
-
             Button("Log Out →") { viewModel.logout() }
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.5))
