@@ -35,7 +35,7 @@ struct CustomerRetentionView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Retention and promises")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.fliqInk)
+                .foregroundStyle(.white)
 
             StatusCard(
                 title: errorMessage == nil ? "Current status" : "Error",
@@ -68,7 +68,7 @@ struct CustomerRetentionView: View {
                         ParityListCard {
                             Text(badge.name)
                                 .font(.system(size: 17, weight: .bold, design: .rounded))
-                                .foregroundStyle(Color.fliqInk)
+                                .foregroundStyle(.white)
                             DetailLine(label: "Category", value: badge.category)
                             DetailLine(label: "Description", value: badge.description)
                         }
@@ -79,7 +79,7 @@ struct CustomerRetentionView: View {
             ParitySectionCard(title: "Leaderboards") {
                 Text("Top tippers")
                     .font(.system(size: 17, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color.fliqInk)
+                    .foregroundStyle(.white)
                 if tipperLeaderboard.isEmpty {
                     Text("No leaderboard data yet.")
                         .foregroundStyle(Color.fliqMuted)
@@ -91,7 +91,7 @@ struct CustomerRetentionView: View {
 
                 Text("Top providers")
                     .font(.system(size: 17, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color.fliqInk)
+                    .foregroundStyle(.white)
                 if providerLeaderboard.isEmpty {
                     Text("No provider leaderboard data yet.")
                         .foregroundStyle(Color.fliqMuted)
@@ -136,7 +136,7 @@ struct CustomerRetentionView: View {
                     ParityListCard {
                         Text("Mandate ready for \(recurringAuthorization.providerName)")
                             .font(.system(size: 17, weight: .bold, design: .rounded))
-                            .foregroundStyle(Color.fliqInk)
+                            .foregroundStyle(.white)
                         DetailLine(label: "Subscription", value: recurringAuthorization.subscriptionId)
                         DetailLine(label: "Authorization URL", value: recurringAuthorization.authorizationUrl)
                         Link(destination: URL(string: recurringAuthorization.authorizationUrl)!) {
@@ -144,7 +144,7 @@ struct CustomerRetentionView: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
                         }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(NothingGhostButtonStyle())
                     }
                 }
 
@@ -156,7 +156,7 @@ struct CustomerRetentionView: View {
                         ParityListCard {
                             Text("\(parityAmountText(recurring.amountPaise)) / \(recurring.frequency.lowercased())")
                                 .font(.system(size: 17, weight: .bold, design: .rounded))
-                                .foregroundStyle(Color.fliqInk)
+                                .foregroundStyle(.white)
                             if let providerName = recurring.providerName {
                                 DetailLine(label: "Provider", value: providerName)
                             }
@@ -175,7 +175,7 @@ struct CustomerRetentionView: View {
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 12)
                                 }
-                                .buttonStyle(.bordered)
+                                .buttonStyle(NothingGhostButtonStyle())
                                 .disabled(isUpdatingRecurring || (recurring.status != "ACTIVE" && recurring.status != "PAUSED"))
 
                                 Button(action: {
@@ -185,7 +185,7 @@ struct CustomerRetentionView: View {
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 12)
                                 }
-                                .buttonStyle(.bordered)
+                                .buttonStyle(NothingGhostButtonStyle())
                                 .disabled(isUpdatingRecurring)
                             }
                         }
@@ -217,7 +217,7 @@ struct CustomerRetentionView: View {
                         ParityListCard {
                             Text("\(parityAmountText(deferred.amountPaise)) to \(deferred.providerName ?? "Provider")")
                                 .font(.system(size: 17, weight: .bold, design: .rounded))
-                                .foregroundStyle(Color.fliqInk)
+                                .foregroundStyle(.white)
                             DetailLine(label: "Status", value: deferred.status)
                             if let dueAt = deferred.dueAt {
                                 DetailLine(label: "Due", value: parityDateText(dueAt) ?? dueAt)
@@ -243,7 +243,7 @@ struct CustomerRetentionView: View {
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 12)
                                 }
-                                .buttonStyle(.bordered)
+                                .buttonStyle(NothingGhostButtonStyle())
                                 .disabled(deferred.status != "PROMISED")
                             }
                         }
@@ -254,7 +254,7 @@ struct CustomerRetentionView: View {
                     ParityListCard {
                         Text("Deferred payment order")
                             .font(.system(size: 17, weight: .bold, design: .rounded))
-                            .foregroundStyle(Color.fliqInk)
+                            .foregroundStyle(.white)
                         DetailLine(label: "Title", value: paymentOrder.title)
                         if let subtitle = paymentOrder.subtitle {
                             DetailLine(label: "Context", value: subtitle)
@@ -266,7 +266,7 @@ struct CustomerRetentionView: View {
                         }
                         if let paymentImpact {
                             Text(paymentImpact.message)
-                                .foregroundStyle(Color.fliqInk)
+                                .foregroundStyle(.white)
                         }
                         HStack(spacing: 12) {
                             if paymentOrder.isMockOrder {
@@ -297,7 +297,7 @@ struct CustomerRetentionView: View {
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 12)
                             }
-                            .buttonStyle(.bordered)
+                            .buttonStyle(NothingGhostButtonStyle())
                         }
                     }
                 }
@@ -563,7 +563,7 @@ struct ProviderCompletionView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Provider completion")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.fliqInk)
+                .foregroundStyle(.white)
 
             StatusCard(
                 title: errorMessage == nil ? "Current status" : "Error",
@@ -574,20 +574,24 @@ struct ProviderCompletionView: View {
             ParitySectionCard(title: "Bank details") {
                 TextField("UPI VPA", text: $bankUpiVpa)
                     .padding(14)
+                    .foregroundStyle(.white)
                     .background(parityFieldBackground)
                 TextField("Bank account number", text: $bankAccountNumber)
                     .keyboardType(.numberPad)
                     .padding(14)
+                    .foregroundStyle(.white)
                     .background(parityFieldBackground)
                 TextField("IFSC code", text: $bankIfscCode)
                     .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()
                     .padding(14)
+                    .foregroundStyle(.white)
                     .background(parityFieldBackground)
                 TextField("PAN", text: $bankPan)
                     .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()
                     .padding(14)
+                    .foregroundStyle(.white)
                     .background(parityFieldBackground)
 
                 Button(action: {
@@ -616,6 +620,7 @@ struct ProviderCompletionView: View {
                 TextField("Aadhaar or VID", text: $aadhaarOrVid)
                     .keyboardType(.numberPad)
                     .padding(14)
+                    .foregroundStyle(.white)
                     .background(parityFieldBackground)
 
                 Button(action: {
@@ -635,7 +640,8 @@ struct ProviderCompletionView: View {
                     TextField("OTP", text: $ekycOtp)
                         .keyboardType(.numberPad)
                         .padding(14)
-                        .background(parityFieldBackground)
+                        .foregroundStyle(.white)
+                    .background(parityFieldBackground)
 
                     Button(action: {
                         Task { await verifyEkyc() }
@@ -652,7 +658,7 @@ struct ProviderCompletionView: View {
                     ParityListCard {
                         Text("Verified profile")
                             .font(.system(size: 17, weight: .bold, design: .rounded))
-                            .foregroundStyle(Color.fliqInk)
+                            .foregroundStyle(.white)
                         DetailLine(label: "Name", value: ekycProfile.name)
                         DetailLine(label: "DOB", value: ekycProfile.dob)
                         DetailLine(label: "Gender", value: ekycProfile.gender)
@@ -670,7 +676,7 @@ struct ProviderCompletionView: View {
                         ParityListCard {
                             Text("\(parityAmountText(tip.amountPaise))\(tip.customerName.map { " from \($0)" } ?? "")")
                                 .font(.system(size: 17, weight: .bold, design: .rounded))
-                                .foregroundStyle(Color.fliqInk)
+                                .foregroundStyle(.white)
                             DetailLine(label: "Status", value: tip.status)
                             if let existingResponse = responseState[tip.id] {
                                 DetailLine(label: "Existing response", value: existingResponse)
@@ -678,7 +684,8 @@ struct ProviderCompletionView: View {
                             HStack(spacing: 12) {
                                 TextField("Emoji", text: $responseEmoji)
                                     .padding(14)
-                                    .background(parityFieldBackground)
+                                    .foregroundStyle(.white)
+                    .background(parityFieldBackground)
 
                                 Button(action: {
                                     Task { await sendResponse(for: tip.id, status: tip.status) }
@@ -818,7 +825,7 @@ struct BusinessExportView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Business export")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.fliqInk)
+                .foregroundStyle(.white)
 
             StatusCard(
                 title: errorMessage == nil ? "Current status" : "Error",
@@ -842,14 +849,14 @@ struct BusinessExportView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(NothingGhostButtonStyle())
             }
 
             if let csvPreview {
                 ParitySectionCard(title: "Preview") {
                     Text(csvPreview)
                         .font(.system(size: 12, weight: .regular, design: .monospaced))
-                        .foregroundStyle(Color.fliqInk)
+                        .foregroundStyle(.white)
                 }
             }
         }
@@ -887,16 +894,18 @@ private struct ParitySectionCard<Content: View>: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(.system(size: 20, weight: .semibold, design: .rounded))
-                .foregroundStyle(Color.fliqInk)
+                .foregroundStyle(.white)
 
             content
         }
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
+        .background(.ultraThinMaterial)
+        .background(Color.white.opacity(0.06))
+        .cornerRadius(26)
+        .overlay(
             RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .fill(Color.white.opacity(0.94))
-                .shadow(color: Color.black.opacity(0.06), radius: 18, x: 0, y: 10)
+                .strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
         )
     }
 }
@@ -910,17 +919,19 @@ private struct ParityListCard<Content: View>: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
+        .background(Color.white.opacity(0.08))
+        .cornerRadius(22)
+        .overlay(
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Color.white.opacity(0.92))
+                .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
         )
     }
 }
 
 private let parityFieldBackground =
-    RoundedRectangle(cornerRadius: 18, style: .continuous)
-        .fill(Color.white)
-        .stroke(Color.black.opacity(0.08), lineWidth: 1)
+    RoundedRectangle(cornerRadius: 10, style: .continuous)
+        .fill(Color.white.opacity(0.1))
+        .stroke(Color.white.opacity(0.2), lineWidth: 1)
 
 private struct ParsedDeferredCheckoutPayload {
     let orderId: String?

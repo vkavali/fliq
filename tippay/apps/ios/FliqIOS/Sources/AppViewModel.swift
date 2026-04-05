@@ -77,6 +77,12 @@ final class AppViewModel: ObservableObject {
         session = restored
         stage = restored == nil ? .rolePicker : .home
         if let restored {
+            // Keep the user's selectedRole from UserDefaults; only fall back if none was saved
+            if selectedRole == nil {
+                let backendRole = derivedRole(from: restored.user)
+                selectedRole = backendRole
+                UserDefaults.standard.set(backendRole.rawValue, forKey: "selectedRole")
+            }
             if restored.user.type == NativeRole.customer.rawValue {
                 applyCustomerProfile(restored.user)
             }
@@ -131,6 +137,7 @@ final class AppViewModel: ObservableObject {
                 code: code.trimmingCharacters(in: .whitespacesAndNewlines)
             )
             session = verified
+            // selectedRole was already set (and persisted) when user picked a role; keep it.
             if verified.user.type == NativeRole.customer.rawValue {
                 applyCustomerProfile(verified.user)
             }
@@ -815,6 +822,12 @@ final class AppViewModel: ObservableObject {
         default:
             return false
         }
+    }
+
+    private func derivedRole(from user: AuthUser) -> NativeRole {
+        if user.type.hasPrefix("BUSINESS") { return .business }
+        if user.type == NativeRole.provider.rawValue { return .provider }
+        return .customer
     }
 
     private func looksLikePaymentLink(_ rawInput: String) -> Bool {

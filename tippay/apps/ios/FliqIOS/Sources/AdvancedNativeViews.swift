@@ -32,7 +32,7 @@ struct CustomerJarView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Tip jars")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.fliqInk)
+                .foregroundStyle(.white)
 
             StatusCard(
                 title: errorMessage == nil ? "Current status" : "Error",
@@ -45,6 +45,7 @@ struct CustomerJarView: View {
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .padding(14)
+                    .foregroundStyle(.white)
                     .background(advancedFieldBackground)
 
                 HStack(spacing: 12) {
@@ -63,14 +64,14 @@ struct CustomerJarView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(NothingGhostButtonStyle())
                 }
 
                 if let resolvedJar {
                     AdvancedNativeListCard {
                         Text(resolvedJar.name)
                             .font(.system(size: 17, weight: .bold, design: .rounded))
-                            .foregroundStyle(Color.fliqInk)
+                            .foregroundStyle(.white)
                         DetailLine(label: "Event", value: resolvedJar.eventType.replacingOccurrences(of: "_", with: " "))
                         DetailLine(label: "Members", value: String(resolvedJar.members.count))
                         DetailLine(label: "Collected", value: advancedAmountText(resolvedJar.totalCollectedPaise))
@@ -88,16 +89,19 @@ struct CustomerJarView: View {
                 TextField("Amount in rupees", text: $amountRupees)
                     .keyboardType(.numberPad)
                     .padding(14)
+                    .foregroundStyle(.white)
                     .background(advancedFieldBackground)
 
                 TextField("Message", text: $message, axis: .vertical)
                     .lineLimit(2...4)
                     .padding(14)
+                    .foregroundStyle(.white)
                     .background(advancedFieldBackground)
 
                 TextField("Rating 1-5", text: $rating)
                     .keyboardType(.numberPad)
                     .padding(14)
+                    .foregroundStyle(.white)
                     .background(advancedFieldBackground)
 
                 Button(action: {
@@ -114,7 +118,7 @@ struct CustomerJarView: View {
                     AdvancedNativeListCard {
                         Text(paymentOrder.title)
                             .font(.system(size: 17, weight: .bold, design: .rounded))
-                            .foregroundStyle(Color.fliqInk)
+                            .foregroundStyle(.white)
                         DetailLine(label: "Order ID", value: paymentOrder.orderId)
                         DetailLine(label: "Amount", value: advancedAmountText(paymentOrder.amountPaise))
                         if let paymentStatus {
@@ -122,7 +126,7 @@ struct CustomerJarView: View {
                         }
                         if let paymentImpact {
                             Text(paymentImpact.message)
-                                .foregroundStyle(Color.fliqInk)
+                                .foregroundStyle(.white)
                         }
 
                         HStack(spacing: 12) {
@@ -155,7 +159,7 @@ struct CustomerJarView: View {
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 12)
                             }
-                            .buttonStyle(.bordered)
+                            .buttonStyle(NothingGhostButtonStyle())
                             .disabled(isRefreshingStatus)
                         }
                     }
@@ -331,7 +335,7 @@ struct ProviderAvatarView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Avatar")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.fliqInk)
+                .foregroundStyle(.white)
 
             StatusCard(
                 title: errorMessage == nil ? "Current status" : "Error",
@@ -443,7 +447,7 @@ struct ProviderCollectionsView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Shared collections")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.fliqInk)
+                .foregroundStyle(.white)
 
             StatusCard(
                 title: errorMessage == nil ? "Current status" : "Error",
@@ -458,12 +462,13 @@ struct ProviderCollectionsView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(NothingGhostButtonStyle())
             .disabled(isLoading)
 
             AdvancedNativeCard(title: "Create a tip jar") {
                 TextField("Jar name", text: $jarName)
                     .padding(14)
+                    .foregroundStyle(.white)
                     .background(advancedFieldBackground)
 
                 AdvancedChoiceSection(label: "Event type", options: nativeJarEvents, selected: $jarEventType)
@@ -471,11 +476,13 @@ struct ProviderCollectionsView: View {
                 TextField("Description", text: $jarDescription, axis: .vertical)
                     .lineLimit(2...4)
                     .padding(14)
+                    .foregroundStyle(.white)
                     .background(advancedFieldBackground)
 
                 TextField("Target amount in rupees", text: $jarTargetRupees)
                     .keyboardType(.numberPad)
                     .padding(14)
+                    .foregroundStyle(.white)
                     .background(advancedFieldBackground)
 
                 Button(action: {
@@ -496,7 +503,7 @@ struct ProviderCollectionsView: View {
                         AdvancedNativeListCard {
                             Text(jar.name)
                                 .font(.system(size: 17, weight: .bold, design: .rounded))
-                                .foregroundStyle(Color.fliqInk)
+                                .foregroundStyle(.white)
                             DetailLine(label: "Short code", value: jar.shortCode)
                             DetailLine(label: "Members", value: String(jar.members.count))
                             DetailLine(label: "Contributions", value: String(jar.contributionCount))
@@ -511,7 +518,7 @@ struct ProviderCollectionsView: View {
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 12)
                                 }
-                                .buttonStyle(.bordered)
+                                .buttonStyle(NothingGhostButtonStyle())
 
                                 if jar.isActive {
                                     Button(action: {
@@ -521,7 +528,7 @@ struct ProviderCollectionsView: View {
                                             .frame(maxWidth: .infinity)
                                             .padding(.vertical, 12)
                                     }
-                                    .buttonStyle(.bordered)
+                                    .buttonStyle(NothingGhostButtonStyle())
                                 }
                             }
                         }
@@ -539,16 +546,19 @@ struct ProviderCollectionsView: View {
 
                     TextField("Member provider ID", text: $jarMemberProviderId)
                         .padding(14)
-                        .background(advancedFieldBackground)
+                        .foregroundStyle(.white)
+                    .background(advancedFieldBackground)
 
                     TextField("Split percentage", text: $jarMemberSplit)
                         .keyboardType(.decimalPad)
                         .padding(14)
-                        .background(advancedFieldBackground)
+                        .foregroundStyle(.white)
+                    .background(advancedFieldBackground)
 
                     TextField("Role label", text: $jarMemberRole)
                         .padding(14)
-                        .background(advancedFieldBackground)
+                        .foregroundStyle(.white)
+                    .background(advancedFieldBackground)
 
                     Button(action: {
                         Task { await addJarMember(selectedJar.id) }
@@ -567,7 +577,7 @@ struct ProviderCollectionsView: View {
                             AdvancedNativeListCard {
                                 Text(member.providerName ?? member.providerId)
                                     .font(.system(size: 17, weight: .bold, design: .rounded))
-                                    .foregroundStyle(Color.fliqInk)
+                                    .foregroundStyle(.white)
                                 if let roleLabel = member.roleLabel {
                                     DetailLine(label: "Role", value: roleLabel)
                                 }
@@ -580,7 +590,7 @@ struct ProviderCollectionsView: View {
                                             .frame(maxWidth: .infinity)
                                             .padding(.vertical, 12)
                                     }
-                                    .buttonStyle(.bordered)
+                                    .buttonStyle(NothingGhostButtonStyle())
                                 }
                             }
                         }
@@ -591,6 +601,7 @@ struct ProviderCollectionsView: View {
             AdvancedNativeCard(title: "Create a tip pool") {
                 TextField("Pool name", text: $poolName)
                     .padding(14)
+                    .foregroundStyle(.white)
                     .background(advancedFieldBackground)
 
                 AdvancedChoiceSection(label: "Split method", options: nativePoolSplitMethods, selected: $poolSplitMethod)
@@ -598,6 +609,7 @@ struct ProviderCollectionsView: View {
                 TextField("Description", text: $poolDescription, axis: .vertical)
                     .lineLimit(2...4)
                     .padding(14)
+                    .foregroundStyle(.white)
                     .background(advancedFieldBackground)
 
                 Button(action: {
@@ -618,7 +630,7 @@ struct ProviderCollectionsView: View {
                         AdvancedNativeListCard {
                             Text(pool.name)
                                 .font(.system(size: 17, weight: .bold, design: .rounded))
-                                .foregroundStyle(Color.fliqInk)
+                                .foregroundStyle(.white)
                             DetailLine(label: "Split method", value: pool.splitMethod)
                             DetailLine(label: "Members", value: String(pool.members.count))
                             DetailLine(label: "Tips", value: String(pool.tipCount))
@@ -630,7 +642,7 @@ struct ProviderCollectionsView: View {
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 12)
                                 }
-                                .buttonStyle(.bordered)
+                                .buttonStyle(NothingGhostButtonStyle())
 
                                 if pool.isActive {
                                     Button(action: {
@@ -640,7 +652,7 @@ struct ProviderCollectionsView: View {
                                             .frame(maxWidth: .infinity)
                                             .padding(.vertical, 12)
                                     }
-                                    .buttonStyle(.bordered)
+                                    .buttonStyle(NothingGhostButtonStyle())
                                 }
                             }
                         }
@@ -658,16 +670,19 @@ struct ProviderCollectionsView: View {
 
                     TextField("Member phone", text: $poolMemberPhone)
                         .padding(14)
-                        .background(advancedFieldBackground)
+                        .foregroundStyle(.white)
+                    .background(advancedFieldBackground)
 
                     TextField("Role", text: $poolMemberRole)
                         .padding(14)
-                        .background(advancedFieldBackground)
+                        .foregroundStyle(.white)
+                    .background(advancedFieldBackground)
 
                     TextField("Split percentage", text: $poolMemberSplit)
                         .keyboardType(.decimalPad)
                         .padding(14)
-                        .background(advancedFieldBackground)
+                        .foregroundStyle(.white)
+                    .background(advancedFieldBackground)
 
                     Button(action: {
                         Task { await addPoolMember(selectedPool.id) }
@@ -686,7 +701,7 @@ struct ProviderCollectionsView: View {
                             AdvancedNativeListCard {
                                 Text(member.userName ?? member.userPhone ?? member.userId)
                                     .font(.system(size: 17, weight: .bold, design: .rounded))
-                                    .foregroundStyle(Color.fliqInk)
+                                    .foregroundStyle(.white)
                                 if let role = member.role {
                                     DetailLine(label: "Role", value: role)
                                 }
@@ -701,7 +716,7 @@ struct ProviderCollectionsView: View {
                                             .frame(maxWidth: .infinity)
                                             .padding(.vertical, 12)
                                     }
-                                    .buttonStyle(.bordered)
+                                    .buttonStyle(NothingGhostButtonStyle())
                                 }
                             }
                         }
@@ -940,15 +955,17 @@ private struct AdvancedNativeCard<Content: View>: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(.system(size: 20, weight: .semibold, design: .rounded))
-                .foregroundStyle(Color.fliqInk)
+                .foregroundStyle(.white)
             content
         }
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
+        .background(.ultraThinMaterial)
+        .background(Color.white.opacity(0.06))
+        .cornerRadius(26)
+        .overlay(
             RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .fill(Color.white.opacity(0.94))
-                .shadow(color: Color.black.opacity(0.06), radius: 18, x: 0, y: 10)
+                .strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
         )
     }
 }
@@ -962,9 +979,11 @@ private struct AdvancedNativeListCard<Content: View>: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
+        .background(Color.white.opacity(0.08))
+        .cornerRadius(22)
+        .overlay(
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Color.white.opacity(0.92))
+                .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
         )
     }
 }
@@ -996,7 +1015,7 @@ private struct AdvancedChoiceSection: View {
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 10)
                             }
-                            .buttonStyle(.bordered)
+                            .buttonStyle(NothingGhostButtonStyle())
                         }
                     }
                 }
@@ -1006,9 +1025,9 @@ private struct AdvancedChoiceSection: View {
 }
 
 private let advancedFieldBackground =
-    RoundedRectangle(cornerRadius: 18, style: .continuous)
-        .fill(Color.white)
-        .stroke(Color.black.opacity(0.08), lineWidth: 1)
+    RoundedRectangle(cornerRadius: 10, style: .continuous)
+        .fill(Color.white.opacity(0.1))
+        .stroke(Color.white.opacity(0.2), lineWidth: 1)
 
 private func advancedAmountText(_ amountPaise: Int) -> String {
     "Rs \(amountPaise / 100)"

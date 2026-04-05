@@ -124,7 +124,7 @@ struct ProviderHomeView: View {
                                             }) {
                                                 Text("Decline").frame(maxWidth: .infinity).padding(.vertical, 12)
                                             }
-                                            .buttonStyle(.bordered)
+                                            .buttonStyle(NothingGhostButtonStyle())
                                         }
                                     }
                                 }
@@ -133,8 +133,11 @@ struct ProviderHomeView: View {
                     }
                     .padding(16)
                 }
+                .background(Color.clear)
                 .navigationTitle("Dashboard")
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button(action: { Task { await loadProviderHome() } }) {
@@ -168,8 +171,11 @@ struct ProviderHomeView: View {
                     }
                     .padding(16)
                 }
+                .background(Color.clear)
                 .navigationTitle("Tips")
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
             }
             .tabItem { Label("Tips", systemImage: "banknote.fill") }
 
@@ -209,8 +215,11 @@ struct ProviderHomeView: View {
                     }
                     .padding(16)
                 }
+                .background(Color.clear)
                 .navigationTitle("Collect")
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
             }
             .tabItem { Label("Collect", systemImage: "qrcode") }
 
@@ -243,8 +252,11 @@ struct ProviderHomeView: View {
                     }
                     .padding(16)
                 }
+                .background(Color.clear)
                 .navigationTitle("Profile")
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
             }
             .tabItem { Label("Profile", systemImage: "person.fill") }
         }
@@ -515,7 +527,7 @@ private struct ProviderAffiliationsView: View {
                     RoleItemCard {
                         Text(affiliation.businessName)
                             .font(.system(size: 17, weight: .bold, design: .rounded))
-                            .foregroundStyle(Color.fliqInk)
+                            .foregroundStyle(.white)
                         DetailLine(label: "Role", value: affiliation.isOwner ? "\(affiliation.role) (Owner)" : affiliation.role)
                         DetailLine(label: "Type", value: affiliation.businessType)
                         if let joinedAt = affiliation.joinedAt {
@@ -563,7 +575,7 @@ private struct BusinessReportingView: View {
             if !topStaff.isEmpty {
                 Text("Top staff")
                     .font(.system(size: 17, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color.fliqInk)
+                    .foregroundStyle(.white)
                 ForEach(topStaff) { member in
                     DetailLine(label: member.displayName, value: roleAmountText(member.tips.totalAmountPaise))
                 }
@@ -633,8 +645,11 @@ struct BusinessHomeView: View {
                     }
                     .padding(16)
                 }
+                .background(Color.clear)
                 .navigationTitle("Dashboard")
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button(action: { Task { await loadBusinessHome() } }) {
@@ -667,7 +682,7 @@ struct BusinessHomeView: View {
                                         RoleItemCard {
                                             Text(member.displayName)
                                                 .font(.system(size: 17, weight: .bold, design: .rounded))
-                                                .foregroundStyle(Color.fliqInk)
+                                                .foregroundStyle(.white)
                                             DetailLine(label: "Role", value: member.role)
                                             if let contact = member.contact {
                                                 DetailLine(label: "Contact", value: contact)
@@ -683,7 +698,7 @@ struct BusinessHomeView: View {
                                             Button(action: { Task { await removeMember(member.id) } }) {
                                                 Text("Remove member").frame(maxWidth: .infinity).padding(.vertical, 12)
                                             }
-                                            .buttonStyle(.bordered)
+                                            .buttonStyle(NothingGhostButtonStyle())
                                         }
                                     }
                                 }
@@ -696,8 +711,11 @@ struct BusinessHomeView: View {
                     }
                     .padding(16)
                 }
+                .background(Color.clear)
                 .navigationTitle("Staff")
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
             }
             .tabItem { Label("Staff", systemImage: "person.2.fill") }
 
@@ -711,7 +729,7 @@ struct BusinessHomeView: View {
                                     RoleItemCard {
                                         Text(review.providerName)
                                             .font(.system(size: 17, weight: .bold, design: .rounded))
-                                            .foregroundStyle(Color.fliqInk)
+                                            .foregroundStyle(.white)
                                         if let rating = review.rating { DetailLine(label: "Rating", value: "\(rating)/5") }
                                         if let message = review.message { DetailLine(label: "Message", value: message) }
                                         DetailLine(label: "Amount", value: roleAmountText(review.amountPaise))
@@ -729,8 +747,11 @@ struct BusinessHomeView: View {
                     }
                     .padding(16)
                 }
+                .background(Color.clear)
                 .navigationTitle("Analytics")
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
             }
             .tabItem { Label("Analytics", systemImage: "chart.pie.fill") }
 
@@ -749,7 +770,7 @@ struct BusinessHomeView: View {
                                         RoleItemCard {
                                             Text(group.displayName)
                                                 .font(.system(size: 17, weight: .bold, design: .rounded))
-                                                .foregroundStyle(Color.fliqInk)
+                                                .foregroundStyle(.white)
                                             DetailLine(label: "QR codes", value: String(group.qrCodes.count))
                                             ForEach(group.qrCodes) { qrCode in
                                                 DetailLine(label: "QR", value: qrCode.locationLabel ?? qrCode.id)
@@ -768,8 +789,11 @@ struct BusinessHomeView: View {
                     }
                     .padding(16)
                 }
+                .background(Color.clear)
                 .navigationTitle("Settings")
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
             }
             .tabItem { Label("Settings", systemImage: "gear") }
         }
@@ -923,33 +947,33 @@ private struct ProviderProfileSection: View {
             }
 
             TextField("Display name", text: $displayName)
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white)
-                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                )
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+                .padding(13)
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
 
             RoleChoiceSection(label: "Category", options: providerCategories, selected: $category)
 
             TextField("Bio", text: $bio, axis: .vertical)
                 .lineLimit(3...5)
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white)
-                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                )
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+                .padding(13)
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
 
             TextField("UPI VPA", text: $upiVpa)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white)
-                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                )
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+                .padding(13)
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
 
             Button(action: onSave) {
                 Text(isSavingProfile ? "Saving..." : (hasProfile ? "Save profile" : "Create profile"))
@@ -971,12 +995,12 @@ private struct ProviderQrSection: View {
     var body: some View {
         RoleSectionContainer(title: "QR codes") {
             TextField("Location label", text: $qrLocationLabel)
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white)
-                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                )
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+                .padding(13)
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
 
             Button(action: onCreate) {
                 Text(isCreatingQR ? "Creating..." : "Create QR code")
@@ -1042,38 +1066,38 @@ private struct ProviderPaymentLinkSection: View {
     var body: some View {
         RoleSectionContainer(title: "Payment links") {
             TextField("Role", text: $linkRole)
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white)
-                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                )
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+                .padding(13)
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
 
             TextField("Workplace", text: $linkWorkplace)
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white)
-                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                )
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+                .padding(13)
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
 
             TextField("Description", text: $linkDescription, axis: .vertical)
                 .lineLimit(2...4)
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white)
-                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                )
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+                .padding(13)
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
 
             TextField("Suggested amount in rupees", text: $linkSuggestedAmount)
                 .keyboardType(.numberPad)
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white)
-                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                )
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+                .padding(13)
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
 
             Button(action: {
                 linkAllowCustomAmount.toggle()
@@ -1082,7 +1106,7 @@ private struct ProviderPaymentLinkSection: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(NothingGhostButtonStyle())
 
             Button(action: onCreate) {
                 Text(isCreatingLink ? "Creating..." : "Create payment link")
@@ -1131,7 +1155,7 @@ private struct ProviderTipsSection: View {
                     RoleItemCard {
                         Text("\(roleAmountText(tip.amountPaise))\(tip.customerName.map { " from \($0)" } ?? "")")
                             .font(.system(size: 17, weight: .bold, design: .rounded))
-                            .foregroundStyle(Color.fliqInk)
+                            .foregroundStyle(.white)
                         DetailLine(label: "Status", value: tip.status)
                         if let rating = tip.rating {
                             DetailLine(label: "Rating", value: "\(rating)/5")
@@ -1169,32 +1193,32 @@ private struct ProviderDreamSection: View {
             }
 
             TextField("Dream title", text: $dreamTitle)
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white)
-                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                )
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+                .padding(13)
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
 
             TextField("Dream description", text: $dreamDescription, axis: .vertical)
                 .lineLimit(3...5)
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white)
-                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                )
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+                .padding(13)
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
 
             RoleChoiceSection(label: "Dream category", options: dreamCategories, selected: $dreamCategory)
 
             TextField("Goal amount in rupees", text: $dreamGoalAmount)
                 .keyboardType(.numberPad)
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white)
-                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                )
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+                .padding(13)
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
 
             Button(action: onSave) {
                 Text(isSavingDream ? "Saving..." : "Save dream")
@@ -1221,7 +1245,7 @@ private struct ProviderRecurringSupportSection: View {
                     RoleItemCard {
                         Text("\(roleAmountText(recurring.amountPaise)) / \(recurring.frequency.lowercased())")
                             .font(.system(size: 17, weight: .bold, design: .rounded))
-                            .foregroundStyle(Color.fliqInk)
+                            .foregroundStyle(.white)
                         DetailLine(label: "Status", value: recurring.status)
                         if let customerName = recurring.customerName {
                             DetailLine(label: "Customer", value: customerName)
@@ -1246,12 +1270,12 @@ private struct ProviderPayoutSection: View {
         RoleSectionContainer(title: "Payouts") {
             TextField("Payout amount in rupees", text: $payoutAmountRupees)
                 .keyboardType(.numberPad)
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white)
-                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                )
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+                .padding(13)
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
 
             Button(action: onRequest) {
                 Text(isRequestingPayout ? "Requesting..." : "Request payout")
@@ -1270,7 +1294,7 @@ private struct ProviderPayoutSection: View {
                     RoleItemCard {
                         Text(roleAmountText(payout.amountPaise))
                             .font(.system(size: 17, weight: .bold, design: .rounded))
-                            .foregroundStyle(Color.fliqInk)
+                            .foregroundStyle(.white)
                         DetailLine(label: "Status", value: payout.status)
                         if let mode = payout.mode {
                             DetailLine(label: "Mode", value: mode)
@@ -1299,52 +1323,52 @@ private struct BusinessEditorSection: View {
     var body: some View {
         RoleSectionContainer(title: isRegistered ? "Business settings" : "Business registration") {
             TextField("Business name", text: $businessName)
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white)
-                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                )
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+                .padding(13)
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
 
             RoleChoiceSection(label: "Business type", options: businessTypes, selected: $businessType)
 
             TextField("Address", text: $businessAddress, axis: .vertical)
                 .lineLimit(2...4)
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white)
-                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                )
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+                .padding(13)
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
 
             TextField("Contact phone", text: $businessContactPhone)
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white)
-                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                )
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+                .padding(13)
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
 
             TextField("Contact email", text: $businessContactEmail)
                 .keyboardType(.emailAddress)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white)
-                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                )
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+                .padding(13)
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
 
             TextField("GSTIN", text: $businessGstin)
                 .textInputAutocapitalization(.characters)
                 .autocorrectionDisabled()
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white)
-                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                )
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+                .padding(13)
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
 
             Button(action: onSave) {
                 Text(isSavingBusiness ? "Saving..." : (isRegistered ? "Save business" : "Register business"))
@@ -1366,12 +1390,12 @@ private struct BusinessInviteSection: View {
     var body: some View {
         RoleSectionContainer(title: "Invite staff") {
             TextField("Staff phone number", text: $invitePhone)
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white)
-                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                )
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+                .padding(13)
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
 
             RoleChoiceSection(label: "Role", options: businessRoles, selected: $inviteRole)
 
@@ -1394,15 +1418,17 @@ private struct RoleSectionContainer<Content: View>: View {
         VStack(alignment: .leading, spacing: 14) {
             Text(title)
                 .font(.system(size: 20, weight: .semibold, design: .rounded))
-                .foregroundStyle(Color.fliqInk)
+                .foregroundStyle(.white)
             content
         }
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
+        .background(.ultraThinMaterial)
+        .background(Color.white.opacity(0.06))
+        .cornerRadius(26)
+        .overlay(
             RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .fill(Color.white.opacity(0.94))
-                .shadow(color: Color.black.opacity(0.06), radius: 18, x: 0, y: 10)
+                .strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
         )
     }
 }
@@ -1416,9 +1442,11 @@ private struct RoleItemCard<Content: View>: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
+        .background(Color.white.opacity(0.08))
+        .cornerRadius(22)
+        .overlay(
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Color.white.opacity(0.92))
+                .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
         )
     }
 }
@@ -1442,7 +1470,7 @@ private struct RoleChoiceSection: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
                         }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(NothingGhostButtonStyle())
                     }
                 }
             }
