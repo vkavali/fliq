@@ -389,6 +389,7 @@ function hideAuthErr() { document.getElementById('auth-error').classList.add('hi
 
 function logout() {
   token = null; user = null; providerProfile = null;
+  _qrLoadedForProvider = null;
   pendingRedirect = null;
   localStorage.removeItem('tp_token');
   localStorage.removeItem('tp_refresh');
@@ -568,7 +569,7 @@ async function saveDream() {
   const goalAmount = parseInt(document.getElementById('dream-goal-input').value) || 0;
   if (!title || goalAmount < 100) { toast('Enter a title and goal amount (min ₹100)'); return; }
   try {
-    await api('POST', '/dreams', { title, description, goalAmountPaise: goalAmount * 100 });
+    await api('POST', '/dreams', { title, description, category: 'OTHER', goalAmount: goalAmount * 100 });
     hideDreamForm();
     loadDream(providerProfile?.id);
     toast('Dream saved! Tippers will see this.');
