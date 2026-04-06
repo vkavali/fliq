@@ -791,35 +791,55 @@ async function loadQrCodes() {
     const tipBase = `${location.origin}/tip/${providerProfile.id}`;
     const [primary, ...rest] = codes;
 
-    // Show primary QR prominently
-    const primaryQrUrl = primary.qrImageUrl || `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(tipBase)}`;
-    const primaryDownload = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(tipBase)}`;
+    // Show primary QR prominently — client-side generation (no external API dependency)
     let html = `
       <div style="background:linear-gradient(135deg,#F0EDFF,#E8FFF8);border-radius:16px;padding:24px;text-align:center;margin-bottom:12px;border:2px solid rgba(108,92,231,0.15);">
-        <img src="${primaryQrUrl}" alt="Your QR Code" style="width:180px;height:180px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.12);" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(tipBase)}'">
+        <div id="qr-primary" style="display:inline-block;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.12);"></div>
         <div style="font-size:15px;font-weight:700;color:var(--text);margin-top:12px;">${primary.locationLabel || 'My QR Code'}</div>
         <div style="font-size:12px;color:var(--text2);margin-top:4px;">${primary.scanCount || 0} scans</div>
-        <a href="${primaryDownload}" download="fliq-qr.png" style="display:inline-block;margin-top:12px;background:var(--pri);color:white;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:600;text-decoration:none;">⬇ Download QR</a>
+        <button onclick="downloadQr('qr-primary','fliq-qr.png')" style="display:inline-block;margin-top:12px;background:var(--pri);color:white;border:none;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer;">⬇ Download QR</button>
       </div>`;
 
     // Show additional QRs smaller
     if (rest.length > 0) {
-      html += `<div class="qr-grid" style="margin-top:8px;">` + rest.map(q => {
-        const qrUrl = q.qrImageUrl || `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(tipBase)}`;
-        const dlUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(tipBase)}`;
+      html += `<div class="qr-grid" style="margin-top:8px;">` + rest.map((q, i) => {
         return `
         <div class="qr-card">
-          <img src="${qrUrl}" alt="QR Code" style="width:100px;height:100px;border-radius:8px;" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(tipBase)}'">
+          <div id="qr-extra-${i}" style="display:inline-block;"></div>
           <div class="qr-label">${q.locationLabel || 'QR Code'}</div>
           <div class="qr-scans">${q.scanCount || 0} scans</div>
-          <a href="${dlUrl}" download="fliq-qr.png" style="font-size:11px;color:var(--pri);text-decoration:none;margin-top:4px;display:block;">⬇ Download</a>
+          <button onclick="downloadQr('qr-extra-${i}','fliq-qr-${i}.png')" style="font-size:11px;color:var(--pri);background:none;border:none;cursor:pointer;margin-top:4px;display:block;">⬇ Download</button>
         </div>`;
       }).join('') + `</div>`;
     }
 
     grid.innerHTML = html;
+
+    // Render QR codes client-side
+    try {
+      new QRCode(document.getElementById('qr-primary'), { text: tipBase, width: 180, height: 180, correctLevel: QRCode.CorrectLevel.M });
+    } catch(e) { console.warn('QR primary render failed', e); }
+    rest.forEach((q, i) => {
+      try {
+        const el = document.getElementById(`qr-extra-${i}`);
+        if (el) new QRCode(el, { text: tipBase, width: 100, height: 100, correctLevel: QRCode.CorrectLevel.M });
+      } catch(e) { console.warn('QR extra render failed', e); }
+    });
+
     _qrLoadedForProvider = currentProviderId;
-  } catch (e) { grid.innerHTML = '<p class="muted">Could not load</p>'; }
+  } catch (e) { grid.innerHTML = '<p class="muted">Could not load QR codes</p>'; }
+}
+
+// Download QR as PNG from canvas
+function downloadQr(elementId, filename) {
+  const el = document.getElementById(elementId);
+  const canvas = el?.querySelector('canvas');
+  if (canvas) {
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = filename;
+    a.click();
+  }
 }
 
 function newQr() {

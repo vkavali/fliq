@@ -149,8 +149,8 @@ function renderLanding(data, pub) {
     avatarEl.textContent = name[0].toUpperCase();
   }
   document.getElementById('provider-name').textContent = name;
-  document.getElementById('trust-name').textContent = name.split(' ')[0];
-  document.getElementById('net-name').textContent = name.split(' ')[0];
+  document.getElementById('trust-name').textContent = name;
+  document.getElementById('net-name').textContent = name;
 
   // Subtitle
   const sub = document.getElementById('provider-subtitle');
