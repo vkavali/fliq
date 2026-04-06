@@ -357,6 +357,7 @@
       </div>
     </div>
     <button class="cta-btn" id="start-tip-btn" onclick="goScreen('intent')">Tip Now ✨</button>
+    <div class="skip-link"><a onclick="skipIntent()">Just send a tip →</a></div>
     <div class="subscribe-row">
       <button class="subscribe-btn" onclick="goScreen('subscribe')">🔄 Subscribe — Auto-tip monthly</button>
     </div>
@@ -390,12 +391,11 @@
       </button>
     </div>
     <button class="cta-btn" id="intent-next-btn" onclick="goScreen('amount')">Continue</button>
-    <div class="skip-link"><a onclick="skipIntent()">Just send a tip →</a></div>
   </div>
 
   <!-- SCREEN 3: Amount Selection -->
   <div id="screen-amount" class="hidden">
-    <div class="back-row"><button class="back-btn" onclick="goScreen('intent')">← Back</button></div>
+    <div class="back-row"><button class="back-btn" onclick="goScreen(state.intentVisited ? 'intent' : 'landing')">← Back</button></div>
     <p class="section-label">Choose tip amount</p>
     <div class="shagun-toggle">
       <div><div class="shagun-label">🪔 Shagun Mode</div><div class="shagun-hint">Auspicious amounts</div></div>

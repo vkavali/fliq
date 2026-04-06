@@ -10,11 +10,10 @@ const PRESETS_NORMAL = [
 ];
 const PRESETS_SHAGUN = [
   { paise: 1100, label: 'Ek shagun' },
-  { paise: 2100, label: 'Aashirwad' },
-  { paise: 5100, label: 'Dil se', popular: true },
+  { paise: 2100, label: 'Aashirwad', popular: true },
+  { paise: 5100, label: 'Dil se' },
   { paise: 10100, label: 'Khushi' },
   { paise: 20100, label: 'Barkat' },
-  { paise: 50100, label: 'Bada shagun' },
 ];
 
 const INTENT_LABELS = {
@@ -26,7 +25,7 @@ const INTENT_LABELS = {
 
 let state = {
   shortCode: null, providerId: null, provider: null, publicProfile: null,
-  amount: 10000, rating: 5, intent: null, tipId: null, shagun: false,
+  amount: 10000, rating: 5, intent: null, tipId: null, shagun: false, intentVisited: false,
   pollTimer: null, pollCount: 0,
   // Subscribe state
   subAmount: 10000, subFreq: 'MONTHLY',
@@ -127,6 +126,7 @@ function goScreen(name) {
   const target = document.getElementById(`screen-${name}`);
   if (target) target.classList.remove('hidden');
 
+  if (name === 'intent') state.intentVisited = true;
   if (name === 'amount') renderAmountGrid();
   if (name === 'subscribe') initSubscribeScreen();
 }
@@ -161,7 +161,14 @@ function renderLanding(data, pub) {
     sub.classList.remove('hidden');
   }
 
-  document.getElementById('provider-category').textContent = data.category || pub?.category || 'SERVICE';
+  const categoryEl = document.getElementById('provider-category');
+  const cat = data.category || pub?.category;
+  if (cat && cat !== '-' && cat !== 'OTHER') {
+    categoryEl.textContent = cat.charAt(0) + cat.slice(1).toLowerCase();
+    categoryEl.classList.remove('hidden');
+  } else {
+    categoryEl.classList.add('hidden');
+  }
 
   // Rating
   const rating = pub?.ratingAverage ? Number(pub.ratingAverage) : (data.ratingAverage ? Number(data.ratingAverage) : 0);
@@ -234,6 +241,7 @@ function pickIntent(intent) {
 
 function skipIntent() {
   state.intent = null;
+  state.intentVisited = false;
   goScreen('amount');
 }
 
@@ -511,6 +519,7 @@ function fireConfetti() {
 // ===== Reset =====
 function resetFlow() {
   state.intent = null;
+  state.intentVisited = false;
   state.tipId = null;
   state.rating = 5;
   state.pollCount = 0;

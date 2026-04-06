@@ -36,7 +36,7 @@ export class TipJarsService {
     @Inject(forwardRef(() => RazorpayService))
     private readonly razorpay: RazorpayService,
   ) {
-    this.baseUrl = this.config.get<string>('BASE_URL', 'https://fliq.co.in');
+    this.baseUrl = this.config.get<string>('APP_URL', 'https://fliq.co.in');
   }
 
   // ─── Create / Manage ──────────────────────────────────────────────────────

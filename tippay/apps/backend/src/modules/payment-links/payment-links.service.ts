@@ -20,8 +20,8 @@ export class PaymentLinksService {
     private readonly config: ConfigService,
   ) {
     this.baseUrl = this.config.get<string>(
-      'APP_BASE_URL',
-      'https://fliq-production-9ac7.up.railway.app',
+      'APP_URL',
+      'https://fliq.co.in',
     );
   }
 

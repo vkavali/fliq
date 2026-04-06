@@ -144,7 +144,7 @@ export class DevService {
       },
     });
 
-    const baseUrl = this.config.get('APP_BASE_URL', 'https://fliq.co.in');
+    const baseUrl = this.config.get('APP_URL', 'https://fliq.co.in');
     this.logger.warn('[DEV] Test data seeded successfully');
 
     return {
