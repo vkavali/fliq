@@ -403,11 +403,7 @@
     </div>
     <div class="amount-grid" id="amount-grid"></div>
     <div class="custom-row"><span class="rupee">₹</span><input type="number" id="custom-amount" placeholder="Custom amount" min="10" max="10000" oninput="onCustomAmount()"></div>
-    <div class="breakdown">
-      <div class="bd-line"><span>Tip amount</span><span id="bd-amount">₹100</span></div>
-      <div class="bd-line commission hidden" id="bd-commission"><span>Platform fee (5%)</span><span id="bd-comm-val">₹0</span></div>
-      <div class="bd-line net"><span><strong id="net-name">Provider</strong> receives</span><span id="bd-net">₹100</span></div>
-    </div>
+    <div id="receipt-preview" style="background:#FAFAFA;border:1px solid #E9ECEF;border-radius:12px;padding:14px 16px;margin:12px 0;"></div>
     <p class="section-label">Rate your experience</p>
     <div class="stars-row">
       <button class="star-btn" onclick="setRating(1)" data-v="1">★</button>
@@ -457,6 +453,7 @@
           <span class="impact-progress-pct" id="impact-pct">0%</span>
           <span id="impact-goal" style="color:var(--text2);font-size:12px;"></span>
         </div>
+        <div id="impact-dream-text" class="hidden" style="font-size:13px;color:var(--pri);font-weight:600;margin-top:8px;text-align:center;"></div>
       </div>
       <div class="receipt" id="impact-receipt">
         <div class="receipt-line"><span>Amount</span><span id="r-amount">-</span></div>
@@ -539,7 +536,7 @@
   </div>
 
   <div class="footer">
-    <span>Powered by</span> <strong> Fliq</strong> <span> · Scan. Fliq. Done.</span>
+    <span>Powered by</span> <a href="/" style="font-weight:700;color:var(--pri);text-decoration:none;"> Fliq</a> <span> · Scan. Fliq. Done.</span>
   </div>
 </div>
 

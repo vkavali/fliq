@@ -480,8 +480,39 @@
         </div>
       </div>
 
+      <!-- Profile Completion Gate -->
+      <div id="profile-gate" class="hidden" style="background:linear-gradient(135deg,#FFF3E0,#FFF8E1);border:2px solid #FFB74D;border-radius:16px;padding:24px;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+          <div style="font-size:28px;">🔒</div>
+          <div>
+            <div style="font-size:16px;font-weight:800;color:#E65100;">Complete your profile to unlock your tip link</div>
+            <div style="font-size:12px;color:#BF360C;margin-top:2px;" id="gate-progress-text">0/3 complete</div>
+          </div>
+        </div>
+        <div style="background:rgba(0,0,0,0.08);border-radius:6px;height:8px;margin-bottom:16px;overflow:hidden;">
+          <div id="gate-progress-fill" style="height:100%;width:0%;background:linear-gradient(90deg,#FF9800,#4CAF50);border-radius:6px;transition:width 0.6s ease;"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div id="gate-photo" onclick="scrollToOnboarding()" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:white;border-radius:10px;border:1px solid #E9ECEF;">
+            <span class="gate-check" style="font-size:16px;">⬜</span>
+            <div><div style="font-size:13px;font-weight:600;">Upload a profile photo</div><div style="font-size:11px;color:#636E72;">Tippers want to see who they're appreciating</div></div>
+            <span style="margin-left:auto;font-size:14px;color:var(--pri);">→</span>
+          </div>
+          <div id="gate-bio" onclick="scrollToOnboarding()" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:white;border-radius:10px;border:1px solid #E9ECEF;">
+            <span class="gate-check" style="font-size:16px;">⬜</span>
+            <div><div style="font-size:13px;font-weight:600;">Add a bio or one-liner</div><div style="font-size:11px;color:#636E72;">Tell people what you do in one sentence</div></div>
+            <span style="margin-left:auto;font-size:14px;color:var(--pri);">→</span>
+          </div>
+          <div id="gate-dream" onclick="scrollToDream()" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:white;border-radius:10px;border:1px solid #E9ECEF;">
+            <span class="gate-check" style="font-size:16px;">⬜</span>
+            <div><div style="font-size:13px;font-weight:600;">Set a Dream with a goal amount</div><div style="font-size:11px;color:#636E72;">Dreams inspire tippers to give more</div></div>
+            <span style="margin-left:auto;font-size:14px;color:var(--pri);">→</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Share Tip Link Card -->
-      <div style="background:linear-gradient(135deg,#6C5CE7,#4834D4);border-radius:16px;padding:20px;margin-bottom:20px;position:relative;overflow:hidden;">
+      <div id="tip-link-card" style="background:linear-gradient(135deg,#6C5CE7,#4834D4);border-radius:16px;padding:20px;margin-bottom:20px;position:relative;overflow:hidden;">
         <div style="position:absolute;top:-20px;right:-20px;width:120px;height:120px;background:rgba(255,255,255,0.06);border-radius:50%;"></div>
         <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">📲 Your Tip Link</div>
         <div style="display:flex;align-items:center;gap:8px;">
@@ -602,11 +633,11 @@
       </div>
 
       <!-- Existing sections -->
-      <div class="section">
+      <div id="qr-section" class="section">
         <div class="section-header"><h3>📱 Your QR Code</h3><a onclick="newQr()" style="font-size:12px;color:var(--pri);cursor:pointer;text-decoration:underline;font-weight:600;">+ Create another</a></div>
         <div id="qr-grid" class="qr-grid"><p class="muted">Loading...</p></div>
       </div>
-      <div class="section"><div class="section-header"><h3>🔗 Your Tip Links</h3></div>
+      <div id="tip-links-section" class="section"><div class="section-header"><h3>🔗 Your Tip Links</h3></div>
         <div class="tip-link-create">
           <input type="text" id="link-role" class="input-sm" placeholder="Your role (e.g. Waiter)" maxlength="100">
           <input type="text" id="link-workplace" class="input-sm" placeholder="Workplace (e.g. Cafe Mocha)" maxlength="200">

@@ -7,15 +7,14 @@ const PRESETS_NORMAL = [
   { paise: 10000, label: 'Great service', popular: true },
   { paise: 20000, label: 'Above & beyond' },
   { paise: 50000, label: 'Exceptional' },
-  { paise: 100000, label: 'VIP' },
 ];
 const PRESETS_SHAGUN = [
-  { paise: 5100, label: '₹51 shagun' },
-  { paise: 10100, label: '₹101 shagun', popular: true },
-  { paise: 25100, label: '₹251 shagun' },
-  { paise: 50100, label: '₹501 shagun' },
-  { paise: 100100, label: '₹1001 shagun' },
-  { paise: 200100, label: '₹2001 shagun' },
+  { paise: 1100, label: 'Ek shagun' },
+  { paise: 2100, label: 'Aashirwad' },
+  { paise: 5100, label: 'Dil se', popular: true },
+  { paise: 10100, label: 'Khushi' },
+  { paise: 20100, label: 'Barkat' },
+  { paise: 50100, label: 'Bada shagun' },
 ];
 
 const INTENT_LABELS = {
@@ -217,6 +216,10 @@ function renderLanding(data, pub) {
   if (data.suggestedAmountPaise && data.suggestedAmountPaise >= 1000) {
     state.amount = data.suggestedAmountPaise;
   }
+
+  // Personalize CTA button
+  const firstName = name.split(' ')[0];
+  document.getElementById('start-tip-btn').textContent = `Tip ${firstName} ✨`;
 }
 
 // ===== Screen 2: Intent =====
@@ -280,15 +283,30 @@ function onCustomAmount() {
 function updateBreakdown() {
   const p = state.amount;
   const r = p / 100;
-  let comm = 0;
-  if (p > 10000) comm = Math.round(p * 0.05);
-  const net = p - comm;
-  document.getElementById('bd-amount').textContent = `₹${r.toFixed(0)}`;
-  document.getElementById('bd-comm-val').textContent = `₹${(comm / 100).toFixed(0)}`;
+  const name = state.provider?.providerName || state.publicProfile?.displayName || 'Worker';
+
+  // Receipt preview — always show ₹0 platform fee as trust signal
+  const receiptEl = document.getElementById('receipt-preview');
+  if (receiptEl) {
+    receiptEl.innerHTML = `
+      <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:var(--text2);">
+        <span>Tip amount</span><span>₹${r.toFixed(0)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;">
+        <span style="color:var(--text2);">Platform fee</span><span style="color:#00B894;font-weight:700;">₹0</span>
+      </div>
+      <div style="border-top:2px solid var(--border);margin-top:4px;padding-top:8px;display:flex;justify-content:space-between;font-size:15px;font-weight:800;color:var(--text);">
+        <span>${name} receives</span><span>₹${r.toFixed(0)}</span>
+      </div>`;
+  }
+
+  // Legacy breakdown elements (if present)
+  const bdAmount = document.getElementById('bd-amount');
+  if (bdAmount) bdAmount.textContent = `₹${r.toFixed(0)}`;
+  const bdNet = document.getElementById('bd-net');
+  if (bdNet) bdNet.textContent = `₹${r.toFixed(0)}`;
   const cr = document.getElementById('bd-commission');
-  cr.style.display = comm > 0 ? 'flex' : 'none';
-  cr.classList.toggle('hidden', comm === 0);
-  document.getElementById('bd-net').textContent = `₹${(net / 100).toFixed(0)}`;
+  if (cr) cr.style.display = 'none';
 }
 
 function updatePayBtn() {
@@ -421,10 +439,19 @@ async function showImpact() {
       document.getElementById('impact-goal').textContent = `₹${Math.round(impact.dream.currentAmount / 100)} / ₹${Math.round(impact.dream.goalAmount / 100)}`;
       document.getElementById('impact-pct').textContent = impact.dream.newProgress + '%';
 
-      // Animate: start from previous, fill to new
+      // Animate: start from previous, fill to new over 1.2s
       const fill = document.getElementById('impact-fill');
+      fill.style.transition = 'width 1.2s ease-out';
       fill.style.width = impact.dream.previousProgress + '%';
-      setTimeout(() => { fill.style.width = impact.dream.newProgress + '%'; }, 500);
+      setTimeout(() => { fill.style.width = impact.dream.newProgress + '%'; }, 400);
+
+      // Dream contribution text
+      const dreamText = document.getElementById('impact-dream-text');
+      if (dreamText) {
+        const workerFirst = impact.workerName?.split(' ')[0] || provName;
+        dreamText.textContent = `Your tip moved ${workerFirst}'s dream from ${impact.dream.previousProgress}% to ${impact.dream.newProgress}%`;
+        dreamText.classList.remove('hidden');
+      }
     } else {
       document.getElementById('impact-emoji').textContent = '🎉';
       document.getElementById('impact-title').textContent = `You made ${provName}'s day!`;

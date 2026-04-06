@@ -438,15 +438,18 @@ async function loadDashboard() {
     // Tip link — points to V5 tip page (/tip/ID)
     document.getElementById('tip-link').textContent = `${location.origin}/tip/${p.id}`;
 
-    loadQrCodes();
-    loadTipLinks();
-    loadProviderTips();
-    loadPayouts();
-
     // V5: Load dream, reputation, intents, recurring, responses
     loadDream(p.id);
     loadReputation(p.id);
     loadIntents(p.id);
+
+    // Profile completion gate — check after dream loads
+    setTimeout(() => checkProfileCompletion(p), 800);
+
+    loadQrCodes();
+    loadTipLinks();
+    loadProviderTips();
+    loadPayouts();
     loadRecurringTips();
     loadWorkerResponses(p.id);
 
@@ -463,6 +466,67 @@ async function loadDashboard() {
 function copyTipLink() {
   const link = document.getElementById('tip-link').textContent;
   navigator.clipboard.writeText(link).then(() => toast('✅ Tip link copied!')).catch(() => toast('Failed to copy'));
+}
+
+// ===== Profile Completion Gate =====
+function checkProfileCompletion(provider) {
+  const hasPhoto = !!(provider.avatarUrl);
+  const hasBio = !!(provider.bio && provider.bio.trim().length > 0);
+  const hasDream = !document.getElementById('dream-empty') || document.getElementById('dream-empty').classList.contains('hidden');
+
+  const complete = hasPhoto && hasBio && hasDream;
+  const gateEl = document.getElementById('profile-gate');
+  const tipLinkCard = document.getElementById('tip-link-card');
+  const qrSection = document.getElementById('qr-section');
+  const tipLinksSection = document.getElementById('tip-links-section');
+
+  if (!gateEl) return; // safety
+
+  if (complete) {
+    gateEl.classList.add('hidden');
+    if (tipLinkCard) tipLinkCard.classList.remove('hidden');
+    if (qrSection) qrSection.classList.remove('hidden');
+    if (tipLinksSection) tipLinksSection.classList.remove('hidden');
+  } else {
+    gateEl.classList.remove('hidden');
+    if (tipLinkCard) tipLinkCard.classList.add('hidden');
+    if (qrSection) qrSection.classList.add('hidden');
+    if (tipLinksSection) tipLinksSection.classList.add('hidden');
+
+    // Update progress steps
+    const steps = [
+      { done: hasPhoto, id: 'gate-photo', action: 'scrollToOnboarding' },
+      { done: hasBio, id: 'gate-bio', action: 'scrollToOnboarding' },
+      { done: hasDream, id: 'gate-dream', action: 'scrollToDream' },
+    ];
+    const doneCount = steps.filter(s => s.done).length;
+    document.getElementById('gate-progress-text').textContent = `${doneCount}/3 complete`;
+    document.getElementById('gate-progress-fill').style.width = `${Math.round((doneCount / 3) * 100)}%`;
+
+    steps.forEach(s => {
+      const el = document.getElementById(s.id);
+      if (el) {
+        el.querySelector('.gate-check').textContent = s.done ? '✅' : '⬜';
+        el.style.opacity = s.done ? '0.6' : '1';
+        el.style.cursor = s.done ? 'default' : 'pointer';
+      }
+    });
+  }
+}
+
+function scrollToDream() {
+  const dreamSection = document.getElementById('dream-display');
+  if (dreamSection) {
+    dreamSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    showDreamForm();
+  }
+}
+
+function scrollToOnboarding() {
+  // Scroll to profile editing (top of dashboard)
+  const dash = document.getElementById('dashboard');
+  if (dash) dash.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  toast('📸 Update your profile photo and bio in Settings');
 }
 
 // ===== Business Affiliation & Invitations =====
