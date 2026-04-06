@@ -523,10 +523,9 @@ function scrollToDream() {
 }
 
 function scrollToOnboarding() {
-  // Scroll to profile editing (top of dashboard)
-  const dash = document.getElementById('dashboard');
-  if (dash) dash.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  toast('📸 Update your profile photo and bio in Settings');
+  bizTab('settings');
+  const settings = document.getElementById('biz-tab-settings');
+  if (settings) settings.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ===== Business Affiliation & Invitations =====
@@ -1157,9 +1156,17 @@ async function loadBizStats(bizId) {
 
 function loadSettingsTab() {
   // Load user profile
-  document.getElementById('settings-name').value = user?.name || '';
+  document.getElementById('settings-name').value = providerProfile?.displayName || user?.name || '';
   document.getElementById('settings-email').value = user?.email || '';
   document.getElementById('settings-phone').value = user?.phone || '';
+  document.getElementById('settings-bio').value = providerProfile?.bio || '';
+  // Avatar preview
+  const avatarPreview = document.getElementById('settings-avatar-preview');
+  if (providerProfile?.avatarUrl) {
+    avatarPreview.innerHTML = `<img src="${providerProfile.avatarUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+  } else {
+    avatarPreview.textContent = (providerProfile?.displayName || user?.name || '?')[0].toUpperCase();
+  }
   // Load business details
   const biz = bizState.business;
   if (biz) {
@@ -1167,6 +1174,17 @@ function loadSettingsTab() {
     document.getElementById('settings-biz-type').value = biz.type || '';
     document.getElementById('settings-biz-address').value = biz.address || '';
   }
+}
+
+function onSettingsAvatarChange(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('settings-avatar-preview').innerHTML =
+      `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
+  };
+  reader.readAsDataURL(file);
 }
 
 async function saveProfile() {
@@ -1177,16 +1195,36 @@ async function saveProfile() {
 
   const name = document.getElementById('settings-name').value.trim();
   const phone = document.getElementById('settings-phone').value.trim();
-
-  const payload = {};
-  if (name) payload.name = name;
-  if (phone) payload.phone = phone;
+  const bio = document.getElementById('settings-bio').value.trim();
 
   try {
-    const updated = await api('PATCH', '/users/me', payload);
+    // Save user profile (name, phone)
+    const userPayload = {};
+    if (name) userPayload.name = name;
+    if (phone) userPayload.phone = phone;
+    const updated = await api('PATCH', '/users/me', userPayload);
     user = { ...user, ...updated };
     localStorage.setItem('tp_user', JSON.stringify(user));
     document.getElementById('biz-phone').textContent = user.email || user.phone || '';
+
+    // Save provider profile (displayName, bio)
+    if (providerProfile) {
+      const provPayload = {};
+      if (name) provPayload.displayName = name;
+      provPayload.bio = bio || '';
+      await api('PATCH', '/providers/profile', provPayload);
+      providerProfile = { ...providerProfile, displayName: name, bio };
+    }
+
+    // Upload avatar if selected
+    const avatarFile = document.getElementById('settings-avatar-input').files[0];
+    if (avatarFile) {
+      try {
+        await uploadAvatar(avatarFile);
+        toast('Photo uploaded');
+      } catch (e) { toast('Saved, but avatar upload failed: ' + e.message); }
+    }
+
     msg.textContent = '✅ Profile updated';
     msg.style.background = 'var(--green-bg)';
     msg.style.color = 'var(--green)';
