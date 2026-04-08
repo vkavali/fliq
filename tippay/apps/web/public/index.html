@@ -818,6 +818,32 @@
             </div>
           </div>
           <div style="background:white;border-radius:var(--r);padding:24px;border:1px solid var(--border);">
+            <h4 style="margin-bottom:12px;font-size:15px;">🏦 Financial Details</h4>
+            <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Required to receive payouts. Funds are settled daily at 12:00 AM.</p>
+            <div style="display:grid;gap:12px;">
+              <div>
+                <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;">UPI VPA (Primary)</label>
+                <input type="text" id="settings-upi" placeholder="yourname@upi" style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;width:100%;box-sizing:border-box;">
+              </div>
+              <div style="display:flex;gap:12px;">
+                <div style="flex:2;">
+                  <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;">Bank Account Number</label>
+                  <input type="password" id="settings-bank-acc" placeholder="Enter Acct No" style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;width:100%;box-sizing:border-box;">
+                </div>
+                <div style="flex:1;">
+                  <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;">IFSC Code</label>
+                  <input type="text" id="settings-bank-ifsc" placeholder="ABCD0123456" style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;width:100%;box-sizing:border-box;text-transform:uppercase;">
+                </div>
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;">PAN Number (for TDS)</label>
+                <input type="text" id="settings-pan" placeholder="ABCDE1234F" style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;width:100%;box-sizing:border-box;text-transform:uppercase;">
+              </div>
+              <button class="auth-btn" onclick="saveFinancials()" id="settings-finance-btn" style="max-width:200px;margin-top:8px;">Securely Save</button>
+              <div id="finance-msg" class="hidden" style="font-size:13px;padding:8px 12px;border-radius:8px;margin-top:8px;"></div>
+            </div>
+          </div>
+          <div style="background:white;border-radius:var(--r);padding:24px;border:1px solid var(--border);">
             <h4 style="margin-bottom:12px;font-size:15px;">🏢 Business Details</h4>
             <div style="display:grid;gap:12px;">
               <div><label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;">Business Name</label><input type="text" id="settings-biz-name" disabled style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;width:100%;box-sizing:border-box;background:var(--bg);color:var(--text2);"></div>

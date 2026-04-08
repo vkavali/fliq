@@ -1,0 +1,81 @@
+name: Fliq CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    # We need a test database for Prisma
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: fliq
+          POSTGRES_PASSWORD: fliq_test
+          POSTGRES_DB: fliq_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://fliq:fliq_test@localhost:5432/fliq_test?schema=public
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+          
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+          
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+            
+      - name: Install dependencies
+        working-directory: ./tippay
+        run: pnpm install
+        
+      - name: Generate Prisma Client
+        working-directory: ./tippay
+        run: pnpm db:generate
+        
+      - name: Validate Prisma Schema & Push
+        working-directory: ./tippay
+        # push is used in CI to quickly sync the test db instead of full migrations for now
+        run: pnpm --filter @fliq/database exec prisma db push --accept-data-loss
+        
+      - name: Type Check & Lint (Backend)
+        working-directory: ./tippay
+        run: pnpm --filter @fliq/backend lint
+        
+      - name: Build Backend
+        working-directory: ./tippay
+        run: pnpm --filter @fliq/backend run build
+        
+      - name: Run Unit Tests (Backend)
+        working-directory: ./tippay
+        run: pnpm --filter @fliq/backend test

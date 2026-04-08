@@ -1,6 +1,7 @@
 // ===== Fliq Web App =====
 // Auto-detect: if in native wrapper, use production backend. Otherwise use same origin or localhost.
-const isCapacitor = Boolean(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const isCapacitor = typeof Capacitor !== 'undefined';
+// Use production backend for local 5173 testing since local Docker is down
 const API = isCapacitor ? 'https://fliq.co.in' : (location.port === '5173' ? 'http://localhost:3000' : location.origin);
 
 let token = null;
@@ -1160,6 +1161,13 @@ function loadSettingsTab() {
   document.getElementById('settings-email').value = user?.email || '';
   document.getElementById('settings-phone').value = user?.phone || '';
   document.getElementById('settings-bio').value = providerProfile?.bio || '';
+  
+  // Financial Details
+  document.getElementById('settings-upi').value = providerProfile?.upiVpa || '';
+  // Bank Account is hidden, but IFSC/PAN are retrieved if backend sends them unencrypted/masked
+  document.getElementById('settings-bank-ifsc').value = providerProfile?.bankIfsc || providerProfile?.ifscCode || '';
+  document.getElementById('settings-pan').value = providerProfile?.pan ? '••••••••' + providerProfile.pan.slice(-2) : '';
+
   // Avatar preview
   const avatarPreview = document.getElementById('settings-avatar-preview');
   if (providerProfile?.avatarUrl) {
@@ -1237,6 +1245,45 @@ async function saveProfile() {
     msg.classList.remove('hidden');
   } finally {
     btn.disabled = false; btn.textContent = 'Save Changes';
+  }
+}
+
+async function saveFinancials() {
+  const btn = document.getElementById('settings-finance-btn');
+  const msg = document.getElementById('finance-msg');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  msg.classList.add('hidden');
+
+  const payload = {};
+  const upi = document.getElementById('settings-upi').value.trim();
+  const bankAcc = document.getElementById('settings-bank-acc').value.trim();
+  const ifsc = document.getElementById('settings-bank-ifsc').value.trim().toUpperCase();
+  const pan = document.getElementById('settings-pan').value.trim().toUpperCase();
+
+  if (upi) payload.upiVpa = upi;
+  // Send bank account if completely newly inputted (not masked)
+  if (bankAcc && !bankAcc.includes('•')) payload.bankAccountNumber = bankAcc;
+  if (ifsc) payload.ifscCode = ifsc;
+  if (pan && !pan.includes('•')) payload.pan = pan;
+
+  try {
+    const updated = await api('PATCH', '/providers/profile', payload);
+    
+    // Merge into local cache
+    providerProfile = { ...providerProfile, ...payload };
+    
+    msg.textContent = '✅ Financial details securely saved';
+    msg.style.background = 'var(--green-bg)';
+    msg.style.color = 'var(--green)';
+    msg.classList.remove('hidden');
+    toast('Financial details saved');
+  } catch (e) {
+    msg.textContent = '❌ ' + (e.message || 'Failed to save');
+    msg.style.background = '#FFF0F0';
+    msg.style.color = '#E17055';
+    msg.classList.remove('hidden');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Securely Save';
   }
 }
 
