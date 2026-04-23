@@ -93,52 +93,30 @@ tippay/
 
 ---
 
-## Mobile App Status: NEEDS MAJOR WORK (v0.1)
+## Mobile App Status: PWA / CAPACITOR (v0.5)
 
-### Existing Screens
+### Existing Screens (PWA/Web)
 | Screen | Path | Status |
 |--------|------|--------|
 | Login (phone entry) | /login | Works |
 | OTP verification | /otp | Works |
-| Customer Home | /home | Basic — scan button + quick actions |
-| QR Scanner | /scan | Works (mobile_scanner) |
+| Business Login | /business-login | Works |
+| Tipper Portal | /tipper-portal | Works |
+| Customer Home | /home | PWA layout |
 | Tip Amount | /tip | Works — presets, rating, message, Razorpay checkout |
-| Payment Success | /payment-success | Basic confirmation |
-| Transaction History | /history | Basic list |
-| Provider Dashboard | /dashboard | Basic — tips count, recent tips, quick actions |
+| Provider Dashboard | /dashboard | Works — stats, tip links, payouts |
 | Provider QR Display | /my-qr | Works — shows QR codes |
-| Provider Earnings | /earnings | Basic list |
-| Provider Payouts | /payouts | Basic — request + history |
 
-### What's Missing in Mobile (65+ features)
+### Mobile Architecture Shift
+- We transitioned from native Flutter to a PWA wrapped with **Capacitor** (`apps/android` and `apps/ios`).
+- Flutter (`apps/mobile`) directory has been removed/deprecated.
+- The web app dynamically detects native and PWA contexts (in `app.js`) to serve an app-like experience.
+
+### What's Missing in Mobile (Capacitor)
 **Critical:**
-- Provider onboarding (KYC, bank details, PAN, fund account)
-- Commission/fee transparency in UI
-- Wallet balance display
-- Multi-language selector
-- Settings screen
-- Auth persistence (splash → restore session)
-- Push/in-app notifications
-
-**Important:**
-- Admin dashboard
-- Tax reporting (TDS/TCS/GST breakdown)
-- Advanced analytics (charts, trends)
-- QR code analytics (scan counts)
-- Payment method display
-- Payout mode selection (UPI/IMPS/NEFT)
-- Data export
-
-**Nice-to-have:**
-- Provider search/discovery
-- Favorites/bookmarks
-- Profile pictures
-- Offline mode
-- Referral system
-
-### UI Quality
-- **Good foundation**: Material 3 theme, Google Fonts (Inter), consistent spacing, color palette
-- **Missing polish**: No animations (Lottie unused), no skeleton loaders (shimmer unused), no custom loading states, no empty state illustrations, basic snackbar errors only, no bottom navigation bar, no swipe-to-refresh, no infinite scroll pagination
+- Build and test Android APK / iOS IPA using Capacitor CLI
+- Push/in-app notifications via Firebase Cloud Messaging plugin
+- App store prep — icon, splash, screenshots, store listing
 
 ---
 
