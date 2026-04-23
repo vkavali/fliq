@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Tip on Fliq</title>
   <meta name="description" content="Send a tip via Fliq — India's UPI-native tipping platform">
-  <!-- PWA -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#6C5CE7">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,533 +12,596 @@
   <meta name="apple-mobile-web-app-title" content="Fliq">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --pri: #6C5CE7; --pri-dark: #5A4BD1; --pri-light: #A29BFE; --pri-bg: #F0EDFF;
-      --green: #00B894; --green-bg: #E8FFF8; --green-dark: #00A381;
-      --yellow: #FDCB6E; --red: #E17055; --red-bg: #FFEDE9;
-      --text: #2D3436; --text2: #636E72; --muted: #B2BEC3;
-      --bg: #F8F9FA; --card: #FFFFFF; --border: #E9ECEF;
-      --shadow: 0 2px 16px rgba(0,0,0,0.07); --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
-      --r: 16px; --r-sm: 10px;
+      --purple: #6C5CE7;
+      --green: #00B894;
+      --text: #1a1a1a;
+      --text2: #636E72;
+      --muted: #999;
+      --border: #ddd;
+      --bg: #f5f5f5;
     }
-    body {
-      font-family: 'Inter', -apple-system, sans-serif;
-      background: linear-gradient(180deg, #6C5CE7 0%, #A29BFE 30%, #F8F9FA 60%);
-      color: var(--text); line-height: 1.6; min-height: 100vh;
-      display: flex; align-items: flex-start; justify-content: center;
-      padding: 24px 16px 40px;
+    html, body {
+      font-family: -apple-system, system-ui, sans-serif;
+      color: var(--text);
+      background: #fff;
+      min-height: 100vh;
+      -webkit-tap-highlight-color: transparent;
     }
     .hidden { display: none !important; }
 
-    /* Subscribe button */
-    .subscribe-row { text-align: center; margin-top: 12px; }
-    .subscribe-btn {
-      background: none; border: 2px dashed var(--green); color: var(--green);
-      border-radius: 12px; padding: 12px 24px; font-size: 14px; font-weight: 600;
-      cursor: pointer; width: 100%; transition: all 0.2s;
-    }
-    .subscribe-btn:hover { background: var(--green-bg); }
-    .tip-card {
-      background: white; border-radius: 24px; box-shadow: var(--shadow-lg);
-      padding: 32px 24px; width: 100%; max-width: 420px; margin-top: 16px;
-      position: relative; overflow: hidden;
-    }
-    .tip-card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-      background: linear-gradient(90deg, var(--pri), var(--pri-light), var(--green));
+    /* --- Layout --- */
+    .screen {
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 20px 16px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
-    /* Loading */
-    .loading-state { text-align: center; padding: 60px 20px; }
-    .loading-spinner {
-      width: 48px; height: 48px; border: 4px solid var(--border);
-      border-top-color: var(--pri); border-radius: 50%;
-      animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+    /* --- Screen 1: Tip --- */
+    .worker-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .avatar {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: var(--purple);
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; font-weight: 700;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .worker-info { min-width: 0; }
+    .worker-name { font-size: 20px; font-weight: 700; line-height: 1.2; }
+    .category-pill {
+      display: inline-block;
+      background: #f0edff;
+      color: var(--purple);
+      font-size: 11px; font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 12px;
+      margin-top: 4px;
+      text-transform: capitalize;
+    }
+    .trust-line {
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 24px;
+    }
+
+    /* Big amount display */
+    .big-amount {
+      text-align: center;
+      font-size: 40px;
+      font-weight: 800;
+      margin-bottom: 20px;
+      color: var(--text);
+    }
+
+    /* Amount chips 3x2 grid */
+    .chip-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .chip-btn {
+      height: 52px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      font-size: 18px;
+      font-weight: 700;
+      font-family: inherit;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.15s, background 0.15s, color 0.15s;
+    }
+    .chip-btn:active { transform: scale(0.97); }
+    .chip-btn.active {
+      background: var(--purple);
+      color: #fff;
+      border-color: var(--purple);
+    }
+
+    /* Custom amount row */
+    .custom-row {
+      display: flex;
+      align-items: center;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      transition: border-color 0.15s;
+    }
+    .custom-row:focus-within { border-color: var(--purple); }
+    .custom-prefix {
+      padding: 0 14px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--muted);
+      background: var(--bg);
+      height: 48px;
+      display: flex;
+      align-items: center;
+      border-right: 2px solid var(--border);
+    }
+    .custom-row input {
+      flex: 1;
+      border: none;
+      outline: none;
+      padding: 0 14px;
+      height: 48px;
+      font-size: 18px;
+      font-family: inherit;
+      color: var(--text);
+      background: transparent;
+    }
+
+    /* More details toggle */
+    .details-toggle {
+      background: none;
+      border: none;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 8px 0;
+      width: 100%;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .details-panel {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .details-panel .detail-section { margin-bottom: 14px; }
+    .details-panel .detail-section:last-child { margin-bottom: 0; }
+    .detail-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .dream-progress-bg {
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 6px 0 4px;
+    }
+    .dream-progress-fill {
+      height: 100%;
+      background: var(--purple);
+      border-radius: 4px;
+      transition: width 1s ease-out;
+    }
+    .dream-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); }
+    .trust-score { font-size: 14px; font-weight: 600; color: var(--purple); }
+    .stats-row {
+      display: flex;
+      gap: 16px;
+    }
+    .stat-item { text-align: center; flex: 1; }
+    .stat-val { font-size: 18px; font-weight: 800; color: var(--purple); }
+    .stat-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; }
+
+    /* Spacer to push button down */
+    .flex-spacer { flex: 1; min-height: 16px; }
+
+    /* Pay button — sticky bottom */
+    .pay-btn {
+      width: 100%;
+      height: 56px;
+      border: none;
+      border-radius: 14px;
+      background: var(--purple);
+      color: #fff;
+      font-size: 18px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      flex-shrink: 0;
+    }
+    .pay-btn:active { opacity: 0.85; }
+    .pay-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .secure-hint {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+      padding-bottom: 8px;
+    }
+
+    /* --- Screen 2: Waiting --- */
+    .waiting-center {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .spinner {
+      width: 48px; height: 48px;
+      border: 4px solid #eee;
+      border-top-color: var(--purple);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 20px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Screen 1: Worker Landing */
-    .greeting { font-size: 14px; color: var(--pri); font-weight: 600; margin-bottom: 4px; text-align: center; }
-    .provider-header { text-align: center; margin-bottom: 20px; }
-    .avatar {
-      width: 88px; height: 88px; background: linear-gradient(135deg, var(--pri), var(--pri-light));
-      color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      font-size: 36px; font-weight: 700; margin: 0 auto 14px;
-      box-shadow: 0 4px 20px rgba(108,92,231,0.3); overflow: hidden;
-    }
-    .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-    .provider-name { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
-    .provider-subtitle { font-size: 14px; color: var(--text2); font-weight: 500; margin-bottom: 6px; }
-    .category-badge {
-      display: inline-block; background: var(--pri-bg); color: var(--pri);
-      padding: 4px 16px; border-radius: 20px; font-size: 11px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.5px;
-    }
-    .rating-row { margin-top: 8px; font-size: 14px; color: var(--text2); }
-    .rating-row .stars { color: var(--yellow); }
-    .trust-badge {
-      display: inline-flex; align-items: center; gap: 6px; margin-top: 10px;
-      background: var(--green-bg); color: var(--green); padding: 6px 16px;
-      border-radius: 20px; font-size: 12px; font-weight: 600;
-    }
-    .trust-badge::before {
-      content: '\2713'; width: 18px; height: 18px; background: var(--green); color: white;
-      border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      font-size: 11px; font-weight: 700;
-    }
-
-    /* Stats bar */
-    .stats-bar {
-      display: flex; justify-content: center; gap: 16px; margin: 16px 0;
-      padding: 12px 16px; background: var(--bg); border-radius: var(--r-sm);
-    }
-    .stat-item { text-align: center; }
-    .stat-val { font-size: 18px; font-weight: 800; color: var(--pri); }
-    .stat-lbl { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-
-    /* Reputation badge */
-    .rep-badge {
-      display: inline-flex; align-items: center; gap: 6px; margin-top: 8px;
-      background: linear-gradient(135deg, #FFD93D22, #FF6B6B11);
-      border: 1px solid #FFD93D44; padding: 5px 14px; border-radius: 20px;
-      font-size: 11px; font-weight: 700; color: #E17055;
-    }
-
-    /* Dream card */
-    .dream-card {
-      background: linear-gradient(135deg, #F0EDFF, #E8FFF8);
-      border-radius: var(--r); padding: 20px; margin: 16px 0;
-      border: 1px solid rgba(108,92,231,0.15); position: relative; overflow: hidden;
-    }
-    .dream-card::after {
-      content: '✨'; position: absolute; top: 12px; right: 16px; font-size: 20px;
-    }
-    .dream-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--pri); margin-bottom: 6px; }
-    .dream-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-    .dream-desc { font-size: 12px; color: var(--text2); margin-bottom: 12px; line-height: 1.5; }
-    .dream-progress-bg { height: 8px; background: rgba(108,92,231,0.15); border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
-    .dream-progress-fill { height: 100%; background: linear-gradient(90deg, var(--pri), var(--green)); border-radius: 4px; transition: width 1.5s ease-out; }
-    .dream-pct { font-size: 12px; font-weight: 700; color: var(--pri); }
-    .dream-amounts { font-size: 11px; color: var(--text2); }
-
-    /* Tip Now CTA */
-    .cta-btn {
-      width: 100%; padding: 16px; border: none; border-radius: var(--r-sm);
-      font-size: 17px; font-weight: 700; cursor: pointer; font-family: inherit;
-      transition: all 0.2s; box-shadow: 0 4px 16px rgba(108,92,231,0.3);
-      background: linear-gradient(135deg, var(--pri), var(--pri-dark)); color: white;
-    }
-    .cta-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(108,92,231,0.4); }
-    .cta-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-    .cta-btn.green { background: linear-gradient(135deg, var(--green), var(--green-dark)); box-shadow: 0 4px 16px rgba(0,184,148,0.3); }
-    .cta-btn.outline { background: white; color: var(--pri); border: 2px solid var(--pri); box-shadow: none; margin-top: 10px; }
-    .cta-btn.outline:hover { background: var(--pri-bg); }
-
-    /* Screen 2: Intent */
-    .intent-title { font-size: 20px; font-weight: 800; text-align: center; margin-bottom: 4px; }
-    .intent-sub { font-size: 14px; color: var(--text2); text-align: center; margin-bottom: 20px; }
-    .intent-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-    .intent-tile {
-      padding: 20px 14px; border: 2px solid var(--border); border-radius: var(--r);
-      background: white; cursor: pointer; text-align: center; transition: all 0.2s;
-      display: flex; flex-direction: column; align-items: center; gap: 6px;
-    }
-    .intent-tile:hover { border-color: var(--pri-light); transform: translateY(-2px); box-shadow: var(--shadow); }
-    .intent-tile.active { border-color: var(--pri); background: var(--pri-bg); }
-    .intent-icon { font-size: 32px; }
-    .intent-name { font-size: 14px; font-weight: 700; color: var(--text); }
-    .intent-desc { font-size: 11px; color: var(--text2); line-height: 1.4; }
-    .intent-tile.active .intent-name { color: var(--pri); }
-    .skip-link { text-align: center; margin-top: 8px; }
-    .skip-link a { color: var(--text2); font-size: 13px; text-decoration: none; cursor: pointer; }
-    .skip-link a:hover { color: var(--pri); }
-
-    /* Screen 3: Amount */
-    .section-label { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
-    .shagun-toggle {
-      display: flex; align-items: center; justify-content: space-between;
-      background: linear-gradient(135deg, #fff8e1, #fff3e0); border-radius: var(--r-sm);
-      padding: 10px 14px; margin-bottom: 14px; border: 1px solid #ffe0b2;
-    }
-    .shagun-label { font-size: 13px; font-weight: 600; color: #E65100; }
-    .shagun-hint { font-size: 10px; color: #BF360C; }
-    .toggle-switch { position: relative; width: 44px; height: 24px; cursor: pointer; }
-    .toggle-switch input { display: none; }
-    .toggle-slider {
-      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-      background: #ccc; border-radius: 12px; transition: 0.3s;
-    }
-    .toggle-slider::before {
-      content: ''; position: absolute; width: 18px; height: 18px; left: 3px; bottom: 3px;
-      background: white; border-radius: 50%; transition: 0.3s;
-    }
-    .toggle-switch input:checked + .toggle-slider { background: #FF6F00; }
-    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
-
-    .amount-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
-    .amt-btn {
-      padding: 14px 8px; border: 2px solid var(--border); border-radius: var(--r-sm);
-      background: white; cursor: pointer; font-family: inherit; transition: all 0.15s;
-      display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative;
-    }
-    .amt-btn:hover { border-color: var(--pri); }
-    .amt-btn.active { border-color: var(--pri); background: var(--pri-bg); }
-    .amt-btn .amount { font-size: 20px; font-weight: 800; color: var(--text); }
-    .amt-btn.active .amount { color: var(--pri); }
-    .amt-btn .label { font-size: 10px; color: var(--text2); font-weight: 500; }
-    .amt-btn.active .label { color: var(--pri); }
-    .popular-tag {
-      position: absolute; top: -8px; background: var(--pri); color: white;
-      font-size: 8px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
-      text-transform: uppercase; letter-spacing: 0.3px;
-    }
-    .custom-row {
-      display: flex; align-items: center; border: 2px solid var(--border);
-      border-radius: var(--r-sm); overflow: hidden; margin-bottom: 16px; transition: border-color 0.2s;
-    }
-    .custom-row:focus-within { border-color: var(--pri); }
-    .rupee { padding: 10px 14px; background: var(--bg); color: var(--text2); font-weight: 700; font-size: 16px; border-right: 2px solid var(--border); }
-    .custom-row input { flex: 1; border: none; outline: none; padding: 10px 14px; font-size: 16px; font-family: inherit; }
-
-    .breakdown { background: var(--bg); border-radius: var(--r-sm); padding: 14px 16px; margin-bottom: 20px; }
-    .bd-line { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; color: var(--text2); }
-    .bd-line.net { border-top: 2px solid var(--border); margin-top: 6px; padding-top: 10px; font-weight: 700; color: var(--text); font-size: 15px; }
-    .bd-line.commission { font-size: 12px; }
-
-    .stars-row { display: flex; gap: 4px; margin-bottom: 16px; }
-    .star-btn {
-      font-size: 32px; background: none; border: none; cursor: pointer;
-      color: var(--border); transition: color 0.15s, transform 0.15s;
-    }
-    .star-btn.active { color: var(--yellow); }
-    .star-btn:hover { color: var(--yellow); transform: scale(1.1); }
-
-    .msg-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
-    .chip {
-      background: var(--bg); border: 1px solid var(--border); border-radius: 20px;
-      padding: 6px 14px; font-size: 12px; font-family: inherit; cursor: pointer;
-      transition: all 0.15s; color: var(--text2);
-    }
-    .chip:hover, .chip.active { border-color: var(--pri); color: var(--pri); background: var(--pri-bg); }
-    textarea {
-      width: 100%; border: 2px solid var(--border); border-radius: var(--r-sm);
-      padding: 10px 14px; font-family: inherit; font-size: 14px; resize: none;
-      margin-bottom: 20px; transition: border-color 0.2s;
-    }
-    textarea:focus { border-color: var(--pri); outline: none; }
-    .pay-hint { text-align: center; font-size: 11px; color: var(--muted); margin-top: 8px; }
-
-    /* Screen 5: Waiting */
-    .waiting-section { text-align: center; padding: 30px 10px; }
-    .pulse-ring {
-      width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 24px;
-      background: var(--pri-bg); display: flex; align-items: center; justify-content: center;
-      animation: pulse 2s ease-in-out infinite; position: relative;
-    }
-    .pulse-ring::before {
-      content: ''; position: absolute; inset: -10px; border-radius: 50%;
-      border: 3px solid var(--pri-light); animation: ripple 2s ease-out infinite; opacity: 0;
-    }
-    .pulse-ring .icon { font-size: 40px; }
-    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-    @keyframes ripple { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(1.6); opacity: 0; } }
-    .waiting-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .waiting-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
     .waiting-sub { font-size: 14px; color: var(--text2); margin-bottom: 24px; }
-    .status-pills { display: flex; justify-content: center; gap: 8px; margin-bottom: 24px; }
-    .pill { padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; background: var(--bg); color: var(--muted); }
-    .pill.active { background: var(--pri-bg); color: var(--pri); }
-    .pill.done { background: var(--green-bg); color: var(--green); }
-    .timeout-hint { font-size: 12px; color: var(--text2); font-style: italic; }
-
-    /* Screen 6: Impact */
-    .impact-section { text-align: center; padding: 20px 0; }
-    .impact-emoji { font-size: 56px; margin-bottom: 12px; animation: pop 0.5s ease-out; }
-    @keyframes pop { 0% { transform: scale(0); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
-    .impact-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
-    .impact-msg { font-size: 15px; color: var(--text2); margin-bottom: 24px; line-height: 1.6; }
-    .impact-dream-card {
-      background: linear-gradient(135deg, #F0EDFF, #E8FFF8); border-radius: var(--r);
-      padding: 24px 20px; margin-bottom: 24px; text-align: left;
-      border: 1px solid rgba(108,92,231,0.15);
+    .status-pills { display: flex; gap: 8px; justify-content: center; }
+    .pill {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--bg);
+      color: var(--muted);
     }
-    .impact-dream-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-    .impact-progress-bg { height: 12px; background: rgba(108,92,231,0.12); border-radius: 6px; overflow: hidden; margin-bottom: 8px; position: relative; }
-    .impact-progress-fill {
-      height: 100%; border-radius: 6px; transition: width 2s cubic-bezier(0.4,0,0.2,1);
-      background: linear-gradient(90deg, var(--pri), var(--green));
+    .pill.active { background: #f0edff; color: var(--purple); }
+    .pill.done { background: #e8fff8; color: var(--green); }
+    .timeout-hint {
+      font-size: 13px;
+      color: var(--text2);
+      margin-top: 20px;
     }
-    .impact-progress-label { display: flex; justify-content: space-between; font-size: 12px; }
-    .impact-progress-pct { font-weight: 800; color: var(--pri); font-size: 14px; }
-    .impact-actions { display: flex; gap: 10px; }
-    .impact-actions .cta-btn { flex: 1; }
 
-    .receipt { background: var(--bg); border-radius: var(--r-sm); padding: 16px; margin-bottom: 16px; text-align: left; }
-    .receipt-line { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid var(--border); }
+    /* --- Screen 3: Done --- */
+    .done-center {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .done-check {
+      width: 72px; height: 72px;
+      background: var(--green);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px;
+      color: #fff;
+      margin: 24px 0 16px;
+    }
+    .done-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .done-subtitle {
+      font-size: 16px;
+      color: var(--text2);
+      margin-bottom: 24px;
+    }
+
+    /* Dream progress on done screen */
+    .done-dream {
+      width: 100%;
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .done-dream-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+
+    /* Receipt */
+    .receipt {
+      width: 100%;
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .receipt-line {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      font-size: 13px;
+      border-bottom: 1px solid #e0e0e0;
+    }
     .receipt-line:last-child { border-bottom: none; }
-    .mono { font-family: monospace; font-size: 12px; }
-    .badge-ok { background: var(--green-bg); color: var(--green); padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .badge-ok {
+      background: #e8fff8;
+      color: var(--green);
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
 
-    /* Confetti canvas */
-    #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+    /* Tip again button */
+    .tip-again-btn {
+      width: 100%;
+      height: 52px;
+      border: 2px solid var(--purple);
+      border-radius: 14px;
+      background: #fff;
+      color: var(--purple);
+      font-size: 16px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+    .tip-again-btn:active { background: #f0edff; }
 
-    /* Error */
-    .error-box { background: var(--red-bg); color: var(--red); padding: 10px 14px; border-radius: var(--r-sm); font-size: 13px; margin-top: 14px; text-align: center; }
+    /* Subscribe link */
+    .subscribe-link {
+      font-size: 14px;
+      color: var(--text2);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: inherit;
+      padding: 8px;
+    }
+    .subscribe-link:active { color: var(--purple); }
+
+    /* Inline subscribe section on done screen */
+    .subscribe-section {
+      width: 100%;
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 20px 16px;
+      margin-top: 12px;
+      text-align: left;
+    }
+    .subscribe-section h4 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .subscribe-section p {
+      font-size: 13px;
+      color: var(--text2);
+      margin-bottom: 14px;
+    }
+    .sub-chip-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .sub-chip {
+      height: 44px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: inherit;
+      color: var(--text);
+      cursor: pointer;
+    }
+    .sub-chip.active {
+      border-color: var(--green);
+      background: #e8fff8;
+      color: var(--green);
+    }
+    .autopay-btn {
+      width: 100%;
+      height: 48px;
+      border: none;
+      border-radius: 12px;
+      background: var(--green);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .autopay-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .sub-error {
+      background: #ffede9;
+      color: #e17055;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .sub-hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    /* Error / Loading */
+    .loading-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .error-box {
+      background: #ffede9;
+      color: #e17055;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-top: 14px;
+      text-align: center;
+    }
 
     /* Footer */
-    .footer { text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); }
-    .footer strong { color: var(--pri); }
-
-    /* Back button */
-    .back-row { margin-bottom: 16px; }
-    .back-btn { background: none; border: none; cursor: pointer; font-size: 14px; color: var(--text2); font-family: inherit; font-weight: 600; padding: 4px 0; }
-    .back-btn:hover { color: var(--pri); }
-
-    /* Responsive */
-    @media (max-width: 420px) {
-      body { padding: 16px 10px 32px; }
-      .tip-card { padding: 24px 18px; border-radius: 20px; }
-      .amount-grid { gap: 6px; }
-      .amt-btn { padding: 10px 6px; }
-      .amt-btn .amount { font-size: 17px; }
-      .intent-grid { gap: 8px; }
-      .intent-tile { padding: 14px 10px; }
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 12px 0 8px;
+      flex-shrink: 0;
     }
+    .footer a { color: var(--purple); font-weight: 700; text-decoration: none; }
   </style>
 </head>
 <body>
 
-<canvas id="confetti-canvas" class="hidden"></canvas>
+<!-- Loading -->
+<div id="loading" class="screen">
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p style="color:var(--text2);">Loading...</p>
+  </div>
+</div>
 
-<div class="tip-card">
-  <!-- Loading -->
-  <div id="loading" class="loading-state">
-    <div class="loading-spinner"></div>
-    <p style="color: var(--text2);">Loading tip page...</p>
+<!-- SCREEN 1: Tip -->
+<div id="screen-tip" class="screen hidden">
+  <div class="worker-row">
+    <div class="avatar" id="avatar">?</div>
+    <div class="worker-info">
+      <div class="worker-name" id="worker-name">Loading...</div>
+      <span class="category-pill hidden" id="category-pill"></span>
+    </div>
+  </div>
+  <div class="trust-line" id="trust-line">&#10003; 100% goes to them</div>
+
+  <div class="big-amount" id="big-amount">&#8377; 50</div>
+
+  <div class="chip-grid" id="chip-grid">
+    <button class="chip-btn" data-paise="2000" onclick="pickAmt(2000)">&#8377;20</button>
+    <button class="chip-btn active" data-paise="5000" onclick="pickAmt(5000)">&#8377;50</button>
+    <button class="chip-btn" data-paise="10000" onclick="pickAmt(10000)">&#8377;100</button>
+    <button class="chip-btn" data-paise="20000" onclick="pickAmt(20000)">&#8377;200</button>
+    <button class="chip-btn" data-paise="50000" onclick="pickAmt(50000)">&#8377;500</button>
+    <button class="chip-btn" data-paise="2100" onclick="pickAmt(2100)">&#127950;&#8377;21</button>
   </div>
 
-  <!-- SCREEN 1: Worker Landing -->
-  <div id="screen-landing" class="hidden">
-    <div class="greeting" id="greeting"></div>
-    <div class="provider-header">
-      <div class="avatar" id="avatar">?</div>
-      <div class="provider-name" id="provider-name">Loading...</div>
-      <div class="provider-subtitle hidden" id="provider-subtitle"></div>
-      <span class="category-badge" id="provider-category">-</span>
-      <div class="rating-row" id="rating-row"></div>
-      <div class="trust-badge" id="trust-badge">100% goes directly to <span id="trust-name">them</span></div>
-    </div>
-    <div class="stats-bar" id="stats-bar">
-      <div class="stat-item"><div class="stat-val" id="stat-tips-today">0</div><div class="stat-lbl">Tips Today</div></div>
-      <div class="stat-item"><div class="stat-val" id="stat-recent">0</div><div class="stat-lbl">This Hour</div></div>
-      <div class="stat-item"><div class="stat-val" id="stat-total">0</div><div class="stat-lbl">All Time</div></div>
-    </div>
-    <div id="rep-section" class="hidden" style="text-align:center;">
-      <span class="rep-badge">🏆 Trust Score: <span id="rep-score">0</span>/100</span>
-    </div>
-    <div id="subscribers-section" style="text-align:center;margin:10px 0 4px;">
-      <span id="subscribers-text" style="font-size:13px;color:var(--muted);">No subscribers yet — share your tip link to get started</span>
-    </div>
-    <div id="dream-section" class="hidden">
-      <div class="dream-card">
-        <div class="dream-label">Their Dream</div>
-        <div class="dream-title" id="dream-title"></div>
-        <div class="dream-desc" id="dream-desc"></div>
-        <div class="dream-progress-bg"><div class="dream-progress-fill" id="dream-fill" style="width:0%"></div></div>
-        <div style="display:flex;justify-content:space-between;">
-          <span class="dream-pct" id="dream-pct">0%</span>
-          <span class="dream-amounts" id="dream-amounts"></span>
-        </div>
+  <div class="custom-row">
+    <span class="custom-prefix">&#8377;</span>
+    <input type="number" id="custom-amount" placeholder="Other amount" min="1" max="10000" oninput="onCustomAmount()">
+  </div>
+
+  <button class="details-toggle" id="details-toggle" onclick="toggleDetails()">More details &#8595;</button>
+  <div class="details-panel hidden" id="details-panel">
+    <div class="detail-section hidden" id="detail-dream">
+      <div class="detail-label">Their Dream</div>
+      <div id="detail-dream-title" style="font-size:14px;font-weight:700;margin-bottom:2px;"></div>
+      <div id="detail-dream-desc" style="font-size:12px;color:var(--text2);"></div>
+      <div class="dream-progress-bg"><div class="dream-progress-fill" id="detail-dream-fill" style="width:0%"></div></div>
+      <div class="dream-meta">
+        <span id="detail-dream-pct">0%</span>
+        <span id="detail-dream-amounts"></span>
       </div>
     </div>
-    <button class="cta-btn" id="start-tip-btn" onclick="goScreen('intent')">Tip Now ✨</button>
-    <div class="skip-link"><a onclick="skipIntent()">Just send a tip →</a></div>
-    <div class="subscribe-row">
-      <button class="subscribe-btn" onclick="goScreen('subscribe')">🔄 Subscribe — Auto-tip monthly</button>
+    <div class="detail-section hidden" id="detail-trust">
+      <div class="detail-label">Trust Score</div>
+      <div class="trust-score" id="detail-trust-score">0/100</div>
     </div>
-  </div>
-
-  <!-- SCREEN 2: Intent Selection -->
-  <div id="screen-intent" class="hidden">
-    <div class="back-row"><button class="back-btn" onclick="goScreen('landing')">← Back</button></div>
-    <div class="intent-title">Why are you tipping?</div>
-    <div class="intent-sub">Your intention adds meaning to every tip</div>
-    <div class="intent-grid">
-      <button class="intent-tile" onclick="pickIntent('KINDNESS')" data-intent="KINDNESS">
-        <span class="intent-icon">🤗</span>
-        <span class="intent-name">Kindness</span>
-        <span class="intent-desc">They were warm & caring</span>
-      </button>
-      <button class="intent-tile" onclick="pickIntent('SPEED')" data-intent="SPEED">
-        <span class="intent-icon">⚡</span>
-        <span class="intent-name">Speed</span>
-        <span class="intent-desc">Fast, efficient service</span>
-      </button>
-      <button class="intent-tile" onclick="pickIntent('EXPERIENCE')" data-intent="EXPERIENCE">
-        <span class="intent-icon">✨</span>
-        <span class="intent-name">Experience</span>
-        <span class="intent-desc">Made it special</span>
-      </button>
-      <button class="intent-tile" onclick="pickIntent('SUPPORT')" data-intent="SUPPORT">
-        <span class="intent-icon">💪</span>
-        <span class="intent-name">Support</span>
-        <span class="intent-desc">Support their dream</span>
-      </button>
-    </div>
-    <button class="cta-btn" id="intent-next-btn" onclick="goScreen('amount')">Continue</button>
-  </div>
-
-  <!-- SCREEN 3: Amount Selection -->
-  <div id="screen-amount" class="hidden">
-    <div class="back-row"><button class="back-btn" onclick="goScreen(state.intentVisited ? 'intent' : 'landing')">← Back</button></div>
-    <p class="section-label">Choose tip amount</p>
-    <div class="shagun-toggle">
-      <div><div class="shagun-label">🪔 Shagun Mode</div><div class="shagun-hint">Auspicious amounts</div></div>
-      <label class="toggle-switch"><input type="checkbox" id="shagun-toggle" onchange="toggleShagun()"><span class="toggle-slider"></span></label>
-    </div>
-    <div class="amount-grid" id="amount-grid"></div>
-    <div class="custom-row"><span class="rupee">₹</span><input type="number" id="custom-amount" placeholder="Custom amount" min="10" max="10000" oninput="onCustomAmount()"></div>
-    <div id="receipt-preview" style="background:#FAFAFA;border:1px solid #E9ECEF;border-radius:12px;padding:14px 16px;margin:12px 0;"></div>
-    <p class="section-label">Rate your experience</p>
-    <div class="stars-row">
-      <button class="star-btn" onclick="setRating(1)" data-v="1">★</button>
-      <button class="star-btn" onclick="setRating(2)" data-v="2">★</button>
-      <button class="star-btn" onclick="setRating(3)" data-v="3">★</button>
-      <button class="star-btn active" onclick="setRating(4)" data-v="4">★</button>
-      <button class="star-btn active" onclick="setRating(5)" data-v="5">★</button>
-    </div>
-    <div class="msg-chips">
-      <button class="chip" onclick="setMessage('Great service!')">Great service!</button>
-      <button class="chip" onclick="setMessage('Thank you!')">Thank you!</button>
-      <button class="chip" onclick="setMessage('You made my day!')">Made my day!</button>
-    </div>
-    <textarea id="tip-message" placeholder="Or write a personal message..." rows="2"></textarea>
-    <button class="cta-btn" id="pay-btn" onclick="payTip()">Tip ₹<span id="pay-amount">100</span> via UPI</button>
-    <p class="pay-hint">Secure payment via Razorpay. No account needed.</p>
-  </div>
-
-  <!-- SCREEN 5: Waiting -->
-  <div id="screen-waiting" class="hidden">
-    <div class="waiting-section">
-      <div class="pulse-ring"><span class="icon">💳</span></div>
-      <div class="waiting-title">Waiting for payment...</div>
-      <div class="waiting-sub">Complete payment in your UPI app</div>
-      <div class="status-pills">
-        <span class="pill active" id="pill-initiated">Initiated</span>
-        <span class="pill" id="pill-paid">Paid</span>
-        <span class="pill" id="pill-settled">Settled</span>
-      </div>
-      <div class="timeout-hint hidden" id="timeout-hint">Still waiting? Check your UPI app or try again.</div>
-    </div>
-  </div>
-
-  <!-- SCREEN 6: Impact -->
-  <div id="screen-impact" class="hidden">
-    <div class="impact-section">
-      <div class="impact-emoji" id="impact-emoji">🎉</div>
-      <div class="impact-title" id="impact-title">You made their day!</div>
-      <div class="impact-msg" id="impact-msg"></div>
-      <div class="impact-dream-card hidden" id="impact-dream-card">
-        <div class="dream-label">Dream Progress</div>
-        <div class="impact-dream-title" id="impact-dream-title"></div>
-        <div class="impact-progress-bg">
-          <div class="impact-progress-fill" id="impact-fill" style="width:0%"></div>
-        </div>
-        <div class="impact-progress-label">
-          <span class="impact-progress-pct" id="impact-pct">0%</span>
-          <span id="impact-goal" style="color:var(--text2);font-size:12px;"></span>
-        </div>
-        <div id="impact-dream-text" class="hidden" style="font-size:13px;color:var(--pri);font-weight:600;margin-top:8px;text-align:center;"></div>
-      </div>
-      <div class="receipt" id="impact-receipt">
-        <div class="receipt-line"><span>Amount</span><span id="r-amount">-</span></div>
-        <div class="receipt-line"><span>Tip ID</span><span id="r-tipid" class="mono">-</span></div>
-        <div class="receipt-line"><span>Status</span><span class="badge-ok" id="r-status">PAID</span></div>
-      </div>
-      <div class="impact-actions">
-        <button class="cta-btn outline" onclick="resetFlow()">Tip Again</button>
+    <div class="detail-section" id="detail-stats">
+      <div class="detail-label">Stats</div>
+      <div class="stats-row">
+        <div class="stat-item"><div class="stat-val" id="stat-today">0</div><div class="stat-lbl">Today</div></div>
+        <div class="stat-item"><div class="stat-val" id="stat-recent">0</div><div class="stat-lbl">This Hour</div></div>
+        <div class="stat-item"><div class="stat-val" id="stat-total">0</div><div class="stat-lbl">All Time</div></div>
       </div>
     </div>
-  </div>
-
-  <!-- Error state -->
-  <div id="error-state" class="hidden" style="text-align:center; padding:40px 20px;">
-    <div style="font-size:48px; margin-bottom:16px;">😕</div>
-    <h2 style="margin-bottom:8px;">Link not found</h2>
-    <p style="color:var(--text2);" id="error-msg">This tip link may have expired or been deactivated.</p>
   </div>
 
   <div id="tip-error" class="error-box hidden"></div>
 
-  <!-- SCREEN: Subscribe (AutoPay) -->
-  <div id="screen-subscribe" class="hidden">
-    <div class="back-row"><button class="back-btn" onclick="goScreen('landing')">← Back</button></div>
-    <div style="text-align:center;margin-bottom:20px;">
-      <div style="font-size:40px;margin-bottom:8px;">🔄</div>
-      <h3 style="font-size:18px;font-weight:800;margin-bottom:4px;">Subscribe via UPI AutoPay</h3>
-      <p style="font-size:13px;color:var(--text2);">Auto-send a tip to <strong id="sub-name">this provider</strong> every month</p>
-    </div>
-    <p class="section-label">Choose frequency</p>
-    <div style="display:flex;gap:10px;margin-bottom:20px;">
-      <button class="amt-btn active" onclick="pickFreq('MONTHLY')" data-freq="MONTHLY" style="flex:1;">
-        <span class="amount">Monthly</span>
-        <span class="label">1st of every month</span>
-      </button>
-      <button class="amt-btn" onclick="pickFreq('WEEKLY')" data-freq="WEEKLY" style="flex:1;">
-        <span class="amount">Weekly</span>
-        <span class="label">Every Monday</span>
-      </button>
-    </div>
-    <p class="section-label">Choose auto-tip amount</p>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px;">
-      <button class="amt-btn" onclick="pickSubAmt(5000)" data-subamt="5000"><span class="amount">₹50</span></button>
-      <button class="amt-btn active" onclick="pickSubAmt(10000)" data-subamt="10000"><span class="amount">₹100</span><span class="popular-tag">Popular</span></button>
-      <button class="amt-btn" onclick="pickSubAmt(15000)" data-subamt="15000"><span class="amount">₹150</span></button>
-      <button class="amt-btn" onclick="pickSubAmt(20000)" data-subamt="20000"><span class="amount">₹200</span></button>
-      <button class="amt-btn" onclick="pickSubAmt(30000)" data-subamt="30000"><span class="amount">₹300</span></button>
-      <button class="amt-btn" onclick="pickSubAmt(50000)" data-subamt="50000"><span class="amount">₹500</span></button>
-    </div>
-    <div style="background:var(--pri-bg);border-radius:12px;padding:16px;margin-bottom:20px;">
-      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span>Auto-tip amount</span><span style="font-weight:700;">₹<span id="sub-display-amt">100</span>/<span id="sub-display-freq">month</span></span></div>
-      <div style="display:flex;justify-content:space-between;font-size:13px;"><span>Yearly total</span><span style="font-weight:700;color:var(--pri);">₹<span id="sub-yearly">1,200</span></span></div>
-      <div style="font-size:11px;color:var(--text2);margin-top:8px;">Cancel anytime. No lock-in. Powered by UPI AutoPay.</div>
-    </div>
-    <button class="cta-btn" id="subscribe-btn" onclick="createSubscription()" style="background:linear-gradient(135deg,var(--green),var(--green-dark));">Start AutoPay Subscription 🔄</button>
-    <div id="sub-error" class="hidden" style="background:#FFEDE9;color:#E17055;padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-top:12px;text-align:center;"></div>
-    <div class="pay-hint">UPI AutoPay mandate. Debit on <span id="sub-debit-day">1st of every month</span>. Cancel anytime.</div>
-  </div>
+  <div class="flex-spacer"></div>
 
-  <!-- SCREEN: Subscribe Success -->
-  <div id="screen-sub-success" class="hidden">
-    <div style="text-align:center;padding:20px 0;">
-      <div style="font-size:56px;margin-bottom:12px;">✅</div>
-      <h3 style="font-size:20px;font-weight:800;margin-bottom:8px;">Subscription Active!</h3>
-      <p style="font-size:14px;color:var(--text2);margin-bottom:20px;">You'll automatically send ₹<span id="sub-confirm-amt">100</span> to <strong id="sub-confirm-name">this worker</strong> every <span id="sub-confirm-freq">month</span>.</p>
-      <div style="background:var(--green-bg);border-radius:12px;padding:16px;margin-bottom:20px;">
-        <div style="font-size:13px;font-weight:600;color:var(--green);margin-bottom:8px;">What happens next</div>
-        <div style="font-size:12px;color:var(--text2);line-height:1.8;">
-          💰 First tip goes out immediately<br>
-          📅 Next auto-debit: <strong id="sub-next-date">-</strong><br>
-          🔔 You'll get a notification before each debit<br>
-          ❌ Cancel anytime from your UPI app
-        </div>
-      </div>
-      <div style="background:#FFF3E0;border-radius:12px;padding:14px;margin-bottom:20px;">
-        <div style="font-size:12px;color:#E65100;">💡 <strong>Impact:</strong> You just gave <span id="sub-impact-name">this worker</span> predictable monthly income. That's transformative.</div>
-      </div>
-      <button class="cta-btn outline" onclick="resetFlow()">Done</button>
-    </div>
-  </div>
+  <button class="pay-btn" id="pay-btn" onclick="payTip()">Pay &#8377;50</button>
+  <div class="secure-hint">Secure UPI payment · No account needed</div>
 
   <div class="footer">
-    <span>Powered by</span> <a href="/" style="font-weight:700;color:var(--pri);text-decoration:none;"> Fliq</a> <span> · Scan. Fliq. Done.</span>
+    Powered by <a href="/">Fliq</a>
   </div>
 </div>
 
-<script src="/app/tip-v5.js"></script>
+<!-- SCREEN 2: Waiting -->
+<div id="screen-waiting" class="screen hidden">
+  <div class="waiting-center">
+    <div class="spinner"></div>
+    <div class="waiting-title">Completing payment...</div>
+    <div class="waiting-sub">Complete payment in your UPI app</div>
+    <div class="status-pills">
+      <span class="pill active" id="pill-initiated">Initiated</span>
+      <span class="pill" id="pill-paid">Paid</span>
+      <span class="pill" id="pill-settled">Settled</span>
+    </div>
+    <div class="timeout-hint hidden" id="timeout-hint">Still waiting? Check your UPI app or try again.</div>
+  </div>
+</div>
+
+<!-- SCREEN 3: Done -->
+<div id="screen-done" class="screen hidden">
+  <div class="done-center">
+    <div class="done-check">&#10003;</div>
+    <div class="done-title" id="done-title">Tip sent!</div>
+    <div class="done-subtitle" id="done-subtitle"></div>
+
+    <div class="done-dream hidden" id="done-dream">
+      <div class="detail-label">Dream Progress</div>
+      <div class="done-dream-title" id="done-dream-title"></div>
+      <div class="dream-progress-bg"><div class="dream-progress-fill" id="done-dream-fill" style="width:0%"></div></div>
+      <div class="dream-meta">
+        <span id="done-dream-pct">0%</span>
+        <span id="done-dream-goal"></span>
+      </div>
+    </div>
+
+    <div class="receipt" id="done-receipt">
+      <div class="receipt-line"><span>Amount</span><span id="r-amount">-</span></div>
+      <div class="receipt-line"><span>Tip ID</span><span id="r-tipid" style="font-family:monospace;font-size:12px;">-</span></div>
+      <div class="receipt-line"><span>Status</span><span class="badge-ok" id="r-status">PAID</span></div>
+    </div>
+
+    <button class="tip-again-btn" onclick="resetFlow()">Tip Again</button>
+    <button class="subscribe-link" id="subscribe-link" onclick="showSubscribe()">Subscribe — auto-tip monthly &#8594;</button>
+
+    <div class="subscribe-section hidden" id="subscribe-section">
+      <h4>Auto-tip monthly</h4>
+      <p>Auto-send a tip to <strong id="sub-name">them</strong> every month via UPI AutoPay</p>
+      <div class="sub-chip-grid">
+        <button class="sub-chip" data-subamt="5000" onclick="pickSubAmt(5000)">&#8377;50</button>
+        <button class="sub-chip active" data-subamt="10000" onclick="pickSubAmt(10000)">&#8377;100</button>
+        <button class="sub-chip" data-subamt="20000" onclick="pickSubAmt(20000)">&#8377;200</button>
+      </div>
+      <button class="autopay-btn" id="autopay-btn" onclick="createSubscription()">Start AutoPay &#8377;100/month</button>
+      <div id="sub-error" class="sub-error hidden"></div>
+      <div class="sub-hint">Cancel anytime. No lock-in.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Error state -->
+<div id="screen-error" class="screen hidden">
+  <div class="loading-state">
+    <div style="font-size:48px;margin-bottom:16px;">&#128533;</div>
+    <h2 style="margin-bottom:8px;">Link not found</h2>
+    <p style="color:var(--text2);" id="error-msg">This tip link may have expired or been deactivated.</p>
+  </div>
+</div>
+
+<script src="/app/tip-v5.js?v=4"></script>
 </body>
 </html>
