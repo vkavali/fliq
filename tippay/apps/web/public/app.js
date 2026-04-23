@@ -137,6 +137,25 @@ async function api(method, path, body, auth = true) {
   return d;
 }
 
+async function apiUpload(method, path, formData) {
+  const h = {};
+  if (token) h['Authorization'] = `Bearer ${token}`;
+  const r = await fetch(API + path, { method, headers: h, body: formData });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.message || `Error ${r.status}`);
+  return d;
+}
+
+function onSettingsAvatarChange(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const preview = document.getElementById('settings-avatar-preview');
+    if (preview) preview.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;">';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
 async function tryRefreshToken() {
   const refresh = localStorage.getItem('tp_refresh');
   if (!refresh) return false;
@@ -1156,11 +1175,19 @@ async function loadBizStats(bizId) {
 }
 
 function loadSettingsTab() {
-  // Load user profile
-  document.getElementById('settings-name').value = user?.name || '';
+  document.getElementById('settings-name').value = providerProfile?.displayName || user?.name || '';
   document.getElementById('settings-email').value = user?.email || '';
   document.getElementById('settings-phone').value = user?.phone || '';
-  // Load business details
+  const bioEl = document.getElementById('settings-bio');
+  if (bioEl) bioEl.value = providerProfile?.bio || '';
+  const avatarPreview = document.getElementById('settings-avatar-preview');
+  if (avatarPreview) {
+    if (providerProfile?.avatarUrl) {
+      avatarPreview.innerHTML = '<img src="' + providerProfile.avatarUrl + '" style="width:100%;height:100%;object-fit:cover;">';
+    } else {
+      avatarPreview.textContent = (providerProfile?.displayName || user?.name || '?')[0].toUpperCase();
+    }
+  }
   const biz = bizState.business;
   if (biz) {
     document.getElementById('settings-biz-name').value = biz.name || '';
@@ -1177,6 +1204,8 @@ async function saveProfile() {
 
   const name = document.getElementById('settings-name').value.trim();
   const phone = document.getElementById('settings-phone').value.trim();
+  const bioEl = document.getElementById('settings-bio');
+  const bio = bioEl ? bioEl.value.trim() : '';
 
   const payload = {};
   if (name) payload.name = name;
@@ -1186,14 +1215,28 @@ async function saveProfile() {
     const updated = await api('PATCH', '/users/me', payload);
     user = { ...user, ...updated };
     localStorage.setItem('tp_user', JSON.stringify(user));
-    document.getElementById('biz-phone').textContent = user.email || user.phone || '';
-    msg.textContent = '✅ Profile updated';
+
+    if (providerProfile) {
+      const provPayload = {};
+      if (name) provPayload.displayName = name;
+      if (bio !== undefined) provPayload.bio = bio;
+      try { await api('PATCH', '/providers/profile', provPayload); } catch (e) { /* non-fatal */ }
+    }
+
+    const avatarInput = document.getElementById('settings-avatar-input');
+    if (avatarInput && avatarInput.files && avatarInput.files[0]) {
+      const fd = new FormData();
+      fd.append('avatar', avatarInput.files[0]);
+      try { await apiUpload('POST', '/providers/avatar', fd); } catch (e) { /* non-fatal */ }
+    }
+
+    msg.textContent = 'Profile updated';
     msg.style.background = 'var(--green-bg)';
     msg.style.color = 'var(--green)';
     msg.classList.remove('hidden');
     toast('Profile saved');
   } catch (e) {
-    msg.textContent = '❌ ' + (e.message || 'Failed to save');
+    msg.textContent = (e.message || 'Failed to save');
     msg.style.background = '#FFF0F0';
     msg.style.color = '#E17055';
     msg.classList.remove('hidden');

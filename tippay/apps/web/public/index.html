@@ -496,7 +496,7 @@
       <!-- ===== 4. PRIMARY ACTION ROW ===== -->
       <div style="display:flex;gap:12px;margin-bottom:24px;">
         <button onclick="var qs=document.getElementById('qr-section');if(qs){qs.classList.remove('hidden');qs.scrollIntoView({behavior:'smooth',block:'center'})}" style="flex:1;height:48px;background:#6C5CE7;color:white;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;">Show QR</button>
-        <button onclick="copyTipLink()" style="flex:1;height:48px;background:white;color:#6C5CE7;border:2px solid #6C5CE7;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;">Share Link</button>
+        <button onclick="var lk=document.getElementById('tip-link');if(lk&amp;&amp;navigator.share){navigator.share({title:'Tip me on Fliq',url:lk.textContent}).catch(function(){})}else{copyTipLink()}" style="flex:1;height:48px;background:white;color:#6C5CE7;border:2px solid #6C5CE7;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;">Share Link</button>
       </div>
 
       <!-- Hidden tip-link value for copyTipLink() -->
@@ -724,6 +724,14 @@
           <div style="background:white;border-radius:var(--r);padding:24px;border:1px solid var(--border);">
             <h4 style="margin-bottom:16px;font-size:15px;">Your Profile</h4>
             <div style="display:grid;gap:12px;">
+              <div style="text-align:center;">
+                <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:8px;">Profile Photo</label>
+                <div style="position:relative;width:80px;height:80px;margin:0 auto 8px;">
+                  <div id="settings-avatar-preview" style="width:80px;height:80px;border-radius:50%;background:var(--bg);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:var(--purple);overflow:hidden;"></div>
+                  <label for="settings-avatar-input" style="position:absolute;bottom:-2px;right:-2px;width:28px;height:28px;border-radius:50%;background:var(--purple);color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;border:2px solid white;">&#128247;</label>
+                  <input type="file" id="settings-avatar-input" accept="image/*" onchange="onSettingsAvatarChange(this)" style="display:none;">
+                </div>
+              </div>
               <div>
                 <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;">Display Name</label>
                 <input type="text" id="settings-name" placeholder="Your name" style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;width:100%;box-sizing:border-box;">
@@ -732,6 +740,11 @@
                 <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;">Email</label>
                 <input type="email" id="settings-email" disabled style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;width:100%;box-sizing:border-box;background:var(--bg);color:var(--text2);">
                 <p style="font-size:11px;color:var(--text2);margin-top:4px;">Email is used for login and cannot be changed here.</p>
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;">Bio / One-liner</label>
+                <textarea id="settings-bio" placeholder="Tell tippers what you do in one sentence" maxlength="500" rows="2" style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;width:100%;box-sizing:border-box;resize:vertical;"></textarea>
+                <p style="font-size:11px;color:var(--text2);margin-top:4px;">Shown to tippers on your tip page.</p>
               </div>
               <div>
                 <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;">Phone (optional)</label>
