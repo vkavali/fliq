@@ -137,6 +137,25 @@ async function api(method, path, body, auth = true) {
   return d;
 }
 
+async function apiUpload(method, path, formData) {
+  const h = {};
+  if (token) h['Authorization'] = `Bearer ${token}`;
+  const r = await fetch(API + path, { method, headers: h, body: formData });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.message || `Error ${r.status}`);
+  return d;
+}
+
+function onSettingsAvatarChange(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const preview = document.getElementById('settings-avatar-preview');
+    if (preview) preview.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;">';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
 async function tryRefreshToken() {
   const refresh = localStorage.getItem('tp_refresh');
   if (!refresh) return false;
@@ -523,9 +542,10 @@ function scrollToDream() {
 }
 
 function scrollToOnboarding() {
-  bizTab('settings');
-  const settings = document.getElementById('biz-tab-settings');
-  if (settings) settings.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Scroll to profile editing (top of dashboard)
+  const dash = document.getElementById('dashboard');
+  if (dash) dash.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  toast('📸 Update your profile photo and bio in Settings');
 }
 
 // ===== Business Affiliation & Invitations =====
@@ -1155,36 +1175,25 @@ async function loadBizStats(bizId) {
 }
 
 function loadSettingsTab() {
-  // Load user profile
   document.getElementById('settings-name').value = providerProfile?.displayName || user?.name || '';
   document.getElementById('settings-email').value = user?.email || '';
   document.getElementById('settings-phone').value = user?.phone || '';
-  document.getElementById('settings-bio').value = providerProfile?.bio || '';
-  // Avatar preview
+  const bioEl = document.getElementById('settings-bio');
+  if (bioEl) bioEl.value = providerProfile?.bio || '';
   const avatarPreview = document.getElementById('settings-avatar-preview');
-  if (providerProfile?.avatarUrl) {
-    avatarPreview.innerHTML = `<img src="${providerProfile.avatarUrl}" style="width:100%;height:100%;object-fit:cover;">`;
-  } else {
-    avatarPreview.textContent = (providerProfile?.displayName || user?.name || '?')[0].toUpperCase();
+  if (avatarPreview) {
+    if (providerProfile?.avatarUrl) {
+      avatarPreview.innerHTML = '<img src="' + providerProfile.avatarUrl + '" style="width:100%;height:100%;object-fit:cover;">';
+    } else {
+      avatarPreview.textContent = (providerProfile?.displayName || user?.name || '?')[0].toUpperCase();
+    }
   }
-  // Load business details
   const biz = bizState.business;
   if (biz) {
     document.getElementById('settings-biz-name').value = biz.name || '';
     document.getElementById('settings-biz-type').value = biz.type || '';
     document.getElementById('settings-biz-address').value = biz.address || '';
   }
-}
-
-function onSettingsAvatarChange(input) {
-  if (!input.files || !input.files[0]) return;
-  const file = input.files[0];
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    document.getElementById('settings-avatar-preview').innerHTML =
-      `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
-  };
-  reader.readAsDataURL(file);
 }
 
 async function saveProfile() {
@@ -1195,43 +1204,39 @@ async function saveProfile() {
 
   const name = document.getElementById('settings-name').value.trim();
   const phone = document.getElementById('settings-phone').value.trim();
-  const bio = document.getElementById('settings-bio').value.trim();
+  const bioEl = document.getElementById('settings-bio');
+  const bio = bioEl ? bioEl.value.trim() : '';
+
+  const payload = {};
+  if (name) payload.name = name;
+  if (phone) payload.phone = phone;
 
   try {
-    // Save user profile (name, phone)
-    const userPayload = {};
-    if (name) userPayload.name = name;
-    if (phone) userPayload.phone = phone;
-    const updated = await api('PATCH', '/users/me', userPayload);
+    const updated = await api('PATCH', '/users/me', payload);
     user = { ...user, ...updated };
     localStorage.setItem('tp_user', JSON.stringify(user));
-    document.getElementById('biz-phone').textContent = user.email || user.phone || '';
 
-    // Save provider profile (displayName, bio)
     if (providerProfile) {
       const provPayload = {};
       if (name) provPayload.displayName = name;
-      provPayload.bio = bio || '';
-      await api('PATCH', '/providers/profile', provPayload);
-      providerProfile = { ...providerProfile, displayName: name, bio };
+      if (bio !== undefined) provPayload.bio = bio;
+      try { await api('PATCH', '/providers/profile', provPayload); } catch (e) { /* non-fatal */ }
     }
 
-    // Upload avatar if selected
-    const avatarFile = document.getElementById('settings-avatar-input').files[0];
-    if (avatarFile) {
-      try {
-        await uploadAvatar(avatarFile);
-        toast('Photo uploaded');
-      } catch (e) { toast('Saved, but avatar upload failed: ' + e.message); }
+    const avatarInput = document.getElementById('settings-avatar-input');
+    if (avatarInput && avatarInput.files && avatarInput.files[0]) {
+      const fd = new FormData();
+      fd.append('avatar', avatarInput.files[0]);
+      try { await apiUpload('POST', '/providers/avatar', fd); } catch (e) { /* non-fatal */ }
     }
 
-    msg.textContent = '✅ Profile updated';
+    msg.textContent = 'Profile updated';
     msg.style.background = 'var(--green-bg)';
     msg.style.color = 'var(--green)';
     msg.classList.remove('hidden');
     toast('Profile saved');
   } catch (e) {
-    msg.textContent = '❌ ' + (e.message || 'Failed to save');
+    msg.textContent = (e.message || 'Failed to save');
     msg.style.background = '#FFF0F0';
     msg.style.color = '#E17055';
     msg.classList.remove('hidden');

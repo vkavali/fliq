@@ -1,5 +1,5 @@
 // Fliq Service Worker — PWA Offline & Caching
-const CACHE_NAME = 'fliq-v3';
+const CACHE_NAME = 'fliq-v4';
 const STATIC_ASSETS = [
   '/app/',
   '/app/index.html',

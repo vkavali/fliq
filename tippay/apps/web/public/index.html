@@ -14,11 +14,9 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- System font stack only — no external fonts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=4">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -30,7 +28,7 @@
       --r: 16px; --r-sm: 10px;
     }
     html { scroll-behavior: smooth; }
-    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
     .hidden { display: none !important; }
 
     /* Nav */
@@ -438,11 +436,11 @@
 
   <!-- ==================== PROVIDER DASHBOARD ==================== -->
   <div id="dashboard-page" class="page hidden">
-    <nav class="topbar"><div class="topbar-inner">
-      <div class="topbar-brand"><a onclick="goTo('landing')" style="cursor:pointer;display:flex;align-items:center;text-decoration:none;"><img src="logo-full.png" alt="Fliq" class="topbar-logo"></a></div>
+    <nav class="topbar"><div class="topbar-inner" style="height:48px;">
+      <div class="topbar-brand"><a onclick="goTo('landing')" style="cursor:pointer;display:flex;align-items:center;text-decoration:none;"><img src="logo-full.png" alt="Fliq" class="topbar-logo" style="height:28px;"></a></div>
       <div class="topbar-right">
-        <span id="dash-phone" class="topbar-phone"></span>
-        <button class="topbar-logout" onclick="logout()">Logout</button>
+        <span id="dash-phone" class="hidden"></span>
+        <button class="topbar-logout" onclick="logout()" style="min-height:36px;padding:6px 16px;font-size:14px;">Logout</button>
       </div>
     </div></nav>
     <div id="onboarding" class="hidden"><div class="container"><div class="onboard-card">
@@ -465,217 +463,167 @@
       <textarea id="bio-input" class="input-full" placeholder="Tell customers about yourself (optional)" rows="2" maxlength="500"></textarea>
       <button class="auth-btn" onclick="createProfile()">Create Profile</button>
     </div></div></div>
-    <div id="dashboard" class="hidden"><div class="container">
-      <!-- Welcome Header -->
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
-        <div id="d-avatar" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--pri),var(--pri-light));display:flex;align-items:center;justify-content:center;color:white;font-size:22px;font-weight:800;flex-shrink:0;overflow:hidden;">
-          <span id="d-avatar-letter">?</span>
+    <div id="dashboard" class="hidden"><div class="container" style="max-width:480px;padding:16px;">
+
+      <!-- ===== 1. HEADER: name + category pill ===== -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+        <div style="font-size:20px;font-weight:700;color:#2D3436;" id="d-provider-name">Loading...</div>
+        <span style="background:#F0EDFF;color:#6C5CE7;font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;white-space:nowrap;" id="d-category">-</span>
+      </div>
+      <!-- Hidden elements that app.js still writes to -->
+      <div id="d-avatar" class="hidden"><span id="d-avatar-letter">?</span></div>
+      <span id="d-member-since" class="hidden"></span>
+
+      <!-- ===== 2. PROFILE COMPLETION BANNER (simplified) ===== -->
+      <div id="profile-gate" class="hidden" onclick="scrollToOnboarding()" style="background:#FFF8E1;border-radius:8px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;cursor:pointer;border:1px solid #FFD54F;">
+        <div style="flex:1;font-size:14px;color:#5D4037;font-weight:600;">Complete your profile — add photo, bio, dream</div>
+        <span style="font-size:20px;color:#5D4037;margin-left:8px;">&#8594;</span>
+        <!-- Hidden sub-elements app.js references -->
+        <span id="gate-progress-text" class="hidden">0/3 complete</span>
+        <div id="gate-progress-fill" class="hidden"></div>
+        <div id="gate-photo" class="hidden"><span class="gate-check"></span></div>
+        <div id="gate-bio" class="hidden"><span class="gate-check"></span></div>
+        <div id="gate-dream" class="hidden"><span class="gate-check"></span></div>
+      </div>
+
+      <!-- ===== 3. EARNINGS HERO ===== -->
+      <div style="text-align:center;padding:24px 0 20px;">
+        <div style="font-size:40px;font-weight:800;color:#2D3436;letter-spacing:-1px;">&#8377;<span id="d-wallet-balance">0</span></div>
+        <div style="font-size:14px;color:#636E72;margin-top:4px;">wallet balance</div>
+        <div style="font-size:14px;color:#636E72;margin-top:8px;"><span id="d-tips" style="font-weight:700;color:#6C5CE7;">0</span> tips received</div>
+      </div>
+
+      <!-- ===== 4. PRIMARY ACTION ROW ===== -->
+      <div style="display:flex;gap:12px;margin-bottom:24px;">
+        <button onclick="var qs=document.getElementById('qr-section');if(qs){qs.classList.remove('hidden');qs.scrollIntoView({behavior:'smooth',block:'center'})}" style="flex:1;height:48px;background:#6C5CE7;color:white;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;">Show QR</button>
+        <button onclick="var lk=document.getElementById('tip-link');if(lk&amp;&amp;navigator.share){navigator.share({title:'Tip me on Fliq',url:lk.textContent}).catch(function(){})}else{copyTipLink()}" style="flex:1;height:48px;background:white;color:#6C5CE7;border:2px solid #6C5CE7;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;">Share Link</button>
+      </div>
+
+      <!-- Hidden tip-link value for copyTipLink() -->
+      <div id="tip-link-card" class="hidden"><code id="tip-link"></code></div>
+
+      <!-- ===== 5. SIMPLE MENU LIST ===== -->
+      <div style="border-top:1px solid #E9ECEF;">
+        <!-- Wallet row -->
+        <div style="display:flex;align-items:center;min-height:48px;padding:12px 0;border-bottom:1px solid #E9ECEF;cursor:pointer;">
+          <span style="font-size:18px;width:28px;">&#128176;</span>
+          <span style="flex:1;font-size:15px;color:#2D3436;font-weight:500;">Wallet &amp; Payouts</span>
+          <span style="color:#B2BEC3;font-size:16px;">&#8594;</span>
         </div>
-        <div style="flex:1;">
-          <div style="font-size:18px;font-weight:800;color:var(--text);" id="d-provider-name">Loading...</div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
-            <span style="background:var(--pri-bg);color:var(--pri);font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px;" id="d-category">-</span>
-            <span style="font-size:12px;color:var(--text2);" id="d-member-since"></span>
-          </div>
+        <!-- Dream row -->
+        <div onclick="var dm=document.getElementById('dream-mgmt');if(dm){dm.classList.toggle('hidden');dm.scrollIntoView({behavior:'smooth',block:'center'})}" style="display:flex;align-items:center;min-height:48px;padding:12px 0;border-bottom:1px solid #E9ECEF;cursor:pointer;">
+          <span style="font-size:18px;width:28px;">&#127775;</span>
+          <span style="flex:1;font-size:15px;color:#2D3436;font-weight:500;" id="dash-dream-row-label">Set a dream</span>
+          <span style="font-size:14px;color:#6C5CE7;font-weight:700;margin-right:8px;" id="d-dream-pct">0%</span>
+          <span style="color:#B2BEC3;font-size:16px;">&#8594;</span>
+        </div>
+        <!-- Tips row -->
+        <div style="display:flex;align-items:center;min-height:48px;padding:12px 0;border-bottom:1px solid #E9ECEF;cursor:pointer;">
+          <span style="font-size:18px;width:28px;">&#128202;</span>
+          <span style="flex:1;font-size:15px;color:#2D3436;font-weight:500;">Tips received</span>
+          <span style="font-size:15px;color:#636E72;font-weight:600;margin-right:8px;" id="dash-tips-total">0</span>
+          <span style="color:#B2BEC3;font-size:16px;">&#8594;</span>
+        </div>
+        <!-- Settings row -->
+        <div onclick="scrollToOnboarding()" style="display:flex;align-items:center;min-height:48px;padding:12px 0;border-bottom:1px solid #E9ECEF;cursor:pointer;">
+          <span style="font-size:18px;width:28px;">&#9881;</span>
+          <span style="flex:1;font-size:15px;color:#2D3436;font-weight:500;">Settings</span>
+          <span style="color:#B2BEC3;font-size:16px;">&#8594;</span>
         </div>
       </div>
 
-      <!-- Profile Completion Gate -->
-      <div id="profile-gate" class="hidden" style="background:linear-gradient(135deg,#FFF3E0,#FFF8E1);border:2px solid #FFB74D;border-radius:16px;padding:24px;margin-bottom:20px;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-          <div style="font-size:28px;">🔒</div>
-          <div>
-            <div style="font-size:16px;font-weight:800;color:#E65100;">Complete your profile to unlock your tip link</div>
-            <div style="font-size:12px;color:#BF360C;margin-top:2px;" id="gate-progress-text">0/3 complete</div>
-          </div>
+      <!-- ===== 6. QR SECTION (visibility managed by app.js checkProfileCompletion; button toggles) ===== -->
+      <div id="qr-section" class="section" style="margin-top:20px;border:1px solid #E9ECEF;border-radius:8px;padding:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h3 style="font-size:16px;font-weight:600;">Your QR Code</h3>
+          <a onclick="newQr()" style="font-size:13px;color:#6C5CE7;cursor:pointer;font-weight:600;">+ New QR</a>
         </div>
-        <div style="background:rgba(0,0,0,0.08);border-radius:6px;height:8px;margin-bottom:16px;overflow:hidden;">
-          <div id="gate-progress-fill" style="height:100%;width:0%;background:linear-gradient(90deg,#FF9800,#4CAF50);border-radius:6px;transition:width 0.6s ease;"></div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <div id="gate-photo" onclick="scrollToOnboarding()" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:white;border-radius:10px;border:1px solid #E9ECEF;">
-            <span class="gate-check" style="font-size:16px;">⬜</span>
-            <div><div style="font-size:13px;font-weight:600;">Upload a profile photo</div><div style="font-size:11px;color:#636E72;">Tippers want to see who they're appreciating</div></div>
-            <span style="margin-left:auto;font-size:14px;color:var(--pri);">→</span>
-          </div>
-          <div id="gate-bio" onclick="scrollToOnboarding()" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:white;border-radius:10px;border:1px solid #E9ECEF;">
-            <span class="gate-check" style="font-size:16px;">⬜</span>
-            <div><div style="font-size:13px;font-weight:600;">Add a bio or one-liner</div><div style="font-size:11px;color:#636E72;">Tell people what you do in one sentence</div></div>
-            <span style="margin-left:auto;font-size:14px;color:var(--pri);">→</span>
-          </div>
-          <div id="gate-dream" onclick="scrollToDream()" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:white;border-radius:10px;border:1px solid #E9ECEF;">
-            <span class="gate-check" style="font-size:16px;">⬜</span>
-            <div><div style="font-size:13px;font-weight:600;">Set a Dream with a goal amount</div><div style="font-size:11px;color:#636E72;">Dreams inspire tippers to give more</div></div>
-            <span style="margin-left:auto;font-size:14px;color:var(--pri);">→</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Share Tip Link Card -->
-      <div id="tip-link-card" style="background:linear-gradient(135deg,#6C5CE7,#4834D4);border-radius:16px;padding:20px;margin-bottom:20px;position:relative;overflow:hidden;">
-        <div style="position:absolute;top:-20px;right:-20px;width:120px;height:120px;background:rgba(255,255,255,0.06);border-radius:50%;"></div>
-        <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">📲 Your Tip Link</div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <code id="tip-link" style="background:rgba(255,255,255,0.15);color:white;padding:10px 14px;border-radius:10px;font-size:13px;flex:1;word-break:break-all;display:block;"></code>
-          <button onclick="copyTipLink()" style="background:white;color:var(--pri);border:none;padding:10px 16px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">📋 Copy</button>
-        </div>
-      </div>
-
-      <!-- Stats Grid -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
-        <div style="background:white;border-radius:14px;padding:16px;text-align:center;border:1px solid var(--border);">
-          <div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:4px;">Total Tips</div>
-          <div style="font-size:24px;font-weight:900;color:var(--pri);" id="d-tips">0</div>
-        </div>
-        <div style="background:white;border-radius:14px;padding:16px;text-align:center;border:1px solid var(--border);">
-          <div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:4px;">Rating</div>
-          <div style="font-size:24px;font-weight:900;color:#FF8F00;" id="d-rating">-</div>
-        </div>
-        <div style="background:white;border-radius:14px;padding:16px;text-align:center;border:1px solid var(--border);">
-          <div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:4px;">Trust Score</div>
-          <div style="font-size:24px;font-weight:900;color:#00B894;" id="d-reputation">-</div>
-        </div>
-        <div style="background:white;border-radius:14px;padding:16px;text-align:center;border:1px solid var(--border);">
-          <div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:4px;">Wallet</div>
-          <div style="font-size:24px;font-weight:900;color:var(--text);">₹<span id="d-wallet-balance">0</span></div>
-        </div>
-      </div>
-
-      <!-- Business Affiliation Badge -->
-      <div id="provider-biz-affiliation" class="hidden" style="background:linear-gradient(135deg,#E8FFF8,#F0EDFF);border-radius:14px;padding:16px 20px;border:1px solid rgba(0,184,148,0.2);margin:16px 0;display:flex;align-items:center;gap:12px;">
-        <div style="width:40px;height:40px;background:linear-gradient(135deg,#6C5CE7,#00B894);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;color:white;font-weight:800;" id="affiliation-emoji">🏢</div>
-        <div>
-          <div style="font-size:13px;font-weight:700;color:#2D3436;" id="affiliation-text">Works at Business</div>
-          <div style="font-size:11px;color:#636E72;" id="affiliation-role">Staff Member</div>
-        </div>
-      </div>
-
-      <!-- Pending Business Invitations -->
-      <div id="provider-invitations" class="hidden" style="margin:16px 0;">
-        <div style="background:linear-gradient(135deg,#FFF3E0,#FFF8E1);border-radius:14px;padding:20px;border:1px solid rgba(255,143,0,0.2);">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-            <span style="font-size:18px;">📩</span>
-            <span style="font-size:14px;font-weight:700;color:#2D3436;">Business Invitations</span>
-          </div>
-          <div id="invitations-list"></div>
-        </div>
-      </div>
-
-      <!-- V5 Feature Cards Row -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0;">
-
-        <!-- Dream Card -->
-        <div id="dream-mgmt" style="background:linear-gradient(135deg,#F0EDFF,#E8FFF8);border-radius:16px;padding:24px;border:1px solid rgba(108,92,231,0.15);position:relative;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6C5CE7;">✨ Your Dream</span>
-            <button class="small-btn" onclick="showDreamForm()" id="dream-edit-btn" style="font-size:11px;padding:4px 12px;">Edit</button>
-          </div>
-          <div id="dream-display">
-            <div id="dream-empty" style="text-align:center;padding:16px 0;">
-              <div style="font-size:32px;margin-bottom:8px;">🌟</div>
-              <p style="font-size:14px;font-weight:600;margin-bottom:4px;">Set Your Dream</p>
-              <p style="font-size:12px;color:#636E72;margin-bottom:12px;">Tell tippers what you're working toward</p>
-              <button class="small-btn" onclick="showDreamForm()">+ Add Dream</button>
-            </div>
-            <div id="dream-active" class="hidden">
-              <h4 style="font-size:16px;font-weight:700;margin-bottom:4px;" id="d-dream-title"></h4>
-              <p style="font-size:12px;color:#636E72;margin-bottom:12px;" id="d-dream-desc"></p>
-              <div style="height:8px;background:rgba(108,92,231,0.15);border-radius:4px;overflow:hidden;margin-bottom:6px;">
-                <div id="d-dream-fill" style="height:100%;background:linear-gradient(90deg,#6C5CE7,#00B894);border-radius:4px;width:0%;transition:width 1.5s ease-out;"></div>
-              </div>
-              <div style="display:flex;justify-content:space-between;font-size:12px;">
-                <span style="font-weight:700;color:#6C5CE7;" id="d-dream-pct">0%</span>
-                <span style="color:#636E72;" id="d-dream-amounts"></span>
-              </div>
-            </div>
-          </div>
-          <!-- Dream Form (hidden by default) -->
-          <div id="dream-form" class="hidden" style="margin-top:8px;">
-            <input type="text" id="dream-title-input" class="input-full" placeholder="Dream title (e.g. Daughter's school books)" maxlength="200" style="margin-bottom:8px;">
-            <textarea id="dream-desc-input" class="input-full" placeholder="Describe your dream..." rows="2" maxlength="500" style="margin-bottom:8px;"></textarea>
-            <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
-              <span style="font-size:13px;font-weight:600;">Goal: ₹</span>
-              <input type="number" id="dream-goal-input" class="input-sm" placeholder="5000" min="100" style="width:120px;">
-            </div>
-            <div style="display:flex;gap:8px;">
-              <button class="small-btn" onclick="saveDream()">Save Dream</button>
-              <button class="small-btn" onclick="hideDreamForm()" style="background:#E9ECEF;color:#636E72;">Cancel</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Intent & Reputation Card -->
-        <div style="display:flex;flex-direction:column;gap:16px;">
-          <!-- Reputation -->
-          <div style="background:white;border-radius:16px;padding:20px;border:1px solid #E9ECEF;">
-            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#00B894;">🏆 Reputation</span>
-            <div style="display:flex;align-items:center;gap:16px;margin-top:12px;">
-              <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#E8FFF8,#C6F6E9);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#00B894;" id="d-rep-circle">-</div>
-              <div>
-                <div style="font-size:12px;color:#636E72;">Your trust score</div>
-                <div style="font-size:11px;color:#B2BEC3;margin-top:2px;" id="d-rep-detail">Based on consistency, frequency & unique tippers</div>
-              </div>
-            </div>
-          </div>
-          <!-- Intent Breakdown -->
-          <div style="background:white;border-radius:16px;padding:20px;border:1px solid #E9ECEF;flex:1;">
-            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#FF8F00;">🤗 Intent Breakdown</span>
-            <div id="d-intent-breakdown" style="margin-top:12px;">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                <div style="text-align:center;padding:8px;background:#F8F9FA;border-radius:8px;"><div style="font-size:18px;">🤗</div><div style="font-size:10px;color:#636E72;font-weight:600;" id="d-intent-kindness">0 kindness</div></div>
-                <div style="text-align:center;padding:8px;background:#F8F9FA;border-radius:8px;"><div style="font-size:18px;">⚡</div><div style="font-size:10px;color:#636E72;font-weight:600;" id="d-intent-speed">0 speed</div></div>
-                <div style="text-align:center;padding:8px;background:#F8F9FA;border-radius:8px;"><div style="font-size:18px;">✨</div><div style="font-size:10px;color:#636E72;font-weight:600;" id="d-intent-experience">0 experience</div></div>
-                <div style="text-align:center;padding:8px;background:#F8F9FA;border-radius:8px;"><div style="font-size:18px;">💪</div><div style="font-size:10px;color:#636E72;font-weight:600;" id="d-intent-support">0 support</div></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Existing sections -->
-      <div id="qr-section" class="section">
-        <div class="section-header"><h3>📱 Your QR Code</h3><a onclick="newQr()" style="font-size:12px;color:var(--pri);cursor:pointer;text-decoration:underline;font-weight:600;">+ Create another</a></div>
         <div id="qr-grid" class="qr-grid"><p class="muted">Loading...</p></div>
       </div>
-      <div id="tip-links-section" class="section"><div class="section-header"><h3>🔗 Your Tip Links</h3></div>
-        <div class="tip-link-create">
-          <input type="text" id="link-role" class="input-sm" placeholder="Your role (e.g. Waiter)" maxlength="100">
-          <input type="text" id="link-workplace" class="input-sm" placeholder="Workplace (e.g. Cafe Mocha)" maxlength="200">
+
+      <!-- ===== 7. DREAM FORM (hidden, toggled by dream row) ===== -->
+      <div id="dream-mgmt" class="hidden" style="margin-top:20px;border:1px solid #E9ECEF;border-radius:8px;padding:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h3 style="font-size:16px;font-weight:600;">Your Dream</h3>
+          <button class="small-btn" onclick="showDreamForm()" id="dream-edit-btn" style="font-size:12px;padding:4px 12px;">Edit</button>
+        </div>
+        <div id="dream-display">
+          <div id="dream-empty" style="text-align:center;padding:16px 0;">
+            <p style="font-size:14px;font-weight:600;margin-bottom:4px;">Set Your Dream</p>
+            <p style="font-size:13px;color:#636E72;margin-bottom:12px;">Tell tippers what you're working toward</p>
+            <button class="small-btn" onclick="showDreamForm()">+ Add Dream</button>
+          </div>
+          <div id="dream-active" class="hidden">
+            <h4 style="font-size:16px;font-weight:700;margin-bottom:4px;" id="d-dream-title"></h4>
+            <p style="font-size:13px;color:#636E72;margin-bottom:12px;" id="d-dream-desc"></p>
+            <div style="height:6px;background:#E9ECEF;border-radius:3px;overflow:hidden;margin-bottom:6px;">
+              <div id="d-dream-fill" style="height:100%;background:#6C5CE7;border-radius:3px;width:0%;transition:width 1s ease-out;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;">
+              <span style="font-weight:700;color:#6C5CE7;" class="d-dream-pct-mirror"></span>
+              <span style="color:#636E72;" id="d-dream-amounts"></span>
+            </div>
+          </div>
+        </div>
+        <div id="dream-form" class="hidden" style="margin-top:12px;">
+          <input type="text" id="dream-title-input" class="input-full" placeholder="Dream title (e.g. Daughter's school books)" maxlength="200" style="margin-bottom:8px;">
+          <textarea id="dream-desc-input" class="input-full" placeholder="Describe your dream..." rows="2" maxlength="500" style="margin-bottom:8px;"></textarea>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
+            <span style="font-size:14px;font-weight:600;">Goal: &#8377;</span>
+            <input type="number" id="dream-goal-input" class="input-sm" placeholder="5000" min="100" style="width:120px;">
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="small-btn" onclick="saveDream()">Save Dream</button>
+            <button class="small-btn" onclick="hideDreamForm()" style="background:#E9ECEF;color:#636E72;">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 8. RECENT TIPS (simplified) ===== -->
+      <div style="margin-top:24px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h3 style="font-size:16px;font-weight:600;">Recent tips</h3>
+        </div>
+        <div id="d-tips-list" class="tips-list" style="font-size:14px;"><p class="muted">Loading...</p></div>
+      </div>
+
+      <!-- ===== HIDDEN SECTIONS (preserve IDs for app.js) ===== -->
+      <div class="hidden" aria-hidden="true" style="position:absolute;left:-9999px;">
+        <!-- Stats the JS writes to -->
+        <span id="d-rating">-</span>
+        <span id="d-reputation">-</span>
+        <span id="d-rep-circle">-</span>
+        <span id="d-rep-detail"></span>
+        <span id="d-intent-kindness">0 kindness</span>
+        <span id="d-intent-speed">0 speed</span>
+        <span id="d-intent-experience">0 experience</span>
+        <span id="d-intent-support">0 support</span>
+        <div id="d-intent-breakdown"></div>
+        <!-- Business affiliation -->
+        <div id="provider-biz-affiliation">
+          <span id="affiliation-emoji">🏢</span>
+          <span id="affiliation-text">Works at Business</span>
+          <span id="affiliation-role">Staff Member</span>
+        </div>
+        <!-- Business invitations -->
+        <div id="provider-invitations"><div id="invitations-list"></div></div>
+        <!-- Tip links -->
+        <div id="tip-links-section">
+          <input type="text" id="link-role" class="input-sm" placeholder="Your role" maxlength="100">
+          <input type="text" id="link-workplace" class="input-sm" placeholder="Workplace" maxlength="200">
           <button class="small-btn" onclick="createTipLink()">+ Create Tip Link</button>
+          <div id="tip-links-list"></div>
         </div>
-        <div id="tip-links-list" class="tip-links-list"><p class="muted">Loading...</p></div>
-      </div>
-      <div class="section"><div class="section-header"><h3>💰 Recent Tips Received</h3></div><div id="d-tips-list" class="tips-list"><p class="muted">Loading...</p></div></div>
-
-      <!-- V5: Recurring Tips (AutoPay Subscribers) -->
-      <div class="section">
-        <div class="section-header"><h3>🔄 AutoPay Subscribers</h3></div>
-        <p style="font-size:12px;color:#636E72;margin-bottom:12px;">Tippers who auto-send you tips on a recurring schedule via UPI AutoPay.</p>
-        <div id="d-recurring-list">
-          <div style="text-align:center;padding:24px;color:#B2BEC3;">
-            <div style="font-size:28px;margin-bottom:6px;">🔄</div>
-            <p style="font-size:13px;">No subscribers yet. Share your tip link to get recurring support!</p>
-          </div>
-        </div>
+        <!-- AutoPay -->
+        <div id="d-recurring-list"></div>
+        <!-- Responses -->
+        <div id="d-responses-list"></div>
+        <!-- Payouts -->
+        <input type="number" id="payout-amt" placeholder="Amount" min="100">
+        <button class="small-btn" onclick="requestPayout()">Request Payout</button>
+        <div id="d-payouts"></div>
       </div>
 
-      <!-- V5: Worker Responses (Thank-you loop) -->
-      <div class="section">
-        <div class="section-header"><h3>💬 Thank-You Responses</h3></div>
-        <p style="font-size:12px;color:#636E72;margin-bottom:12px;">Send quick thank-you messages to tippers. This boosts your reputation score!</p>
-        <div id="d-responses-list">
-          <div style="text-align:center;padding:24px;color:#B2BEC3;">
-            <div style="font-size:28px;margin-bottom:6px;">💬</div>
-            <p style="font-size:13px;">No pending tips to respond to.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="section"><div class="section-header"><h3>💸 Payouts</h3></div>
-        <div class="payout-row"><div class="payout-input-row"><span class="rupee-sign">&#8377;</span><input type="number" id="payout-amt" placeholder="Amount" min="100"></div>
-          <button class="small-btn" onclick="requestPayout()">Request Payout</button></div>
-        <div id="d-payouts" class="payouts-list"><p class="muted">No payouts yet</p></div>
-      </div>
     </div></div>
   </div>
 
@@ -774,13 +722,13 @@
         <h3 style="margin-bottom:24px;">Profile Settings</h3>
         <div style="display:grid;gap:20px;max-width:560px;">
           <div style="background:white;border-radius:var(--r);padding:24px;border:1px solid var(--border);">
-            <h4 style="margin-bottom:16px;font-size:15px;">Provider Profile</h4>
+            <h4 style="margin-bottom:16px;font-size:15px;">Your Profile</h4>
             <div style="display:grid;gap:12px;">
               <div style="text-align:center;">
                 <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:8px;">Profile Photo</label>
                 <div style="position:relative;width:80px;height:80px;margin:0 auto 8px;">
                   <div id="settings-avatar-preview" style="width:80px;height:80px;border-radius:50%;background:var(--bg);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:var(--purple);overflow:hidden;"></div>
-                  <label for="settings-avatar-input" style="position:absolute;bottom:-2px;right:-2px;width:28px;height:28px;border-radius:50%;background:var(--purple);color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;border:2px solid white;">📷</label>
+                  <label for="settings-avatar-input" style="position:absolute;bottom:-2px;right:-2px;width:28px;height:28px;border-radius:50%;background:var(--purple);color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;border:2px solid white;">&#128247;</label>
                   <input type="file" id="settings-avatar-input" accept="image/*" onchange="onSettingsAvatarChange(this)" style="display:none;">
                 </div>
               </div>
@@ -789,14 +737,14 @@
                 <input type="text" id="settings-name" placeholder="Your name" style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;width:100%;box-sizing:border-box;">
               </div>
               <div>
-                <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;">Bio / One-liner</label>
-                <textarea id="settings-bio" placeholder="Tell tippers what you do in one sentence" maxlength="500" rows="2" style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;width:100%;box-sizing:border-box;resize:vertical;"></textarea>
-                <p style="font-size:11px;color:var(--text2);margin-top:4px;">Shown to tippers on your tip page.</p>
-              </div>
-              <div>
                 <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;">Email</label>
                 <input type="email" id="settings-email" disabled style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;width:100%;box-sizing:border-box;background:var(--bg);color:var(--text2);">
                 <p style="font-size:11px;color:var(--text2);margin-top:4px;">Email is used for login and cannot be changed here.</p>
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;">Bio / One-liner</label>
+                <textarea id="settings-bio" placeholder="Tell tippers what you do in one sentence" maxlength="500" rows="2" style="padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;width:100%;box-sizing:border-box;resize:vertical;"></textarea>
+                <p style="font-size:11px;color:var(--text2);margin-top:4px;">Shown to tippers on your tip page.</p>
               </div>
               <div>
                 <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;">Phone (optional)</label>
@@ -1288,7 +1236,7 @@
 
   <div id="toast" class="toast"><span id="toast-msg"></span></div>
 
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=4"></script>
   <script>
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
